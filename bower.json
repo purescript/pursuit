@@ -1,7 +1,9 @@
 {
   "name": "psoogle",
   "description": "Search engine for PureScript functions",
-  "keywords": ["purescript"],
+  "keywords": [
+    "purescript"
+  ],
   "ignore": [
     "**/.*",
     "bower_components",
@@ -15,8 +17,14 @@
     "package.json"
   ],
   "dependencies": {
-    "purescript-arrays"               : "*",
-    "purescript-maybe"                : "*",
-    "purescript-foldable-traversable" : "*"
-  }
+    "purescript-maps": "~0.0.4",
+    "purescript-tuples": "~0.1.2"
+  },
+  "version": "0.0.0",
+  "homepage": "https://github.com/paf31/psoogle",
+  "authors": [
+    "Phil Freeman <paf31@cantab.net>"
+  ],
+  "license": "MIT",
+  "private": true
 }
