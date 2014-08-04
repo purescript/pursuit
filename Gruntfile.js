@@ -11,9 +11,13 @@ module.exports = function(grunt) {
     
     clean: ["tmp", "output"],
   
-    pscMake: {
+    psc: {
+      options: {
+        modules: ["Main"]
+      },
       lib: {
-        src: ["<%=libFiles%>"]
+        src: ["<%=libFiles%>"],
+        dest: "dist/Main.js"
       }
     },
 
@@ -23,6 +27,6 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks("grunt-contrib-clean");
   grunt.loadNpmTasks("grunt-purescript");
  
-  grunt.registerTask("make", ["pscMake:lib", "dotPsci"]);
+  grunt.registerTask("make", ["psc:lib", "dotPsci"]);
   grunt.registerTask("default", ["clean", "make"]);
 };

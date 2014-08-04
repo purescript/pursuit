@@ -1,4 +1,4 @@
 /.psci
 /bower_components/
-/output/
+/dist/
 /node_modules/
