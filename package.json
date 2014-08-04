@@ -1,0 +1,33 @@
+{
+  "name": "psoogle",
+  "version": "0.1.0",
+  "description": "Search engine for PureScript functions",
+  "main": "Gruntfile.js",
+  "private": true,
+  "author": "Phil Freeman",
+  "license": "MIT",
+  "dependencies": {
+    "jquery": "*",
+    "bootstrap": "*",
+    "grunt": "~0.4.4",
+    "grunt-contrib-copy": "~0.5.0",
+    "grunt-contrib-clean": "~0.5.0",
+    "grunt-execute": "~0.1.5",
+    "grunt-purescript": "~0.5.0"
+  },
+  "directories": {
+    "test": "tests"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/paf31/psoogle.git"
+  },
+  "bugs": {
+    "url": "https://github.com/paf31/psoogle/issues"
+  },
+  "homepage": "https://github.com/paf31/psoogle"
+}
