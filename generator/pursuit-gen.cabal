@@ -1,0 +1,19 @@
+name:                pursuit-gen
+version:             0.1.0.0
+synopsis:            Data generator for the pursuit search engine
+description:         
+license:             MIT
+license-file:        LICENSE
+author:              Phil Freeman
+maintainer:          paf31@cantab.net
+copyright:           (c) Phil Freeman 2014 
+category:            Tools
+build-type:          Simple
+cabal-version:       >=1.8
+
+executable pursuit-gen
+  main-is:             Main.hs
+  hs-source-dirs:      src
+  other-modules:
+  ghc-options:         -Wall -O2
+  build-depends:       base ==4.6.*
