@@ -2,7 +2,13 @@
 <html>
   <head>
     <title>PURSuit</title>
-    <link rel="stylesheet" href="css/bootstrap.min.css"></link>
+    <link href="http://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <style>
+      body {
+        font-family: 'Open Sans', sans-serif;
+      }
+    </style>
     <script type="text/javascript" src="dist/Main.js"></script>
     <script type="text/javascript">
       onload = PS.Main.main;     
@@ -10,13 +16,15 @@
   </head>
   <body>
     <div class="container">
-      <h1>PURSuit</h1>   
+        <h1>PURSuit</h1>   
 
-      <div class="form-group">
+      <div class="well">    
         <input type="search" class="form-control" id="searchInput" placeholder="Search..." />
       </div>
-    
+      
       <div id="searchResults"></div>
+
+      <div>&copy; Phil Freeman 2014</div>
     </div>	
   </body>
 </html>
