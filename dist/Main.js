@@ -491,10 +491,14 @@ PS.Data_Array = (function () {
     var Prelude = PS.Prelude;
     function length (xs) {  return xs.length;};
     function append (l1) {  return function (l2) {    return l1.concat(l2);  };};
+    function slice (s) {  return function (e) {    return function (l) {      return l.slice(s, e);    };  };};
     function concatMap (f) {  return function (arr) {    var result = [];    for (var i = 0, l = arr.length; i < l; i++) {      Array.prototype.push.apply(result, f(arr[i]));    }    return result;  };};
     function map (f) {  return function (arr) {    var l = arr.length;    var result = new Array(l);    for (var i = 0; i < l; i++) {      result[i] = f(arr[i]);    }    return result;  };};
     function range (start) {  return function (end) {    var i = ~~start, e = ~~end;    var step = i > e ? -1 : 1;    var result = [i], n = 1;    while (i !== e) {      i += step;      result[n++] = i;    }    return result;  };};
     function zipWith (f) {  return function (xs) {    return function (ys) {      var l = xs.length < ys.length ? xs.length : ys.length;      var result = new Array(l);      for (var i = 0; i < l; i++) {        result[i] = f(xs[i])(ys[i]);      }      return result;    };  };};
+    var take = function (n) {
+        return slice(0)(n);
+    };
     var semigroupArray = function (_) {
         return new Prelude.Semigroup(append);
     };
@@ -505,6 +509,7 @@ PS.Data_Array = (function () {
         zipWith: zipWith, 
         range: range, 
         concatMap: concatMap, 
+        take: take, 
         append: append, 
         length: length, 
         map: map, 
@@ -1744,6 +1749,7 @@ PS.Main = (function () {
     var Control_Monad_Eff = PS.Control_Monad_Eff;
     var Control_Monad_Eff_DOM = PS.Control_Monad_Eff_DOM;
     var Data_Either = PS.Data_Either;
+    var Data_Array = PS.Data_Array;
     var Data_Tuple = PS.Data_Tuple;
     var Data_Foldable = PS.Data_Foldable;
     var Control_Monad_Eff_AJAX = PS.Control_Monad_Eff_AJAX;
@@ -1803,7 +1809,7 @@ PS.Main = (function () {
                             return Prelude["return"](Control_Monad_Eff.monadEff({}))(Prelude.unit);
                         };
                         if (_939 instanceof Data_Maybe.Just) {
-                            return Control_Monad_Eff.foreachE(_939.value0)(function (_327) {
+                            return Control_Monad_Eff.foreachE(Data_Array.take(20)(_939.value0))(function (_327) {
                                 return function __do() {
                                     var _25 = Control_Monad_Eff_DOM.createElement("div")();
                                     var __1 = Prelude[">>="](Control_Monad_Eff.bindEff({}))(Prelude[">>="](Control_Monad_Eff.bindEff({}))(Control_Monad_Eff_DOM.createElement("h2"))(Control_Monad_Eff_DOM.setText(_327.value1.value1)))(Prelude.flip(Control_Monad_Eff_DOM.appendChild)(_25))();

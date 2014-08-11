@@ -1,5 +1,6 @@
 module Main where
 
+import Data.Array
 import Data.Maybe
 import Data.Either
 import Data.Tuple
@@ -46,7 +47,7 @@ search trie = do
       case runSearch trie query of
         Nothing -> return unit 
         Just results -> do
-          foreachE results $ \(Tuple _ (Entry moduleName name detail)) -> do
+          foreachE (take 20 results) $ \(Tuple _ (Entry moduleName name detail)) -> do
             div <- createElement "div"
         
             createElement "h2" 
