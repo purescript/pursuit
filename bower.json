@@ -1,5 +1,5 @@
 {
-  "name": "psoogle",
+  "name": "pursuit",
   "description": "Search engine for PureScript functions",
   "keywords": [
     "purescript"
@@ -21,7 +21,7 @@
     "purescript-tuples": "~0.1.2"
   },
   "version": "0.0.0",
-  "homepage": "https://github.com/paf31/psoogle",
+  "homepage": "https://github.com/paf31/pursuit",
   "authors": [
     "Phil Freeman <paf31@cantab.net>"
   ],

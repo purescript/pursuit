@@ -1,5 +1,5 @@
 {
-  "name": "psoogle",
+  "name": "pursuit",
   "version": "0.1.0",
   "description": "Search engine for PureScript functions",
   "main": "Gruntfile.js",
@@ -22,10 +22,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/paf31/psoogle.git"
+    "url": "https://github.com/paf31/pursuit.git"
   },
   "bugs": {
-    "url": "https://github.com/paf31/psoogle/issues"
+    "url": "https://github.com/paf31/pursuit/issues"
   },
-  "homepage": "https://github.com/paf31/psoogle"
+  "homepage": "https://github.com/paf31/pursuit"
 }
