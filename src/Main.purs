@@ -5,6 +5,7 @@ import Data.Either
 import Data.Tuple
 import Data.Foreign
 import Data.Foldable
+import Data.Traversable
 
 import Control.Monad.Eff
 import Control.Monad.Eff.DOM
@@ -17,6 +18,7 @@ data Entry = Entry String String String
 instance readForeignEntry :: ReadForeign Entry where
   read = Entry <$> prop "module" <*> prop "name" <*> prop "detail"
 
+getQuery :: forall eff. Eff (dom :: DOM | eff) String
 getQuery = do
   Just searchInput <- querySelector "#searchInput"
   query <- getValue searchInput
@@ -25,6 +27,11 @@ getQuery = do
     Right s -> s
     Left _ -> ""
 
+runSearch :: T.Trie Entry -> String -> Maybe [Tuple String Entry]
+runSearch trie "" = Nothing
+runSearch trie query = T.toArray <$> T.lookupAll query trie
+
+search :: forall eff. T.Trie Entry -> Eff (dom :: DOM | eff) Unit
 search trie = do
   query <- getQuery
 
@@ -35,7 +42,7 @@ search trie = do
     Just searchResults -> do
       setInnerHTML "" searchResults
 
-      case T.toArray <$> T.lookupAll query trie of
+      case runSearch trie query of
         Nothing -> return unit 
         Just results -> do
           foreachE results $ \(Tuple _ (Entry moduleName name detail)) -> do
@@ -64,6 +71,7 @@ buildTrie json = case parseJSON json of
   Left err -> error err
   Right arr -> foldl (\t (e@(Entry _ name _)) -> T.insert name e t) T.empty (arr :: [Entry])
 
+main :: Eff (dom :: DOM, xhr :: XHR) Unit
 main = do
   get "data.json" $ \json -> do
     maybeEl <- querySelector "#searchInput"
@@ -72,6 +80,7 @@ main = do
       Nothing -> error "#searchInput not found"
       Just searchInput -> do
         let trie = buildTrie json
-        addEventListener "keyup" (search trie) searchInput
+        for ["keyup", "change"] $ \evt -> 
+	  addEventListener evt (search trie) searchInput
         return unit   
 

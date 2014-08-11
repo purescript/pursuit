@@ -87,7 +87,7 @@ jsonForDeclaration mn (P.DataDeclaration dtype name args ctors) =
   let typeName = P.runProperName name ++ (if null args then "" else " " ++ unwords args)
       detail = show dtype ++ " " ++ typeName ++ (if null ctors then "" else " = ") ++
         intercalate " | " (map (\(ctor, tys) ->
-          P.runProperName ctor ++ " :: " ++ concatMap (\ty -> prettyPrintType' ty ++ " -> ") tys ++ typeName) ctors)
+          intercalate " " (P.runProperName ctor : map P.prettyPrintTypeAtom tys)) ctors)
   in entry mn (show name) detail : map (\(ctor, _) -> entry mn (show ctor) detail) ctors
 jsonForDeclaration mn (P.ExternDataDeclaration name kind) =
   [entry mn (show name) $ "data " ++ P.runProperName name ++ " :: " ++ P.prettyPrintKind kind]
