@@ -14,11 +14,13 @@
     "tmp",
     "bower.json",
     "Gruntfile.js",
-    "package.json"
+    "package.json",
+    "test"
   ],
   "dependencies": {
-    "purescript-maps": "~0.0.4",
-    "purescript-tuples": "~0.1.2"
+    "purescript-virtual-dom": "*",
+    "purescript-strings": "~0.2.1",
+    "purescript-maps": "~0.0.4"
   },
   "version": "0.0.0",
   "homepage": "https://github.com/paf31/pursuit",

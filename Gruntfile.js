@@ -13,7 +13,8 @@ module.exports = function(grunt) {
   
     psc: {
       options: {
-        modules: ["Main"]
+	main: "Main",
+	modules: ["Main"]
       },
       lib: {
         src: ["<%=libFiles%>"],
