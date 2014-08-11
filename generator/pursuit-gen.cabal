@@ -13,7 +13,7 @@ data-dir: ""
 
 executable pursuit-gen
     build-depends: directory >=1.2.0.1 && <1.3,
-                   filepath >=1.3.0.1 && <1.4, base ==4.6.*, purescript -any,
+                   filepath >=1.3.0.1 && <1.4, base ==4.7.*, purescript -any,
                    aeson -any, cmdtheline -any, text -any
     main-is: Main.hs
     buildable: True
