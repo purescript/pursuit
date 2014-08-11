@@ -11,6 +11,7 @@ import Control.Monad.Eff
 import Control.Monad.Eff.DOM
 import Control.Monad.Eff.AJAX
 
+import qualified Data.String as S
 import qualified Data.Trie as T
 
 data Entry = Entry String String String
@@ -29,7 +30,7 @@ getQuery = do
 
 runSearch :: T.Trie Entry -> String -> Maybe [Tuple String Entry]
 runSearch trie "" = Nothing
-runSearch trie query = T.toArray <$> T.lookupAll query trie
+runSearch trie query = T.toArray <$> T.lookupAll (S.toLower query) trie
 
 search :: forall eff. T.Trie Entry -> Eff (dom :: DOM | eff) Unit
 search trie = do
@@ -69,7 +70,7 @@ foreign import error
 buildTrie :: String -> T.Trie Entry
 buildTrie json = case parseJSON json of
   Left err -> error err
-  Right arr -> foldl (\t (e@(Entry _ name _)) -> T.insert name e t) T.empty (arr :: [Entry])
+  Right arr -> foldl (\t (e@(Entry _ name _)) -> T.insert (S.toLower name) e t) T.empty (arr :: [Entry])
 
 main :: Eff (dom :: DOM, xhr :: XHR) Unit
 main = do

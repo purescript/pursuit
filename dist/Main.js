@@ -300,7 +300,9 @@ PS.Data_String = (function () {
     var Prelude = PS.Prelude;
     function charAt(i) {  return function(s) {    return s.charAt(i);   };};
     function length(s) {  return s.length;};
+    function toLower(s) {  return s.toLowerCase();};
     return {
+        toLower: toLower, 
         length: length, 
         charAt: charAt
     };
@@ -1737,6 +1739,7 @@ PS.Main = (function () {
     var Prelude = PS.Prelude;
     var Data_Maybe = PS.Data_Maybe;
     var Data_Trie = PS.Data_Trie;
+    var Data_String = PS.Data_String;
     var Data_Foreign = PS.Data_Foreign;
     var Control_Monad_Eff = PS.Control_Monad_Eff;
     var Control_Monad_Eff_DOM = PS.Control_Monad_Eff_DOM;
@@ -1763,7 +1766,7 @@ PS.Main = (function () {
             if (_330 === "") {
                 return Data_Maybe.Nothing.value;
             };
-            return Prelude["<$>"](Data_Maybe.functorMaybe({}))(Data_Trie.toArray)(Data_Trie.lookupAll(_330)(_329));
+            return Prelude["<$>"](Data_Maybe.functorMaybe({}))(Data_Trie.toArray)(Data_Trie.lookupAll(Data_String.toLower(_330))(_329));
         };
     };
     var readForeignEntry = function (_) {
@@ -1826,7 +1829,7 @@ PS.Main = (function () {
         if (_949 instanceof Data_Either.Right) {
             return Data_Foldable.foldl(Data_Foldable.foldableArray({}))(function (t) {
                 return function (_328) {
-                    return Data_Trie.insert(_328.value1)(_328)(t);
+                    return Data_Trie.insert(Data_String.toLower(_328.value1))(_328)(t);
                 };
             })(Data_Trie.empty)(_949.value0);
         };
