@@ -1,9 +1,77 @@
 module Main where
 
-import Control.AJAX
+import Data.Maybe
+import Data.Either
+import Data.Tuple
+import Data.Foreign
+import Data.Foldable
+
+import Control.Monad.Eff
+import Control.Monad.Eff.DOM
+import Control.Monad.Eff.AJAX
 
 import qualified Data.Trie as T
 
+data Entry = Entry String String String
+
+instance readForeignEntry :: ReadForeign Entry where
+  read = Entry <$> prop "module" <*> prop "name" <*> prop "detail"
+
+getQuery = do
+  Just searchInput <- querySelector "#searchInput"
+  query <- getValue searchInput
+
+  return $ case parseForeign read query of
+    Right s -> s
+    Left _ -> ""
+
+search trie = do
+  query <- getQuery
+
+  maybeEl <- querySelector "#searchResults"  
+  
+  case maybeEl of
+    Nothing -> error "#searchResults not found"
+    Just searchResults -> do
+      setInnerHTML "" searchResults
+
+      case T.toArray <$> T.lookupAll query trie of
+        Nothing -> return unit 
+        Just results -> do
+          foreachE results $ \(Tuple _ (Entry moduleName name detail)) -> do
+            div <- createElement "div"
+        
+            createElement "h2" 
+	      >>= setText name 
+              >>= flip appendChild div
+            createElement "div" 
+	      >>= setText moduleName
+              >>= flip appendChild div
+            createElement "pre" 
+	      >>= setText detail 
+              >>= flip appendChild div
+        
+            div `appendChild` searchResults
+            return unit
+ 
+foreign import error 
+  "function error(msg) {\
+  \  throw new Error(msg);\
+  \}":: forall a. String -> a
+
+buildTrie :: String -> T.Trie Entry
+buildTrie json = case parseJSON json of
+  Left err -> error err
+  Right arr -> foldl (\t (e@(Entry _ name _)) -> T.insert name e t) T.empty (arr :: [Entry])
+
 main = do
   get "data.json" $ \json -> do
-    Debug.Trace.trace json
+    maybeEl <- querySelector "#searchInput"
+   
+    case maybeEl of
+      Nothing -> error "#searchInput not found"
+      Just searchInput -> do
+        let trie = buildTrie json
+        addEventListener "keyup" (search trie) searchInput
+        return unit   
+
