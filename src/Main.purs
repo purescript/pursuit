@@ -37,8 +37,8 @@ search :: forall eff. T.Trie Entry -> Eff (dom :: DOM | eff) Unit
 search trie = do
   query <- getQuery
 
-  maybeEl <- querySelector "#searchResults"  
-  
+  maybeEl <- querySelector "#searchResults"
+
   case maybeEl of
     Nothing -> error "#searchResults not found"
     Just searchResults -> do
@@ -49,21 +49,21 @@ search trie = do
         Just results -> do
           foreachE (take 20 results) $ \(Tuple _ (Entry moduleName name detail)) -> do
             div <- createElement "div"
-        
-            createElement "h2" 
-	      >>= setText name 
+
+            createElement "h2"
+              >>= setText name
               >>= flip appendChild div
-            createElement "div" 
-	      >>= setText moduleName
+            createElement "div"
+              >>= setText moduleName
               >>= flip appendChild div
-            createElement "pre" 
-	      >>= setText detail 
+            createElement "pre"
+              >>= setText detail
               >>= flip appendChild div
-        
+
             div `appendChild` searchResults
             return unit
  
-foreign import error 
+foreign import error
   "function error(msg) {\
   \  throw new Error(msg);\
   \}":: forall a. String -> a
@@ -77,12 +77,11 @@ main :: Eff (dom :: DOM, xhr :: XHR) Unit
 main = do
   get "data.json" $ \json -> do
     maybeEl <- querySelector "#searchInput"
-   
+
     case maybeEl of
       Nothing -> error "#searchInput not found"
       Just searchInput -> do
         let trie = buildTrie json
-        for ["keyup", "change"] $ \evt -> 
-	  addEventListener evt (search trie) searchInput
-        return unit   
-
+        for ["keyup", "change"] $ \evt ->
+          addEventListener evt (search trie) searchInput
+        return unit
