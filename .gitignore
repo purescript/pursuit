@@ -2,3 +2,5 @@
 /.psci
 /bower_components/
 /node_modules/
+.cabal-sandbox
+cabal.sandbox.config
