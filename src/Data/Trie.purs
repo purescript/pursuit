@@ -1,7 +1,5 @@
 module Data.Trie where
 
-import Prelude hiding (empty)
-
 import Data.Maybe
 import Data.Array
 import Data.Tuple
@@ -12,11 +10,11 @@ import qualified Data.String as S
 data Trie a = Trie (Maybe a) (M.Map String (Trie a))
 
 instance showTrie :: (Show a) => Show (Trie a) where
-  show (Trie a m) = 
+  show (Trie a m) =
     "Trie " ++
-    "{ value: " ++ show a ++ 
-    ", children: " ++ show m ++ 
-    " }" 
+    "{ value: " ++ show a ++
+    ", children: " ++ show m ++
+    " }"
 
 toArray :: forall a. Trie a -> [Tuple String a]
 toArray = go ""
@@ -35,7 +33,7 @@ insert s a = go 0
 lookupAll :: forall a. String -> Trie a -> Maybe (Trie a)
 lookupAll s = go 0
   where
-  go i t@(Trie _ _) | i >= S.length s = Just t 
+  go i t@(Trie _ _) | i >= S.length s = Just t
   go i (Trie _ m) = do
     t <- M.lookup (S.charAt i s) m
     go (i + 1) t
