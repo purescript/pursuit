@@ -24,7 +24,7 @@ foreign import createElement
   \  return function() {\
   \    return document.createElement(name);\
   \  };\
-  \}" :: forall eff. String -> Eff (dom :: DOM | eff) Node 
+  \}" :: forall eff. String -> Eff (dom :: DOM | eff) Node
 
 --
 -- Selector Functions
@@ -42,16 +42,16 @@ querySelector :: forall eff. String -> Eff (dom :: DOM | eff) (Maybe Node)
 querySelector s = runFn3 querySelectorImpl Nothing Just s
 
 --
--- Append 
+-- Append
 --
 
-foreign import appendChild 
+foreign import appendChild
   "function appendChild(child) {\
   \  return function(node) {\
   \    return function() {\
   \      node.appendChild(child);\
   \      return node;\
-  \    };\ 
+  \    };\
   \  };\
   \}" :: forall eff. Node -> Node -> Eff (dom :: DOM | eff) Node
 
@@ -73,7 +73,7 @@ foreign import addClass
 -- Properties
 --
 
-foreign import setText 
+foreign import setText
   "function setText(text) {\
   \  return function(node) {\
   \    return function() {\
@@ -81,16 +81,26 @@ foreign import setText
   \      return node;\
   \    };\
   \  };\
-  \}" :: forall eff. String -> Node -> Eff (dom :: DOM | eff) Node 
+  \}" :: forall eff. String -> Node -> Eff (dom :: DOM | eff) Node
 
-foreign import getValue 
+foreign import setValue
+  "function setValue(text) {\
+  \  return function(node) {\
+  \    return function() {\
+  \      node.value = text;\
+  \      return node;\
+  \    };\
+  \  };\
+  \}" :: forall eff. String -> Node -> Eff (dom :: DOM | eff) Node
+
+foreign import getValue
   "function getValue(node) {\
   \  return function() {\
   \    return node.value;\
   \  };\
   \}" :: forall eff. Node -> Eff (dom :: DOM | eff) Foreign
 
-foreign import setInnerHTML 
+foreign import setInnerHTML
   "function setInnerHTML(html) {\
   \  return function(node) {\
   \    return function() {\
@@ -115,4 +125,68 @@ foreign import addEventListener
   \      };\
   \    };\
   \  };\
-  \}" :: forall eff. String -> Eff (dom :: DOM | eff) Unit -> Node -> Eff (dom :: DOM | eff) Node 
+  \}" :: forall eff. String -> Eff (dom :: DOM | eff) Unit -> Node -> Eff (dom :: DOM | eff) Node
+
+--
+-- Document
+--
+
+foreign import documentTitle
+  "function documentTitle() {\
+  \  return document.title;\
+  \}" :: forall eff. Eff (dom :: DOM | eff) String
+
+--
+-- Location
+--
+
+foreign import locationProtocol
+  "function locationProtocol() {\
+  \  return window.location.protocol;\
+  \}" :: forall eff. Eff (dom :: DOM | eff) String
+
+foreign import locationHost
+  "function locationHost() {\
+  \  return window.location.host;\
+  \}" :: forall eff. Eff (dom :: DOM | eff) String
+
+foreign import locationPathname
+  "function locationPathname() {\
+  \  return window.location.pathname;\
+  \}" :: forall eff. Eff (dom :: DOM | eff) String
+
+foreign import locationSearch
+  "function locationSearch() {\
+  \  return window.location.search;\
+  \}" :: forall eff. Eff (dom :: DOM | eff) String
+
+--
+-- History
+--
+
+foreign import historyState
+  "function historyState() {\
+  \  return window.history.state;\
+  \}" :: forall eff s. Eff (dom :: DOM | eff) { | s }
+
+foreign import pushHistoryState
+  "function pushHistoryState(data) {\
+  \  return function(title) {\
+  \    return function(url) {\
+  \      return function() {\
+  \        window.history.pushState(data, title, url);\
+  \      };\
+  \    };\
+  \  };\
+  \}" :: forall eff s. { | s } -> String -> String -> Eff (dom :: DOM | eff) Unit
+
+foreign import replaceHistoryState
+  "function replaceHistoryState(data) {\
+  \  return function(title) {\
+  \    return function(url) {\
+  \      return function() {\
+  \        window.history.replaceState(data, title, url);\
+  \      };\
+  \    };\
+  \  };\
+  \}" :: forall eff s. { | s } -> String -> String -> Eff (dom :: DOM | eff) Unit

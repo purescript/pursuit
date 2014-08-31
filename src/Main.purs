@@ -76,6 +76,21 @@ buildTrie json = case parseJSON json >>= readArray >>= traverse read of
   Left err -> error $ show err
   Right arr -> foldl (\t (e@(Entry _ name _)) -> T.insert (S.toLower name) e t) T.empty (arr :: [Entry])
 
+baseUrl :: forall eff. Eff (dom :: DOM | eff) String
+baseUrl = do
+  protocol <- locationProtocol
+  host <- locationHost
+  pathname <- locationPathname
+  pure $ protocol ++ "//" ++ host ++ pathname
+
+updateHistorySearch :: forall eff. Eff (dom :: DOM | eff) Unit
+updateHistorySearch = do
+  state <- historyState
+  title <- documentTitle
+  url <- baseUrl
+  query <- getQuery
+  replaceHistoryState state title $ url ++ "?" ++ query
+
 main :: Eff (dom :: DOM, xhr :: XHR) Unit
 main = do
   get "data.json" $ \json -> do
@@ -85,6 +100,9 @@ main = do
       Nothing -> error "#searchInput not found"
       Just searchInput -> do
         let trie = buildTrie json
-        for ["keyup", "change"] $ \evt ->
+        for ["keyup", "change"] $ \evt -> do
           addEventListener evt (search trie) searchInput
-        return unit
+          addEventListener evt updateHistorySearch searchInput
+        query <- S.drop 1 <$> locationSearch
+        setValue query searchInput
+        search trie
