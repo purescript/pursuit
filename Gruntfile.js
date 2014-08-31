@@ -22,7 +22,6 @@ module.exports = function(grunt) {
 
     psc: {
       options: {
-        main: "Main",
         modules: ["Main"]
       },
       lib: {
