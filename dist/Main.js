@@ -1947,4 +1947,3 @@ PS.Main = (function () {
         isForeignEntry: isForeignEntry
     };
 })();
-PS.Main.main();
