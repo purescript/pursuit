@@ -84,7 +84,7 @@ jsonForDeclaration mn (P.TypeDeclaration ident ty) =
 jsonForDeclaration mn (P.ExternDeclaration _ ident _ ty) =
   [entry mn (show ident) $ show ident ++ " :: " ++ prettyPrintType' ty]
 jsonForDeclaration mn (P.DataDeclaration dtype name args ctors) =
-  let typeName = P.runProperName name ++ (if null args then "" else " " ++ unwords args)
+  let typeName = P.runProperName name ++ (if null args then "" else " " ++ unwords (map fst args))
       detail = show dtype ++ " " ++ typeName ++ (if null ctors then "" else " = ") ++
         intercalate " | " (map (\(ctor, tys) ->
           intercalate " " (P.runProperName ctor : map P.prettyPrintTypeAtom tys)) ctors)
@@ -92,13 +92,13 @@ jsonForDeclaration mn (P.DataDeclaration dtype name args ctors) =
 jsonForDeclaration mn (P.ExternDataDeclaration name kind) =
   [entry mn (show name) $ "data " ++ P.runProperName name ++ " :: " ++ P.prettyPrintKind kind]
 jsonForDeclaration mn (P.TypeSynonymDeclaration name args ty) =
-  let typeName = P.runProperName name ++ " " ++ unwords args
+  let typeName = P.runProperName name ++ " " ++ unwords (map fst args)
   in [entry mn (show name) $ "type " ++ typeName ++ " = " ++ prettyPrintType' ty]
 jsonForDeclaration mn (P.TypeClassDeclaration name args implies ds) =
   let impliesText = case implies of
                       [] -> ""
                       is -> "(" ++ intercalate ", " (map (\(pn, tys') -> show pn ++ " " ++ unwords (map P.prettyPrintTypeAtom tys')) is) ++ ") <= "
-      detail = "class " ++ impliesText ++ P.runProperName name ++ " " ++ unwords args ++ " where"
+      detail = "class " ++ impliesText ++ P.runProperName name ++ " " ++ unwords (map fst args) ++ " where"
   in entry mn (show name) detail : concatMap (jsonForDeclaration mn) ds
 jsonForDeclaration mn (P.TypeInstanceDeclaration name constraints className tys _) = do
   let constraintsText = case constraints of
