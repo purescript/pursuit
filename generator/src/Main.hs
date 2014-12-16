@@ -11,11 +11,11 @@
 -- | Data generator for the pursuit search engine
 --
 -----------------------------------------------------------------------------
+{-# LANGUAGE OverloadedStrings #-}
 
 module Main where
 
 import Data.List
-import Data.String (fromString)
 import Data.Version (showVersion)
 
 import Control.Applicative
@@ -33,12 +33,30 @@ import qualified Data.Text.Lazy as TL
 import qualified Data.Text.Lazy.IO as TL
 import qualified Data.Text.Lazy.Builder as TL
 
-import Data.Aeson ((.=))
+import Data.Aeson ((.=), (.:))
 import qualified Data.Aeson as A
 import qualified Data.Aeson.Encode as A
 
 import qualified Language.PureScript as P
 import qualified Paths_pursuit_gen as Paths
+
+data PursuitEntry =
+  PursuitEntry { entryName   :: String
+               , entryModule :: String
+               , entryDetail :: String
+               }
+
+instance A.FromJSON PursuitEntry where
+  parseJSON (A.Object o) =
+    PursuitEntry <$> o .: "name" <*> o .: "module" <*> o .: "detail"
+  parseJSON val = fail $ "couldn't parse " ++ show val ++ " as PursuitEntry"
+
+instance A.ToJSON PursuitEntry where
+  toJSON (PursuitEntry name mdl detail) =
+    A.object [ "name"   .= name
+             , "module" .= mdl
+             , "detail" .= detail
+             ]
 
 pursuitGen :: [FilePath] -> Maybe FilePath -> IO ()
 pursuitGen input output = do
@@ -62,52 +80,46 @@ parseFile input = do
 mkdirp :: FilePath -> IO ()
 mkdirp = createDirectoryIfMissing True . takeDirectory
 
-array :: [A.Value] -> A.Value
-array = A.toJSON
-
 modulesToJson :: [P.Module] -> TL.Text
-modulesToJson = TL.toLazyText . A.encodeToTextBuilder . array . concatMap jsonForModule
+modulesToJson =
+  TL.toLazyText . A.encodeToTextBuilder . A.toJSON . concatMap entriesForModule
 
-jsonForModule :: P.Module -> [A.Value]
-jsonForModule (P.Module mn ds _) = concatMap (jsonForDeclaration mn) ds
+entriesForModule :: P.Module -> [PursuitEntry]
+entriesForModule (P.Module mn ds _) = concatMap (entriesForDeclaration mn) ds
 
-entry :: P.ModuleName -> String -> String -> A.Value
-entry mn name detail =
-  A.object [ fromString "name"   .= name
-           , fromString "module" .= show mn
-           , fromString "detail" .= detail
-           ]
+entry :: P.ModuleName -> String -> String -> PursuitEntry
+entry mn name detail = PursuitEntry name (show mn) detail
 
-jsonForDeclaration :: P.ModuleName -> P.Declaration -> [A.Value]
-jsonForDeclaration mn (P.TypeDeclaration ident ty) =
+entriesForDeclaration :: P.ModuleName -> P.Declaration -> [PursuitEntry]
+entriesForDeclaration mn (P.TypeDeclaration ident ty) =
   [entry mn (show ident) $ show ident ++ " :: " ++ prettyPrintType' ty]
-jsonForDeclaration mn (P.ExternDeclaration _ ident _ ty) =
+entriesForDeclaration mn (P.ExternDeclaration _ ident _ ty) =
   [entry mn (show ident) $ show ident ++ " :: " ++ prettyPrintType' ty]
-jsonForDeclaration mn (P.DataDeclaration dtype name args ctors) =
+entriesForDeclaration mn (P.DataDeclaration dtype name args ctors) =
   let typeName = P.runProperName name ++ (if null args then "" else " " ++ unwords (map fst args))
       detail = show dtype ++ " " ++ typeName ++ (if null ctors then "" else " = ") ++
         intercalate " | " (map (\(ctor, tys) ->
           intercalate " " (P.runProperName ctor : map P.prettyPrintTypeAtom tys)) ctors)
   in entry mn (show name) detail : map (\(ctor, _) -> entry mn (show ctor) detail) ctors
-jsonForDeclaration mn (P.ExternDataDeclaration name kind) =
+entriesForDeclaration mn (P.ExternDataDeclaration name kind) =
   [entry mn (show name) $ "data " ++ P.runProperName name ++ " :: " ++ P.prettyPrintKind kind]
-jsonForDeclaration mn (P.TypeSynonymDeclaration name args ty) =
+entriesForDeclaration mn (P.TypeSynonymDeclaration name args ty) =
   let typeName = P.runProperName name ++ " " ++ unwords (map fst args)
   in [entry mn (show name) $ "type " ++ typeName ++ " = " ++ prettyPrintType' ty]
-jsonForDeclaration mn (P.TypeClassDeclaration name args implies ds) =
+entriesForDeclaration mn (P.TypeClassDeclaration name args implies ds) =
   let impliesText = case implies of
                       [] -> ""
                       is -> "(" ++ intercalate ", " (map (\(pn, tys') -> show pn ++ " " ++ unwords (map P.prettyPrintTypeAtom tys')) is) ++ ") <= "
       detail = "class " ++ impliesText ++ P.runProperName name ++ " " ++ unwords (map fst args) ++ " where"
-  in entry mn (show name) detail : concatMap (jsonForDeclaration mn) ds
-jsonForDeclaration mn (P.TypeInstanceDeclaration name constraints className tys _) = do
+  in entry mn (show name) detail : concatMap (entriesForDeclaration mn) ds
+entriesForDeclaration mn (P.TypeInstanceDeclaration name constraints className tys _) = do
   let constraintsText = case constraints of
                           [] -> ""
                           cs -> "(" ++ intercalate ", " (map (\(pn, tys') -> show pn ++ " " ++ unwords (map P.prettyPrintTypeAtom tys')) cs) ++ ") => "
   [entry mn (show name) $ "instance " ++ show name ++ " :: " ++ constraintsText ++ show className ++ " " ++ unwords (map P.prettyPrintTypeAtom tys)]
-jsonForDeclaration mn (P.PositionedDeclaration _ d) =
-  jsonForDeclaration mn d
-jsonForDeclaration _ _ = []
+entriesForDeclaration mn (P.PositionedDeclaration _ d) =
+  entriesForDeclaration mn d
+entriesForDeclaration _ _ = []
 
 prettyPrintType' :: P.Type -> String
 prettyPrintType' = P.prettyPrintType . P.everywhereOnTypes dePrim
