@@ -24,12 +24,12 @@ import Control.Applicative
 import Control.Monad
 
 import System.Console.CmdTheLine
-import System.Exit (exitSuccess, exitFailure)
+import System.Exit (exitSuccess, exitFailure, ExitCode(..))
 import System.IO (stderr)
 import System.Directory (createDirectoryIfMissing, getCurrentDirectory,
                          doesDirectoryExist, removeDirectoryRecursive)
 import System.FilePath (takeDirectory, (</>))
-import System.Process (callProcess)
+import System.Process (readProcessWithExitCode)
 import System.FilePath.Glob (glob)
 
 import qualified Data.Text as T
@@ -104,7 +104,19 @@ gitClone url dir = do
   when exists $
     removeDirectoryRecursive dir
 
-  callProcess "git" ["clone", url, dir]
+  callProcessQuiet "git" ["clone", url, dir]
+
+-- Call a process. If it exits with 0, swallow all output. If it exits nonzero,
+-- print all of its output to stderr and exit nonzero.
+callProcessQuiet :: FilePath -> [String] -> IO ()
+callProcessQuiet program args = do
+  (code, out, err) <- readProcessWithExitCode program args ""
+  case code of
+    ExitSuccess -> return ()
+    ExitFailure _ -> do
+      T.hPutStr stderr (T.pack out)
+      T.hPutStr stderr (T.pack err)
+      exitFailure
 
 libraryEntries :: Maybe String -> FilePath -> IO [PursuitEntry]
 libraryEntries _ dir = do
