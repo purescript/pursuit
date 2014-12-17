@@ -2,7 +2,8 @@ module Libraries where
 
 type GitUrl = String
 data Library = Library { libraryGitUrl :: GitUrl
-                       , libraryBowerName :: Maybe String }
+                       , libraryBowerName :: Maybe String
+                       }
 
 libraries :: [Library]
 libraries =

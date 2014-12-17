@@ -39,7 +39,7 @@ import qualified Data.Text.Lazy as TL
 import qualified Data.Text.Lazy.IO as TL
 import qualified Data.Text.Lazy.Builder as TL
 
-import Data.Aeson ((.=), (.:))
+import Data.Aeson ((.=), (.:), (.:?))
 import qualified Data.Aeson as A
 import qualified Data.Aeson.Encode as A
 
@@ -49,23 +49,28 @@ import qualified Paths_pursuit_gen as Paths
 import Libraries
 
 data PursuitEntry =
-  PursuitEntry { entryName   :: String
-               , entryModule :: String
-               , entryDetail :: String
+  PursuitEntry { entryName        :: String
+               , entryModule      :: String
+               , entryDetail      :: String
+               , entryPackageName :: Maybe String
                }
                deriving (Show, Eq)
 
 instance A.FromJSON PursuitEntry where
   parseJSON (A.Object o) =
-    PursuitEntry <$> o .: "name" <*> o .: "module" <*> o .: "detail"
+    PursuitEntry <$> o .: "name"
+                 <*> o .: "module"
+                 <*> o .: "detail"
+                 <*> o .:? "packageName"
   parseJSON val = fail $ "couldn't parse " ++ show val ++ " as PursuitEntry"
 
 instance A.ToJSON PursuitEntry where
-  toJSON (PursuitEntry name mdl detail) =
-    A.object [ "name"   .= name
-             , "module" .= mdl
-             , "detail" .= detail
-             ]
+  toJSON (PursuitEntry name mdl detail mPkgName) = A.object pairs
+    where
+    pairs = [ "name"   .= name
+            , "module" .= mdl
+            , "detail" .= detail
+            ] ++ maybe [] (\x -> [ "packageName" .= x ]) mPkgName
 
 pursuitGenAll :: Maybe FilePath -> IO ()
 pursuitGenAll output = do
@@ -119,10 +124,11 @@ callProcessQuiet program args = do
       exitFailure
 
 libraryEntries :: Maybe String -> FilePath -> IO [PursuitEntry]
-libraryEntries _ dir = do
+libraryEntries pkgName dir = do
   files <- glob $ dir </> "src/**/*.purs"
   ms <- mapM parseFile files
-  return $ modulesToEntries (concat ms)
+  let entries = modulesToEntries (concat ms)
+  return $ map (\e -> e { entryPackageName = pkgName }) entries
 
 modulesToEntries :: [P.Module] -> [PursuitEntry]
 modulesToEntries = concatMap entriesForModule
@@ -167,7 +173,7 @@ entriesForModule :: P.Module -> [PursuitEntry]
 entriesForModule (P.Module mn ds _) = concatMap (entriesForDeclaration mn) ds
 
 entry :: P.ModuleName -> String -> String -> PursuitEntry
-entry mn name detail = PursuitEntry name (show mn) detail
+entry mn name detail = PursuitEntry name (show mn) detail Nothing
 
 entriesForDeclaration :: P.ModuleName -> P.Declaration -> [PursuitEntry]
 entriesForDeclaration mn (P.TypeDeclaration ident ty) =
