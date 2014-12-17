@@ -84,7 +84,10 @@ generateAllData = do
     let dir = baseDir </> libraryDirFor lib
     gitClone (libraryGitUrl lib) dir
     libraryEntries (libraryBowerName lib) dir
-  return $ concat entries
+
+  preludeEntries <- getPreludeEntries
+
+  return $ preludeEntries ++ concat entries
 
 workingDir :: String
 workingDir = "./tmp/"
@@ -110,6 +113,10 @@ modulesToEntries = concatMap entriesForModule
 entriesToJson :: [PursuitEntry] -> TL.Text
 entriesToJson = TL.toLazyText . A.encodeToTextBuilder . A.toJSON
 
+getPreludeEntries :: IO [PursuitEntry]
+getPreludeEntries =
+  modulesToEntries <$> parseText "<<Prelude>>" (T.pack P.prelude)
+
 pursuitGen :: [FilePath] -> Maybe FilePath -> IO ()
 pursuitGen input output = do
   ms <- mapM parseFile (nub input)
@@ -122,6 +129,10 @@ pursuitGen input output = do
 parseFile :: FilePath -> IO [P.Module]
 parseFile input = do
   text <- T.readFile input
+  parseText input text
+
+parseText :: FilePath -> T.Text -> IO [P.Module]
+parseText input text = do
   case P.runIndentParser input P.parseModules (T.unpack text) of
     Left err -> do
       T.hPutStr stderr $ T.pack $ show err
