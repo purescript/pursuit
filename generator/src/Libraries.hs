@@ -6,11 +6,21 @@ data Library = Library { libraryGitUrl :: GitUrl
 
 libraries :: [Library]
 libraries =
-  [ l "purescript-identity" (githubPs "purescript-identity")
+  [ purescript "identity"
+  , purescript "foldable-traversable"
+  , purescript "transformers"
+  , purescript "monoid"
+
+  , purescriptContrib "canvas"
+  , purescriptContrib "virtual-dom"
   ]
 
   where
   l bower git = Library git (Just bower)
+  prefix str = "purescript-" ++ str
   github user repo = "https://github.com/" ++ user ++ "/" ++ repo
-  githubPs = github "purescript"
-  githubPsContrib = github "purescript-contrib"
+
+  purescript name =
+    l (prefix name) (github "purescript" (prefix name))
+  purescriptContrib name =
+    l (prefix name) (github "purescript-contrib" (prefix name))
