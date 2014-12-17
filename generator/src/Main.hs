@@ -16,15 +16,20 @@
 module Main where
 
 import Data.List
+import Data.List.Split (splitOn)
+import Data.Maybe
 import Data.Version (showVersion)
 
 import Control.Applicative
+import Control.Monad
 
 import System.Console.CmdTheLine
 import System.Exit (exitSuccess, exitFailure)
 import System.IO (stderr)
-import System.Directory (createDirectoryIfMissing)
-import System.FilePath (takeDirectory)
+import System.Directory (createDirectoryIfMissing, getCurrentDirectory)
+import System.FilePath (takeDirectory, (</>))
+import System.Process (callProcess)
+import System.FilePath.Glob (glob)
 
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
@@ -40,11 +45,14 @@ import qualified Data.Aeson.Encode as A
 import qualified Language.PureScript as P
 import qualified Paths_pursuit_gen as Paths
 
+import Libraries
+
 data PursuitEntry =
   PursuitEntry { entryName   :: String
                , entryModule :: String
                , entryDetail :: String
                }
+               deriving (Show, Eq)
 
 instance A.FromJSON PursuitEntry where
   parseJSON (A.Object o) =
@@ -57,6 +65,50 @@ instance A.ToJSON PursuitEntry where
              , "module" .= mdl
              , "detail" .= detail
              ]
+
+pursuitGenAll :: Maybe FilePath -> IO ()
+pursuitGenAll output = do
+  entries <- generateAllData
+  let json = entriesToJson entries
+  case output of
+    Just path -> mkdirp path >> TL.writeFile path json
+    Nothing -> TL.putStrLn json
+  exitSuccess
+
+generateAllData :: IO [PursuitEntry]
+generateAllData = do
+  currentDir <- getCurrentDirectory
+  let baseDir = currentDir </> workingDir
+
+  entries <- forM libraries $ \lib -> do
+    let dir = baseDir </> libraryDirFor lib
+    gitClone (libraryGitUrl lib) dir
+    libraryEntries (libraryBowerName lib) dir
+  return $ concat entries
+
+workingDir :: String
+workingDir = "./tmp/"
+
+libraryDirFor :: Library -> FilePath
+libraryDirFor lib =
+  fromMaybe (last $ splitOn "/" $ libraryGitUrl lib) (libraryBowerName lib)
+
+-- Clone the specified repository into the specified directory.
+gitClone :: GitUrl -> FilePath -> IO ()
+gitClone url dir = do
+  callProcess "git" ["clone", url, dir]
+
+libraryEntries :: Maybe String -> FilePath -> IO [PursuitEntry]
+libraryEntries _ dir = do
+  files <- glob $ dir </> "src/**/*.purs"
+  ms <- mapM parseFile files
+  return $ modulesToEntries (concat ms)
+
+modulesToEntries :: [P.Module] -> [PursuitEntry]
+modulesToEntries = concatMap entriesForModule
+
+entriesToJson :: [PursuitEntry] -> TL.Text
+entriesToJson = TL.toLazyText . A.encodeToTextBuilder . A.toJSON
 
 pursuitGen :: [FilePath] -> Maybe FilePath -> IO ()
 pursuitGen input output = do
@@ -81,8 +133,7 @@ mkdirp :: FilePath -> IO ()
 mkdirp = createDirectoryIfMissing True . takeDirectory
 
 modulesToJson :: [P.Module] -> TL.Text
-modulesToJson =
-  TL.toLazyText . A.encodeToTextBuilder . A.toJSON . concatMap entriesForModule
+modulesToJson = entriesToJson . modulesToEntries
 
 entriesForModule :: P.Module -> [PursuitEntry]
 entriesForModule (P.Module mn ds _) = concatMap (entriesForDeclaration mn) ds
@@ -136,7 +187,8 @@ outputFile :: Term (Maybe FilePath)
 outputFile = value $ opt Nothing $ (optInfo [ "o", "output" ]) { optDoc = "The output .json file" }
 
 term :: Term (IO ())
-term = pursuitGen <$> inputFiles <*> outputFile
+term = pursuitGenAll <$> outputFile
+--term = pursuitGen <$> inputFiles <*> outputFile
 
 termInfo :: TermInfo
 termInfo = defTI
