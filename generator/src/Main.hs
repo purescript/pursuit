@@ -26,7 +26,8 @@ import Control.Monad
 import System.Console.CmdTheLine
 import System.Exit (exitSuccess, exitFailure)
 import System.IO (stderr)
-import System.Directory (createDirectoryIfMissing, getCurrentDirectory)
+import System.Directory (createDirectoryIfMissing, getCurrentDirectory,
+                         doesDirectoryExist, removeDirectoryRecursive)
 import System.FilePath (takeDirectory, (</>))
 import System.Process (callProcess)
 import System.FilePath.Glob (glob)
@@ -99,6 +100,10 @@ libraryDirFor lib =
 -- Clone the specified repository into the specified directory.
 gitClone :: GitUrl -> FilePath -> IO ()
 gitClone url dir = do
+  exists <- doesDirectoryExist dir
+  when exists $
+    removeDirectoryRecursive dir
+
   callProcess "git" ["clone", url, dir]
 
 libraryEntries :: Maybe String -> FilePath -> IO [PursuitEntry]
