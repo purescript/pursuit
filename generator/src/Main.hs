@@ -32,6 +32,8 @@ import System.FilePath (takeDirectory, (</>))
 import System.Process (readProcessWithExitCode)
 import System.FilePath.Glob (glob)
 
+import qualified Data.ByteString as B
+
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 
@@ -46,7 +48,16 @@ import qualified Data.Aeson.Encode as A
 import qualified Language.PureScript as P
 import qualified Paths_pursuit_gen as Paths
 
-import Libraries
+type GitUrl = String
+data Library = Library { libraryGitUrl :: GitUrl
+                       , libraryBowerName :: Maybe String
+                       }
+
+instance A.FromJSON Library where
+  parseJSON (A.Object o) =
+    Library <$> o .: "gitUrl"
+            <*> o .:? "bowerName"
+  parseJSON val = fail $ "couldn't parse " ++ show val ++ " as Library"
 
 data PursuitEntry =
   PursuitEntry { entryName        :: String
@@ -72,20 +83,21 @@ instance A.ToJSON PursuitEntry where
             , "detail" .= detail
             ] ++ maybe [] (\x -> [ "packageName" .= x ]) mPkgName
 
-pursuitGenAll :: Maybe FilePath -> IO ()
-pursuitGenAll output = do
-  entries <- generateAllData
+pursuitGenAll :: FilePath -> Maybe FilePath -> IO ()
+pursuitGenAll librariesFile output = do
+  entries <- generateAllData librariesFile
   let json = entriesToJson entries
   case output of
     Just path -> mkdirp path >> TL.writeFile path json
     Nothing -> TL.putStrLn json
   exitSuccess
 
-generateAllData :: IO [PursuitEntry]
-generateAllData = do
+generateAllData :: FilePath -> IO [PursuitEntry]
+generateAllData file = do
   currentDir <- getCurrentDirectory
   let baseDir = currentDir </> workingDir
 
+  libraries <- parseLibrariesFile file
   entries <- forM libraries $ \lib -> do
     let dir = baseDir </> libraryDirFor lib
     gitClone (libraryGitUrl lib) dir
@@ -97,6 +109,15 @@ generateAllData = do
 
 workingDir :: String
 workingDir = "./tmp/"
+
+parseLibrariesFile :: FilePath -> IO [Library]
+parseLibrariesFile file = do
+  json <- B.readFile file
+  case A.eitherDecodeStrict json of
+    Right libs -> return libs
+    Left err -> do
+      T.hPutStrLn stderr (T.pack err)
+      exitFailure
 
 libraryDirFor :: Library -> FilePath
 libraryDirFor lib =
@@ -217,11 +238,14 @@ prettyPrintType' = P.prettyPrintType . P.everywhereOnTypes dePrim
 inputFiles :: Term [FilePath]
 inputFiles = value $ posAny [] $ posInfo { posName = "file(s)", posDoc = "The input .purs file(s)" }
 
+inputFile :: Term FilePath
+inputFile = required $ pos 0 Nothing $ posInfo { posName = "file", posDoc = "The input .json library list file" }
+
 outputFile :: Term (Maybe FilePath)
 outputFile = value $ opt Nothing $ (optInfo [ "o", "output" ]) { optDoc = "The output .json file" }
 
 term :: Term (IO ())
-term = pursuitGenAll <$> outputFile
+term = pursuitGenAll <$> inputFile <*> outputFile
 --term = pursuitGen <$> inputFiles <*> outputFile
 
 termInfo :: TermInfo
