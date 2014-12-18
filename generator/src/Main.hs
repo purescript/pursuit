@@ -19,6 +19,7 @@ import Data.List
 import Data.Ord
 import Data.List.Split (splitOn)
 import Data.Maybe
+import Data.Monoid
 import Data.Version (showVersion, parseVersion, Version)
 import Text.ParserCombinators.ReadP (readP_to_S)
 
@@ -36,6 +37,7 @@ import System.Process (readProcessWithExitCode)
 import System.FilePath.Glob (glob)
 
 import qualified Data.ByteString as B
+import qualified Data.Map as M
 
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
@@ -52,6 +54,8 @@ import qualified Language.PureScript as P
 import qualified Paths_pursuit_gen as Paths
 
 type GitUrl = String
+
+-- The structure of one entry in the input libraries.json file.
 data Library = Library { libraryGitUrl :: GitUrl
                        , libraryBowerName :: Maybe String
                        }
@@ -62,12 +66,24 @@ instance A.FromJSON Library where
             <*> o .:? "bowerName"
   parseJSON val = fail $ "couldn't parse " ++ show val ++ " as Library"
 
+-- The data associated with a named library in the output.
+data LibraryInfo = LibraryInfo { infoVersion :: String }
+
+instance A.FromJSON LibraryInfo where
+  parseJSON (A.Object o) =
+    LibraryInfo <$> o .: "version"
+  parseJSON val = fail $ "couldn't parse " ++ show val ++ " as LibraryInfo"
+
+instance A.ToJSON LibraryInfo where
+  toJSON (LibraryInfo vers) =
+    A.object [ "version" .= vers
+             ]
+
 data PursuitEntry =
   PursuitEntry { entryName           :: String
                , entryModule         :: String
                , entryDetail         :: String
-               , entryPackageName    :: Maybe String
-               , entryPackageVersion :: Maybe String
+               , entryLibraryName    :: Maybe String
                }
                deriving (Show, Eq)
 
@@ -76,18 +92,36 @@ instance A.FromJSON PursuitEntry where
     PursuitEntry <$> o .: "name"
                  <*> o .: "module"
                  <*> o .: "detail"
-                 <*> o .:? "packageName"
-                 <*> o .:? "packageVersion"
+                 <*> o .:? "library"
   parseJSON val = fail $ "couldn't parse " ++ show val ++ " as PursuitEntry"
 
 instance A.ToJSON PursuitEntry where
-  toJSON (PursuitEntry name mdl detail mPkgName mPkgVersion) = A.object pairs
+  toJSON (PursuitEntry name mdl detail mLibName) = A.object pairs
     where
     pairs = [ "name"   .= name
             , "module" .= mdl
             , "detail" .= detail
-            ] ++ maybe [] (\x -> [ "packageName" .= x ]) mPkgName
-              ++ maybe [] (\x -> [ "packageVersion" .= x ]) mPkgVersion
+            ] ++ maybe [] (\x -> [ "library" .= x ]) mLibName
+
+data PursuitDatabase =
+  PursuitDatabase (M.Map String LibraryInfo) [PursuitEntry]
+
+instance A.FromJSON PursuitDatabase where
+  parseJSON (A.Object o) =
+    PursuitDatabase <$> o .: "libraries" <*> o .: "entries"
+  parseJSON val = fail $ "couldn't parse " ++ show val ++ " as PursuitDatabase"
+
+instance A.ToJSON PursuitDatabase where
+  toJSON (PursuitDatabase libs entries) = A.object pairs
+    where
+    pairs = [ "libraries" .= libs
+            , "entries" .= entries
+            ]
+
+instance Monoid PursuitDatabase where
+  mempty = PursuitDatabase mempty mempty
+  mappend (PursuitDatabase aLibs aEntries) (PursuitDatabase bLibs bEntries) =
+    PursuitDatabase (aLibs <> bLibs) (aEntries <> bEntries)
 
 
 p :: String -> IO ()
@@ -96,7 +130,7 @@ p = T.hPutStrLn stderr . T.pack
 pursuitGenAll :: Maybe FilePath -> IO ()
 pursuitGenAll output = do
   entries <- generateAllData
-  let json = entriesToJson entries
+  let json = databaseToJson entries
   case output of
     Just path -> mkdirp path >> TL.writeFile path json
     Nothing -> TL.putStrLn json
@@ -107,12 +141,12 @@ getBaseDir = do
   currentDir <- getCurrentDirectory
   return $ currentDir </> workingDir
 
-generateAllData :: IO [PursuitEntry]
+generateAllData :: IO PursuitDatabase
 generateAllData = do
   baseDir <- getBaseDir
   libraries <- getLibraries
 
-  entries <- forM libraries $ \lib -> do
+  dbs <- forM libraries $ \lib -> do
     let name = libraryName lib
     let dir = baseDir </> name
     gitClone (libraryGitUrl lib) dir
@@ -125,11 +159,12 @@ generateAllData = do
         let vers = dropWhile (== 'v') vers'
         p $ "selected " ++ name ++ ": " ++ vers
         gitCheckoutTag vers' dir
-        libraryEntries (libraryBowerName lib) (Just vers) dir
+        let info = LibraryInfo vers
+        buildLibraryDb (libraryBowerName lib) (Just info) dir
 
-  preludeEntries <- getPreludeEntries
+  preludeDb <- buildPreludeDb
 
-  return $ preludeEntries ++ concat entries
+  return $ preludeDb <> mconcat dbs
 
 workingDir :: String
 workingDir = "./tmp/"
@@ -203,23 +238,38 @@ runCommandQuiet :: FilePath -> [String] -> IO ()
 runCommandQuiet program args =
   void $ runCommand program args
 
-libraryEntries :: Maybe String -> Maybe String -> FilePath -> IO [PursuitEntry]
-libraryEntries mPkgName mPkgVersion dir = do
+-- Build a subset of the full database for a single library, which may or may
+-- not have a name or associated information. In all cases, the exported types
+-- and values appear in the database. If both a library name and additional
+-- library information are supplied, then those appear in the database too.
+buildLibraryDb ::
+  Maybe String -> Maybe LibraryInfo -> FilePath -> IO PursuitDatabase
+buildLibraryDb mLibName mInfo dir = do
+  entries' <- entriesFromDir dir
+
+  let entries = map (\e -> e { entryPackageName = mLibName }) entries'
+  let lib = M.singleton <$> mLibName <*> mInfo
+
+  return $ PursuitDatabase (fromMaybe mempty lib) entries
+
+entriesFromDir :: FilePath -> IO [PursuitEntry]
+entriesFromDir dir = do
   files <- glob $ dir </> "src/**/*.purs"
   ms <- mapM parseFile files
-  let entries = modulesToEntries (concat ms)
-  return $ map (\e -> e { entryPackageName = mPkgName
-                        , entryPackageVersion = mPkgVersion }) entries
+  return $ modulesToEntries (concat ms)
+
+buildPreludeDb :: IO PursuitDatabase
+buildPreludeDb = do
+  entries <- modulesToEntries <$> parseText "<<Prelude>>" (T.pack P.prelude)
+  let preludeInfo = LibraryInfo (showVersion Paths.version)
+  let lib = M.singleton "PureScript" preludeInfo
+  return $ PursuitDatabase lib entries
 
 modulesToEntries :: [P.Module] -> [PursuitEntry]
 modulesToEntries = concatMap entriesForModule
 
-entriesToJson :: [PursuitEntry] -> TL.Text
-entriesToJson = TL.toLazyText . A.encodeToTextBuilder . A.toJSON
-
-getPreludeEntries :: IO [PursuitEntry]
-getPreludeEntries =
-  modulesToEntries <$> parseText "<<Prelude>>" (T.pack P.prelude)
+databaseToJson :: PursuitDatabase -> TL.Text
+databaseToJson = TL.toLazyText . A.encodeToTextBuilder . A.toJSON
 
 pursuitGen :: [FilePath] -> Maybe FilePath -> IO ()
 pursuitGen input output = do
@@ -250,11 +300,14 @@ mkdirp = createDirectoryIfMissing True . takeDirectory
 modulesToJson :: [P.Module] -> TL.Text
 modulesToJson = entriesToJson . modulesToEntries
 
+entriesToJson :: [PursuitEntry] -> TL.Text
+entriesToJson = TL.toLazyText . A.encodeToTextBuilder . A.toJSON
+
 entriesForModule :: P.Module -> [PursuitEntry]
 entriesForModule (P.Module mn ds _) = concatMap (entriesForDeclaration mn) ds
 
 entry :: P.ModuleName -> String -> String -> PursuitEntry
-entry mn name detail = PursuitEntry name (show mn) detail Nothing Nothing
+entry mn name detail = PursuitEntry name (show mn) detail Nothing
 
 entriesForDeclaration :: P.ModuleName -> P.Declaration -> [PursuitEntry]
 entriesForDeclaration mn (P.TypeDeclaration ident ty) =
