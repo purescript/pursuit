@@ -119,8 +119,8 @@ generateAllData = do
     mVers <- getMostRecentTaggedVersion dir
     case mVers of
       Nothing -> do
-        p $ "warning: no suitable tags found for " ++ name
-        return []
+        p $ "error: no suitable tags found for " ++ name
+        exitFailure
       Just vers' -> do
         let vers = dropWhile (== 'v') vers'
         p $ "selected " ++ name ++ ": " ++ vers
