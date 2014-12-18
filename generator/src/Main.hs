@@ -247,7 +247,7 @@ buildLibraryDb ::
 buildLibraryDb mLibName mInfo dir = do
   entries' <- entriesFromDir dir
 
-  let entries = map (\e -> e { entryPackageName = mLibName }) entries'
+  let entries = map (\e -> e { entryLibraryName = mLibName }) entries'
   let lib = M.singleton <$> mLibName <*> mInfo
 
   return $ PursuitDatabase (fromMaybe mempty lib) entries
