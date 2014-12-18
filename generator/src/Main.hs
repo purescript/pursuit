@@ -16,9 +16,11 @@
 module Main where
 
 import Data.List
+import Data.Ord
 import Data.List.Split (splitOn)
 import Data.Maybe
-import Data.Version (showVersion)
+import Data.Version (showVersion, parseVersion, Version)
+import Text.ParserCombinators.ReadP (readP_to_S)
 
 import Control.Applicative
 import Control.Monad
@@ -27,7 +29,8 @@ import System.Console.CmdTheLine
 import System.Exit (exitSuccess, exitFailure, ExitCode(..))
 import System.IO (stderr)
 import System.Directory (createDirectoryIfMissing, getCurrentDirectory,
-                         doesDirectoryExist, removeDirectoryRecursive)
+                         setCurrentDirectory, doesDirectoryExist,
+                         removeDirectoryRecursive)
 import System.FilePath (takeDirectory, (</>))
 import System.Process (readProcessWithExitCode)
 import System.FilePath.Glob (glob)
@@ -83,6 +86,10 @@ instance A.ToJSON PursuitEntry where
             , "detail" .= detail
             ] ++ maybe [] (\x -> [ "packageName" .= x ]) mPkgName
 
+
+p :: String -> IO ()
+p = T.hPutStrLn stderr . T.pack
+
 pursuitGenAll :: Maybe FilePath -> IO ()
 pursuitGenAll output = do
   entries <- generateAllData
@@ -103,9 +110,18 @@ generateAllData = do
   libraries <- getLibraries
 
   entries <- forM libraries $ \lib -> do
-    let dir = baseDir </> libraryDirFor lib
+    let name = libraryName lib
+    let dir = baseDir </> name
     gitClone (libraryGitUrl lib) dir
-    libraryEntries (libraryBowerName lib) dir
+    mVers <- getMostRecentTaggedVersion dir
+    case mVers of
+      Nothing -> do
+        p $ "warning: no suitable tags found for " ++ name
+        return []
+      Just vers -> do
+        p $ "selected " ++ name ++ ": " ++ vers
+        gitCheckoutTag vers dir
+        libraryEntries (libraryBowerName lib) dir
 
   preludeEntries <- getPreludeEntries
 
@@ -123,8 +139,8 @@ getLibraries = do
       T.hPutStrLn stderr (T.pack err)
       exitFailure
 
-libraryDirFor :: Library -> FilePath
-libraryDirFor lib =
+libraryName :: Library -> String
+libraryName lib =
   fromMaybe (last $ splitOn "/" $ libraryGitUrl lib) (libraryBowerName lib)
 
 -- Clone the specified repository into the specified directory.
@@ -134,19 +150,54 @@ gitClone url dir = do
   when exists $
     removeDirectoryRecursive dir
 
-  callProcessQuiet "git" ["clone", url, dir]
+  p $ "cloning: " ++ url
+  runCommandQuiet "git" ["clone", url, dir]
 
--- Call a process. If it exits with 0, swallow all output. If it exits nonzero,
--- print all of its output to stderr and exit nonzero.
-callProcessQuiet :: FilePath -> [String] -> IO ()
-callProcessQuiet program args = do
+gitCheckoutTag :: String -> FilePath -> IO ()
+gitCheckoutTag tag gitDir = do
+  pushd gitDir $ do
+    runCommandQuiet "git" ["checkout", tag]
+
+getMostRecentTaggedVersion :: FilePath -> IO (Maybe String)
+getMostRecentTaggedVersion gitDir = do
+  pushd gitDir $ do
+    (out, _) <- runCommand "git" ["tag", "--list"]
+    let versions = mapMaybe parseVersion' $ lines out
+    let vers = listToMaybe $ reversedSort versions
+    return $ fmap snd vers
+
+pushd :: FilePath -> IO a -> IO a
+pushd dir action = do
+  oldDir <- getCurrentDirectory
+  setCurrentDirectory dir
+  result <- action
+  setCurrentDirectory oldDir
+  return result
+
+parseVersion' :: String -> Maybe (Version, String)
+parseVersion' ('v':xs) = fmap prependV $ parseVersion' xs
+  where prependV (vers, str) = (vers, 'v' : str)
+parseVersion' str =
+  case filter (null . snd) $ readP_to_S parseVersion str of
+    [(vers, "")] -> Just (vers, str)
+    _ -> Nothing
+
+reversedSort :: Ord a => [a] -> [a]
+reversedSort = sortBy (comparing Down)
+
+runCommand :: FilePath -> [String] -> IO (String, String)
+runCommand program args = do
   (code, out, err) <- readProcessWithExitCode program args ""
   case code of
-    ExitSuccess -> return ()
+    ExitSuccess -> return (out, err)
     ExitFailure _ -> do
       T.hPutStr stderr (T.pack out)
       T.hPutStr stderr (T.pack err)
       exitFailure
+
+runCommandQuiet :: FilePath -> [String] -> IO ()
+runCommandQuiet program args =
+  void $ runCommand program args
 
 libraryEntries :: Maybe String -> FilePath -> IO [PursuitEntry]
 libraryEntries pkgName dir = do
