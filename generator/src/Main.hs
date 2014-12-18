@@ -83,21 +83,25 @@ instance A.ToJSON PursuitEntry where
             , "detail" .= detail
             ] ++ maybe [] (\x -> [ "packageName" .= x ]) mPkgName
 
-pursuitGenAll :: FilePath -> Maybe FilePath -> IO ()
-pursuitGenAll librariesFile output = do
-  entries <- generateAllData librariesFile
+pursuitGenAll :: Maybe FilePath -> IO ()
+pursuitGenAll output = do
+  entries <- generateAllData
   let json = entriesToJson entries
   case output of
     Just path -> mkdirp path >> TL.writeFile path json
     Nothing -> TL.putStrLn json
   exitSuccess
 
-generateAllData :: FilePath -> IO [PursuitEntry]
-generateAllData file = do
+getBaseDir :: IO FilePath
+getBaseDir = do
   currentDir <- getCurrentDirectory
-  let baseDir = currentDir </> workingDir
+  return $ currentDir </> workingDir
 
-  libraries <- parseLibrariesFile file
+generateAllData :: IO [PursuitEntry]
+generateAllData = do
+  baseDir <- getBaseDir
+  libraries <- getLibraries
+
   entries <- forM libraries $ \lib -> do
     let dir = baseDir </> libraryDirFor lib
     gitClone (libraryGitUrl lib) dir
@@ -110,9 +114,9 @@ generateAllData file = do
 workingDir :: String
 workingDir = "./tmp/"
 
-parseLibrariesFile :: FilePath -> IO [Library]
-parseLibrariesFile file = do
-  json <- B.readFile file
+getLibraries :: IO [Library]
+getLibraries = do
+  json <- B.getContents
   case A.eitherDecodeStrict json of
     Right libs -> return libs
     Left err -> do
@@ -238,14 +242,11 @@ prettyPrintType' = P.prettyPrintType . P.everywhereOnTypes dePrim
 inputFiles :: Term [FilePath]
 inputFiles = value $ posAny [] $ posInfo { posName = "file(s)", posDoc = "The input .purs file(s)" }
 
-inputFile :: Term FilePath
-inputFile = required $ pos 0 Nothing $ posInfo { posName = "file", posDoc = "The input .json library list file" }
-
 outputFile :: Term (Maybe FilePath)
 outputFile = value $ opt Nothing $ (optInfo [ "o", "output" ]) { optDoc = "The output .json file" }
 
 term :: Term (IO ())
-term = pursuitGenAll <$> inputFile <*> outputFile
+term = pursuitGenAll <$> outputFile
 --term = pursuitGen <$> inputFiles <*> outputFile
 
 termInfo :: TermInfo
