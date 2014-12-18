@@ -11,8 +11,8 @@ getting your library included
 * Send a pull request modifying `generator/libraries.json`, with a new object
   for your library. The object should include:
   * `gitUrl`: the git URL where your code can be cloned from,
-  * `bowerName`: the name that your library has on the bower registry.
+  * `bowerName`: the name that your library has on the Bower registry.
 
 The Pursuit data is rebuilt daily by an automated job, so your library should
-appear on Pursuit within 24 hours. Any subsequent releases will automatically
-be shown on Pursuit, as long as you remember to `git tag` them.
+appear within 24 hours. Any subsequent releases will automatically be shown on
+Pursuit, as long as you remember to `git tag` them.
