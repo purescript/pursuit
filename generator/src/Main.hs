@@ -63,10 +63,11 @@ instance A.FromJSON Library where
   parseJSON val = fail $ "couldn't parse " ++ show val ++ " as Library"
 
 data PursuitEntry =
-  PursuitEntry { entryName        :: String
-               , entryModule      :: String
-               , entryDetail      :: String
-               , entryPackageName :: Maybe String
+  PursuitEntry { entryName           :: String
+               , entryModule         :: String
+               , entryDetail         :: String
+               , entryPackageName    :: Maybe String
+               , entryPackageVersion :: Maybe String
                }
                deriving (Show, Eq)
 
@@ -76,15 +77,17 @@ instance A.FromJSON PursuitEntry where
                  <*> o .: "module"
                  <*> o .: "detail"
                  <*> o .:? "packageName"
+                 <*> o .:? "packageVersion"
   parseJSON val = fail $ "couldn't parse " ++ show val ++ " as PursuitEntry"
 
 instance A.ToJSON PursuitEntry where
-  toJSON (PursuitEntry name mdl detail mPkgName) = A.object pairs
+  toJSON (PursuitEntry name mdl detail mPkgName mPkgVersion) = A.object pairs
     where
     pairs = [ "name"   .= name
             , "module" .= mdl
             , "detail" .= detail
             ] ++ maybe [] (\x -> [ "packageName" .= x ]) mPkgName
+              ++ maybe [] (\x -> [ "packageVersion" .= x ]) mPkgVersion
 
 
 p :: String -> IO ()
@@ -118,10 +121,11 @@ generateAllData = do
       Nothing -> do
         p $ "warning: no suitable tags found for " ++ name
         return []
-      Just vers -> do
+      Just vers' -> do
+        let vers = dropWhile (== 'v') vers'
         p $ "selected " ++ name ++ ": " ++ vers
-        gitCheckoutTag vers dir
-        libraryEntries (libraryBowerName lib) dir
+        gitCheckoutTag vers' dir
+        libraryEntries (libraryBowerName lib) (Just vers) dir
 
   preludeEntries <- getPreludeEntries
 
@@ -199,12 +203,13 @@ runCommandQuiet :: FilePath -> [String] -> IO ()
 runCommandQuiet program args =
   void $ runCommand program args
 
-libraryEntries :: Maybe String -> FilePath -> IO [PursuitEntry]
-libraryEntries pkgName dir = do
+libraryEntries :: Maybe String -> Maybe String -> FilePath -> IO [PursuitEntry]
+libraryEntries mPkgName mPkgVersion dir = do
   files <- glob $ dir </> "src/**/*.purs"
   ms <- mapM parseFile files
   let entries = modulesToEntries (concat ms)
-  return $ map (\e -> e { entryPackageName = pkgName }) entries
+  return $ map (\e -> e { entryPackageName = mPkgName
+                        , entryPackageVersion = mPkgVersion }) entries
 
 modulesToEntries :: [P.Module] -> [PursuitEntry]
 modulesToEntries = concatMap entriesForModule
@@ -249,7 +254,7 @@ entriesForModule :: P.Module -> [PursuitEntry]
 entriesForModule (P.Module mn ds _) = concatMap (entriesForDeclaration mn) ds
 
 entry :: P.ModuleName -> String -> String -> PursuitEntry
-entry mn name detail = PursuitEntry name (show mn) detail Nothing
+entry mn name detail = PursuitEntry name (show mn) detail Nothing Nothing
 
 entriesForDeclaration :: P.ModuleName -> P.Declaration -> [PursuitEntry]
 entriesForDeclaration mn (P.TypeDeclaration ident ty) =
