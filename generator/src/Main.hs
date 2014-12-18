@@ -271,15 +271,6 @@ modulesToEntries = concatMap entriesForModule
 databaseToJson :: PursuitDatabase -> TL.Text
 databaseToJson = TL.toLazyText . A.encodeToTextBuilder . A.toJSON
 
-pursuitGen :: [FilePath] -> Maybe FilePath -> IO ()
-pursuitGen input output = do
-  ms <- mapM parseFile (nub input)
-  let json = modulesToJson (concat ms)
-  case output of
-    Just path -> mkdirp path >> TL.writeFile path json
-    Nothing -> TL.putStrLn json
-  exitSuccess
-
 parseFile :: FilePath -> IO [P.Module]
 parseFile input = do
   text <- T.readFile input
@@ -296,9 +287,6 @@ parseText input text = do
 
 mkdirp :: FilePath -> IO ()
 mkdirp = createDirectoryIfMissing True . takeDirectory
-
-modulesToJson :: [P.Module] -> TL.Text
-modulesToJson = entriesToJson . modulesToEntries
 
 entriesToJson :: [PursuitEntry] -> TL.Text
 entriesToJson = TL.toLazyText . A.encodeToTextBuilder . A.toJSON
@@ -348,15 +336,11 @@ prettyPrintType' = P.prettyPrintType . P.everywhereOnTypes dePrim
       P.TypeConstructor $ P.Qualified Nothing name
   dePrim other = other
 
-inputFiles :: Term [FilePath]
-inputFiles = value $ posAny [] $ posInfo { posName = "file(s)", posDoc = "The input .purs file(s)" }
-
 outputFile :: Term (Maybe FilePath)
 outputFile = value $ opt Nothing $ (optInfo [ "o", "output" ]) { optDoc = "The output .json file" }
 
 term :: Term (IO ())
 term = pursuitGenAll <$> outputFile
---term = pursuitGen <$> inputFiles <*> outputFile
 
 termInfo :: TermInfo
 termInfo = defTI
