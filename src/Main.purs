@@ -23,6 +23,11 @@ instance isForeignEntry :: IsForeign Entry where
                      <*> readProp "name"   entry
                      <*> readProp "detail" entry
 
+data Database = Database [Entry]
+
+instance isForeignDatabase :: IsForeign Database where
+  read db = Database <$> readProp "entries" db
+
 getQuery :: forall eff. Eff (dom :: DOM | eff) String
 getQuery = do
   Just searchInput <- querySelector "#searchInput"
@@ -72,9 +77,9 @@ foreign import error
   \}":: forall a. String -> a
 
 buildTrie :: String -> T.Trie Entry
-buildTrie json = case parseJSON json >>= readArray >>= traverse read of
+buildTrie json = case parseJSON json >>= read of
   Left err -> error $ show err
-  Right arr -> foldl (\t (e@(Entry _ name _)) -> T.insert (S.toLower name) e t) T.empty (arr :: [Entry])
+  Right (Database entries) -> foldl (\t (e@(Entry _ name _)) -> T.insert (S.toLower name) e t) T.empty (entries :: [Entry])
 
 baseUrl :: forall eff. Eff (dom :: DOM | eff) String
 baseUrl = do
