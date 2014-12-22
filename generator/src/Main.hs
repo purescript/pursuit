@@ -292,41 +292,44 @@ entriesToJson :: [PursuitEntry] -> TL.Text
 entriesToJson = TL.toLazyText . A.encodeToTextBuilder . A.toJSON
 
 entriesForModule :: P.Module -> [PursuitEntry]
-entriesForModule (P.Module mn ds _) = concatMap (entriesForDeclaration mn) ds
+entriesForModule m@(P.Module mn _ exps) = concatMap (entriesForDeclaration exportedCtorsFor mn) (P.exportedDeclarations m)
+  where
+  exportedCtorsFor = P.exportedDctors m
 
 entry :: P.ModuleName -> String -> String -> PursuitEntry
 entry mn name detail = PursuitEntry name (show mn) detail Nothing
 
-entriesForDeclaration :: P.ModuleName -> P.Declaration -> [PursuitEntry]
-entriesForDeclaration mn (P.TypeDeclaration ident ty) =
+entriesForDeclaration :: (P.ProperName -> [P.ProperName]) -> P.ModuleName -> P.Declaration -> [PursuitEntry]
+entriesForDeclaration _ mn (P.TypeDeclaration ident ty) =
   [entry mn (show ident) $ show ident ++ " :: " ++ prettyPrintType' ty]
-entriesForDeclaration mn (P.ExternDeclaration _ ident _ ty) =
+entriesForDeclaration _ mn (P.ExternDeclaration _ ident _ ty) =
   [entry mn (show ident) $ show ident ++ " :: " ++ prettyPrintType' ty]
-entriesForDeclaration mn (P.DataDeclaration dtype name args ctors) =
-  let typeName = P.runProperName name ++ (if null args then "" else " " ++ unwords (map fst args))
+entriesForDeclaration exportedCtorsFor mn (P.DataDeclaration dtype name args _) =
+  let ctors = exportedCtorsFor name
+      typeName = P.runProperName name ++ (if null args then "" else " " ++ unwords (map fst args))
       detail = show dtype ++ " " ++ typeName ++ (if null ctors then "" else " = ") ++
         intercalate " | " (map (\(ctor, tys) ->
           intercalate " " (P.runProperName ctor : map P.prettyPrintTypeAtom tys)) ctors)
   in entry mn (show name) detail : map (\(ctor, _) -> entry mn (show ctor) detail) ctors
-entriesForDeclaration mn (P.ExternDataDeclaration name kind) =
+entriesForDeclaration _ mn (P.ExternDataDeclaration name kind) =
   [entry mn (show name) $ "data " ++ P.runProperName name ++ " :: " ++ P.prettyPrintKind kind]
 entriesForDeclaration mn (P.TypeSynonymDeclaration name args ty) =
   let typeName = P.runProperName name ++ " " ++ unwords (map fst args)
   in [entry mn (show name) $ "type " ++ typeName ++ " = " ++ prettyPrintType' ty]
-entriesForDeclaration mn (P.TypeClassDeclaration name args implies ds) =
+entriesForDeclaration _ mn (P.TypeClassDeclaration name args implies ds) =
   let impliesText = case implies of
                       [] -> ""
                       is -> "(" ++ intercalate ", " (map (\(pn, tys') -> show pn ++ " " ++ unwords (map P.prettyPrintTypeAtom tys')) is) ++ ") <= "
       detail = "class " ++ impliesText ++ P.runProperName name ++ " " ++ unwords (map fst args) ++ " where"
   in entry mn (show name) detail : concatMap (entriesForDeclaration mn) ds
-entriesForDeclaration mn (P.TypeInstanceDeclaration name constraints className tys _) = do
+entriesForDeclaration _ mn (P.TypeInstanceDeclaration name constraints className tys _) = do
   let constraintsText = case constraints of
                           [] -> ""
                           cs -> "(" ++ intercalate ", " (map (\(pn, tys') -> show pn ++ " " ++ unwords (map P.prettyPrintTypeAtom tys')) cs) ++ ") => "
   [entry mn (show name) $ "instance " ++ show name ++ " :: " ++ constraintsText ++ show className ++ " " ++ unwords (map P.prettyPrintTypeAtom tys)]
-entriesForDeclaration mn (P.PositionedDeclaration _ d) =
+entriesForDeclaration _ mn (P.PositionedDeclaration _ d) =
   entriesForDeclaration mn d
-entriesForDeclaration _ _ = []
+entriesForDeclaration _ _ _ = []
 
 prettyPrintType' :: P.Type -> String
 prettyPrintType' = P.prettyPrintType . P.everywhereOnTypes dePrim
