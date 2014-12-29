@@ -18,7 +18,7 @@
     "test"
   ],
   "dependencies": {
-    "purescript-thermite": "~0.4.0",
+    "purescript-thermite": "~0.4.1",
     "purescript-foreign": "~0.2.3"
   },
   "version": "0.0.0",

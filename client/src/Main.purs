@@ -72,13 +72,14 @@ render ctx s _ = container [ T.h1' [ T.text "PURSuit" ]
 
 performAction :: T.PerformAction _ Action (T.Action _ State) 
 performAction _ (Search q) = do
+  T.sync $ updateHistorySearch q  
+  
   let uri = "/search?q=" <> q
-  T.asyncSetState \k -> do
-    updateHistorySearch q
-    get uri \json -> 
-      case parseJSON json >>= read of
-        Left _ -> return unit
-        Right results -> k { results: results }
+  json <- T.async $ get uri
+  
+  case parseJSON json >>= read of
+    Left _ -> return unit
+    Right results -> T.setState { results: results }
         
 baseUrl :: forall eff. Eff (history :: History | eff) String
 baseUrl = do
