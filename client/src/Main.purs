@@ -10,11 +10,16 @@ import Data.Foldable
 import Data.Traversable
 
 import Control.Monad.Eff
-import Control.Monad.Eff.DOM
 import Control.Monad.Eff.AJAX
+import Control.Monad.Eff.History
 
-import qualified Data.String as S
-import qualified Data.Trie as T
+import qualified Thermite as T
+import qualified Thermite.Html as T
+import qualified Thermite.Html.Elements as T
+import qualified Thermite.Html.Attributes as A
+import qualified Thermite.Action as T
+import qualified Thermite.Events as T
+import qualified Thermite.Types as T
 
 data Entry = Entry String String String
 
@@ -22,92 +27,77 @@ instance isForeignEntry :: IsForeign Entry where
   read entry = Entry <$> readProp "module" entry
                      <*> readProp "name"   entry
                      <*> readProp "detail" entry
+  
+data Action = Search String
 
-data Database = Database [Entry]
+type State = { results :: [Entry] }
 
-instance isForeignDatabase :: IsForeign Database where
-  read db = Database <$> readProp "entries" db
+initialState :: State
+initialState = { results: [] }  
+      
+foreign import getValue 
+  "function getValue(e) {\
+  \  return e.target.value;\
+  \}" :: T.FormEvent -> String
+      
+handleOnChangeEvent :: T.FormEvent -> Action
+handleOnChangeEvent = Search <<< getValue
+        
+render :: T.Render State _ Action
+render ctx s _ = container [ T.h1' [ T.text "PURSuit" ]
+                           , well [ T.input [ A._type "search"
+                                            , A.className "form-control"
+                                            , A.placeholder "Search..."
+                                            -- , A.autofocus "autofocus"
+                                            , T.onChange ctx handleOnChangeEvent
+                                            ] []
+                                  ]
+                           , T.div' (searchResult <$> s.results)
+                           , T.div' [ T.a [ A.href "http://github.com/purescript/pursuit" ] [ T.text "Source" ]
+                                    , T.text " | " 
+                                    , T.a [ A.href "http://purescript.org" ] [ T.text "PureScript" ]
+                                    ]
+                           ]
+  where
+  container = T.div [ A.className "container" ]
+  
+  well = T.div [ A.className "well" ]     
+      
+  searchResult :: Entry -> T.Html _
+  searchResult (Entry moduleName name detail) = 
+    T.div' [ T.h2'  [ T.text name ]
+           , T.div' [ T.text moduleName ]
+           , T.pre' [ T.text detail ]
+           ]
 
-getQuery :: forall eff. Eff (dom :: DOM | eff) String
-getQuery = do
-  Just searchInput <- querySelector "#searchInput"
-  query <- getValue searchInput
-
-  return $ case readString query of
-    Right s -> s
-    Left _ -> ""
-
-runSearch :: T.Trie Entry -> String -> Maybe [Tuple String Entry]
-runSearch trie "" = Nothing
-runSearch trie query = T.toArray <$> T.lookupAll (S.toLower query) trie
-
-search :: forall eff. T.Trie Entry -> Eff (dom :: DOM | eff) Unit
-search trie = do
-  query <- getQuery
-
-  maybeEl <- querySelector "#searchResults"
-
-  case maybeEl of
-    Nothing -> error "#searchResults not found"
-    Just searchResults -> do
-      setInnerHTML "" searchResults
-
-      case runSearch trie query of
-        Nothing -> return unit
-        Just results -> do
-          foreachE (take 20 results) $ \(Tuple _ (Entry moduleName name detail)) -> do
-            div <- createElement "div"
-
-            createElement "h2"
-              >>= setText name
-              >>= flip appendChild div
-            createElement "div"
-              >>= setText moduleName
-              >>= flip appendChild div
-            createElement "pre"
-              >>= setText detail
-              >>= flip appendChild div
-
-            div `appendChild` searchResults
-            return unit
-
-foreign import error
-  "function error(msg) {\
-  \  throw new Error(msg);\
-  \}":: forall a. String -> a
-
-buildTrie :: String -> T.Trie Entry
-buildTrie json = case parseJSON json >>= read of
-  Left err -> error $ show err
-  Right (Database entries) -> foldl (\t (e@(Entry _ name _)) -> T.insert (S.toLower name) e t) T.empty (entries :: [Entry])
-
-baseUrl :: forall eff. Eff (dom :: DOM | eff) String
+performAction :: T.PerformAction _ Action (T.Action _ State) 
+performAction _ (Search q) = do
+  let uri = "/search?q=" <> q
+  T.asyncSetState \k -> do
+    updateHistorySearch q
+    get uri \json -> 
+      case parseJSON json >>= read of
+        Left _ -> return unit
+        Right results -> k { results: results }
+        
+baseUrl :: forall eff. Eff (history :: History | eff) String
 baseUrl = do
   protocol <- locationProtocol
-  host <- locationHost
+  host     <- locationHost
   pathname <- locationPathname
   pure $ protocol ++ "//" ++ host ++ pathname
 
-updateHistorySearch :: forall eff. Eff (dom :: DOM | eff) Unit
-updateHistorySearch = do
-  state <- historyState
-  title <- documentTitle
+updateHistorySearch :: forall eff. String -> Eff (history :: History | eff) Unit
+updateHistorySearch query = do
   url <- baseUrl
-  query <- getQuery
-  replaceHistoryState state title $ url ++ "?" ++ query
+  replaceHistoryState {} "PURSuit" $ url ++ "?" ++ query
 
-main :: Eff (dom :: DOM, xhr :: XHR) Unit
+spec :: T.Spec _ State _ Action
+spec = T.Spec { initialState: initialState
+              , performAction: performAction
+              , render: render
+              }
+
 main = do
-  get "data.json" $ \json -> do
-    maybeEl <- querySelector "#searchInput"
-
-    case maybeEl of
-      Nothing -> error "#searchInput not found"
-      Just searchInput -> do
-        let trie = buildTrie json
-        for ["keyup", "change"] $ \evt -> do
-          addEventListener evt (search trie) searchInput
-          addEventListener evt updateHistorySearch searchInput
-        query <- S.drop 1 <$> locationSearch
-        setValue query searchInput
-        search trie
+  let component = T.createClass spec
+  T.render component {}

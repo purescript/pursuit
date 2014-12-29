@@ -3,29 +3,19 @@
   <head>
     <title>PURSuit</title>
     <meta name="viewport" content="width=device-width, user-scalable=no">
-    <link href="http://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" type="text/css">
+    <link href="http://fonts.googleapis.com/css?family=Roboto" rel="stylesheet" type="text/css">
     <link rel="stylesheet" href="css/bootstrap.min.css">
     <style>
-      body {
-        font-family: 'Open Sans', sans-serif;
+      * {
+        font-family: 'Roboto', sans-serif;
       }
     </style>
+    <script src="bower_components/react/react.js"></script>
     <script type="text/javascript" src="dist/Main.js"></script>
     <script type="text/javascript">
       this.onload = PS.Main.main;
     </script>
   </head>
   <body>
-    <div class="container">
-        <h1>PURSuit</h1>
-
-      <div class="well">
-        <input type="search" class="form-control" id="searchInput" placeholder="Search..." autofocus />
-      </div>
-
-      <div id="searchResults"></div>
-
-      <div>&copy; Phil Freeman 2014 | <a href="http://github.com/purescript/pursuit">Source</a> | <a href="http://purescript.org">PureScript</a></div>
-    </div>
   </body>
 </html>
