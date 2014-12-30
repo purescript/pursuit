@@ -44,29 +44,32 @@ handleOnChangeEvent :: T.FormEvent -> Action
 handleOnChangeEvent = Search <<< getValue
         
 render :: T.Render State _ Action
-render ctx s _ = container [ T.h1' [ T.text "PURSuit" ]
-                           , well [ T.input [ A._type "search"
-                                            , A.className "form-control"
-                                            , A.placeholder "Search..."
-                                            -- , A.autofocus "autofocus"
-                                            , T.onChange ctx handleOnChangeEvent
-                                            ] []
-                                  ]
-                           , T.div' (searchResult <$> s.results)
-                           , T.div' [ T.a [ A.href "http://github.com/purescript/pursuit" ] [ T.text "Source" ]
-                                    , T.text " | " 
-                                    , T.a [ A.href "http://purescript.org" ] [ T.text "PureScript" ]
+render ctx s _ = container [ header [ T.h1' [ T.text "Pursuit" ]
+                                    , T.div' [ T.input [ A._type "search"
+                                                       , A.className "form-control"
+                                                       , A.placeholder "Search..."
+                                                       , T.onChange ctx handleOnChangeEvent
+                                                       ] []
+                                             ]
+                                    ]
+                           , body   [ T.div' (searchResult <$> s.results)
+                                     , T.div' [ T.a [ A.href "http://github.com/purescript/pursuit" ] [ T.text "Source" ]
+                                              , T.text " | " 
+                                              , T.a [ A.href "http://purescript.org" ] [ T.text "PureScript" ]
+                                              ]
                                     ]
                            ]
   where
-  container = T.div [ A.className "container" ]
+  container = T.div [ A.className "container-fluid" ]
   
-  well = T.div [ A.className "well" ]     
+  header = T.div [ A.className "header" ]
       
+  body = T.div [ A.className "body" ]
+
   searchResult :: Entry -> T.Html _
   searchResult (Entry moduleName name detail) = 
-    T.div' [ T.h2'  [ T.text name ]
-           , T.div' [ T.text moduleName ]
+    T.div' [ T.h2'  [ T.code' [ T.text name ] ]
+           , T.div' [ T.code' [ T.text moduleName ] ]
            , T.pre' [ T.text detail ]
            ]
 

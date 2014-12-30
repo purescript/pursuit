@@ -582,6 +582,8 @@ PS.Thermite_Html_Elements = (function () {
     var h1$prime = h1([  ]);
     var div = Thermite_Internal.createElementImpl("div");
     var div$prime = div([  ]);
+    var code = Thermite_Internal.createElementImpl("code");
+    var code$prime = code([  ]);
     var a = Thermite_Internal.createElementImpl("a");
     return {
         "pre'": pre$prime, 
@@ -593,6 +595,8 @@ PS.Thermite_Html_Elements = (function () {
         h1: h1, 
         "div'": div$prime, 
         div: div, 
+        "code'": code$prime, 
+        code: code, 
         a: a
     };
 })();
@@ -1163,12 +1167,13 @@ PS.Main = (function () {
     var render = function (_277) {
         return function (_278) {
             return function (_279) {
-                var well = Thermite_Html_Elements.div([ Thermite_Html_Attributes.className("well") ]);
                 var searchResult = function (_282) {
-                    return Thermite_Html_Elements["div'"]([ Thermite_Html_Elements["h2'"]([ Thermite_Html.text(_282.value1) ]), Thermite_Html_Elements["div'"]([ Thermite_Html.text(_282.value0) ]), Thermite_Html_Elements["pre'"]([ Thermite_Html.text(_282.value2) ]) ]);
+                    return Thermite_Html_Elements["div'"]([ Thermite_Html_Elements["h2'"]([ Thermite_Html_Elements["code'"]([ Thermite_Html.text(_282.value1) ]) ]), Thermite_Html_Elements["div'"]([ Thermite_Html_Elements["code'"]([ Thermite_Html.text(_282.value0) ]) ]), Thermite_Html_Elements["pre'"]([ Thermite_Html.text(_282.value2) ]) ]);
                 };
-                var container = Thermite_Html_Elements.div([ Thermite_Html_Attributes.className("container") ]);
-                return container([ Thermite_Html_Elements["h1'"]([ Thermite_Html.text("PURSuit") ]), well([ Thermite_Html_Elements.input([ Thermite_Html_Attributes._type("search"), Thermite_Html_Attributes.className("form-control"), Thermite_Html_Attributes.placeholder("Search..."), Thermite_Events.onChange(_277)(handleOnChangeEvent) ])([  ]) ]), Thermite_Html_Elements["div'"](Prelude["<$>"](Data_Array.functorArray)(searchResult)(_278.results)), Thermite_Html_Elements["div'"]([ Thermite_Html_Elements.a([ Thermite_Html_Attributes.href("http://github.com/purescript/pursuit") ])([ Thermite_Html.text("Source") ]), Thermite_Html.text(" | "), Thermite_Html_Elements.a([ Thermite_Html_Attributes.href("http://purescript.org") ])([ Thermite_Html.text("PureScript") ]) ]) ]);
+                var header = Thermite_Html_Elements.div([ Thermite_Html_Attributes.className("header") ]);
+                var container = Thermite_Html_Elements.div([ Thermite_Html_Attributes.className("container-fluid") ]);
+                var body = Thermite_Html_Elements.div([ Thermite_Html_Attributes.className("body") ]);
+                return container([ header([ Thermite_Html_Elements["h1'"]([ Thermite_Html.text("Pursuit") ]), Thermite_Html_Elements["div'"]([ Thermite_Html_Elements.input([ Thermite_Html_Attributes._type("search"), Thermite_Html_Attributes.className("form-control"), Thermite_Html_Attributes.placeholder("Search..."), Thermite_Events.onChange(_277)(handleOnChangeEvent) ])([  ]) ]) ]), body([ Thermite_Html_Elements["div'"](Prelude["<$>"](Data_Array.functorArray)(searchResult)(_278.results)), Thermite_Html_Elements["div'"]([ Thermite_Html_Elements.a([ Thermite_Html_Attributes.href("http://github.com/purescript/pursuit") ])([ Thermite_Html.text("Source") ]), Thermite_Html.text(" | "), Thermite_Html_Elements.a([ Thermite_Html_Attributes.href("http://purescript.org") ])([ Thermite_Html.text("PureScript") ]) ]) ]) ]);
             };
         };
     };
