@@ -32,10 +32,13 @@ instance isForeignEntry :: IsForeign Entry where
   
 data Action = Change String | Search String | ReadQueryString | DoNothing
 
-type State = { query :: String, results :: [Entry] }
+type State = { lastSearch :: String
+             , query :: String
+             , results :: [Entry] 
+             }
 
 initialState :: State
-initialState = { query: "", results: [] }  
+initialState = { lastSearch: "", query: "", results: [] }  
       
 foreign import getValue 
   "function getValue(e) {\
@@ -71,11 +74,11 @@ render ctx s _ = container [ header [ T.h1' [ T.text "Pursuit" ]
                                                        ] []
                                              ]
                                     ]
-                           , body   [ T.div' (searchResult <$> s.results)
-                                     , T.div' [ T.a [ A.href "http://github.com/purescript/pursuit" ] [ T.text "Source" ]
-                                              , T.text " | " 
-                                              , T.a [ A.href "http://purescript.org" ] [ T.text "PureScript" ]
-                                              ]
+                           , body   [ searchResults
+                                    , T.div' [ T.a [ A.href "http://github.com/purescript/pursuit" ] [ T.text "Source" ]
+                                             , T.text " | " 
+                                             , T.a [ A.href "http://purescript.org" ] [ T.text "PureScript" ]
+                                             ]
                                     ]
                            ]
   where
@@ -84,6 +87,11 @@ render ctx s _ = container [ header [ T.h1' [ T.text "Pursuit" ]
   header = T.div [ A.className "header" ]
       
   body = T.div [ A.className "body" ]
+
+  searchResults :: T.Html _
+  searchResults | s.lastSearch == "" = T.p' [ T.text "Enter a search term above." ]
+                | null s.results = T.p' [ T.text $ "No results for '" <> s.lastSearch <> "'" ]
+                | otherwise = T.div' (searchResult <$> s.results)
 
   searchResult :: Entry -> T.Html _
   searchResult (Entry moduleName name detail) = 
@@ -94,13 +102,13 @@ render ctx s _ = container [ header [ T.h1' [ T.text "Pursuit" ]
 
 performAction :: T.PerformAction _ Action (T.Action _ State) 
 performAction _ (Change s) = T.modifyState \o -> o { query = s }
-performAction _ (Search "") = T.setState { query: "", results: [] }
+performAction _ (Search "") = T.setState { query: "", lastSearch: "", results: [] }
 performAction _ (Search q) = do
   T.sync $ updateHistorySearch q  
   search q
 performAction _ ReadQueryString = do
   q <- S.drop 1 <$> T.sync locationSearch
-  T.setState { query: q, results: [] }
+  T.setState { query: q, lastSearch: q, results: [] }
   case q of
     "" -> return unit
     _  -> search q     
@@ -112,6 +120,7 @@ search q = do
   json <- T.async $ get uri
 
   T.setState { query: q
+             , lastSearch: q
              , results: case parseJSON json >>= read of
                           Left _ -> []
                           Right results -> results 

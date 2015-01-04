@@ -103,6 +103,7 @@ PS.Prelude = (function () {
     var $$return = function (__dict_Monad_5) {
         return pure(__dict_Monad_5["__superclass_Prelude.Applicative_0"]());
     };
+    var otherwise = true;
     var liftA1 = function (__dict_Applicative_7) {
         return function (f) {
             return function (a) {
@@ -174,6 +175,7 @@ PS.Prelude = (function () {
         "<<<": $less$less$less, 
         "const": $$const, 
         flip: flip, 
+        otherwise: otherwise, 
         semigroupoidArr: semigroupoidArr, 
         eqString: eqString, 
         boolLikeBoolean: boolLikeBoolean, 
@@ -394,12 +396,19 @@ PS.Data_Array = (function () {
     function map (f) {  return function (arr) {    var l = arr.length;    var result = new Array(l);    for (var i = 0; i < l; i++) {      result[i] = f(arr[i]);    }    return result;  };};
     function range (start) {  return function (end) {    var i = ~~start, e = ~~end;    var step = i > e ? -1 : 1;    var result = [i], n = 1;    while (i !== e) {      i += step;      result[n++] = i;    }    return result;  };};
     function zipWith (f) {  return function (xs) {    return function (ys) {      var l = xs.length < ys.length ? xs.length : ys.length;      var result = new Array(l);      for (var i = 0; i < l; i++) {        result[i] = f(xs[i])(ys[i]);      }      return result;    };  };};
+    var $$null = function (_94) {
+        if (_94.length === 0) {
+            return true;
+        };
+        return false;
+    };
     var functorArray = new Prelude.Functor(map);
     return {
         zipWith: zipWith, 
         range: range, 
         length: length, 
         map: map, 
+        "null": $$null, 
         functorArray: functorArray
     };
 })();
@@ -741,8 +750,8 @@ PS.Data_Traversable = (function () {
                 return Prelude.pure(__dict_Applicative_134)([  ]);
             };
             if (_267.length >= 1) {
-                var _322 = _267.slice(1);
-                return Prelude["<*>"](__dict_Applicative_134["__superclass_Prelude.Apply_0"]())(Prelude["<$>"]((__dict_Applicative_134["__superclass_Prelude.Apply_0"]())["__superclass_Prelude.Functor_0"]())(Prelude[":"])(_267[0]))(sequence(traversableArray)(__dict_Applicative_134)(_322));
+                var _323 = _267.slice(1);
+                return Prelude["<*>"](__dict_Applicative_134["__superclass_Prelude.Apply_0"]())(Prelude["<$>"]((__dict_Applicative_134["__superclass_Prelude.Apply_0"]())["__superclass_Prelude.Functor_0"]())(Prelude[":"])(_267[0]))(sequence(traversableArray)(__dict_Applicative_134)(_323));
             };
             throw new Error("Failed pattern match");
         };
@@ -753,8 +762,8 @@ PS.Data_Traversable = (function () {
                     return Prelude.pure(__dict_Applicative_133)([  ]);
                 };
                 if (_266.length >= 1) {
-                    var _326 = _266.slice(1);
-                    return Prelude["<*>"](__dict_Applicative_133["__superclass_Prelude.Apply_0"]())(Prelude["<$>"]((__dict_Applicative_133["__superclass_Prelude.Apply_0"]())["__superclass_Prelude.Functor_0"]())(Prelude[":"])(_265(_266[0])))(traverse(traversableArray)(__dict_Applicative_133)(_265)(_326));
+                    var _327 = _266.slice(1);
+                    return Prelude["<*>"](__dict_Applicative_133["__superclass_Prelude.Apply_0"]())(Prelude["<$>"]((__dict_Applicative_133["__superclass_Prelude.Apply_0"]())["__superclass_Prelude.Functor_0"]())(Prelude[":"])(_265(_266[0])))(traverse(traversableArray)(__dict_Applicative_133)(_265)(_327));
                 };
                 throw new Error("Failed pattern match");
             };
@@ -1162,14 +1171,14 @@ PS.Thermite = (function () {
     var createClass = Thermite_Internal.createClassImpl(Thermite_Action.runAction)(Data_Maybe.maybe);
     var componentWillMount = function (_284) {
         return function (_285) {
-            var _354 = {};
-            for (var _355 in _285) {
-                if (_285.hasOwnProperty(_355)) {
-                    _354[_355] = _285[_355];
+            var _355 = {};
+            for (var _356 in _285) {
+                if (_285.hasOwnProperty(_356)) {
+                    _355[_356] = _285[_356];
                 };
             };
-            _354.componentWillMount = new Data_Maybe.Just(_284);
-            return _354;
+            _355.componentWillMount = new Data_Maybe.Just(_284);
+            return _355;
         };
     };
     return {
@@ -1208,6 +1217,8 @@ PS.Thermite_Html_Elements = (function () {
     var Thermite_Types = PS.Thermite_Types;
     var pre = Thermite_Internal.createElementImpl("pre");
     var pre$prime = pre([  ]);
+    var p = Thermite_Internal.createElementImpl("p");
+    var p$prime = p([  ]);
     var input = Thermite_Internal.createElementImpl("input");
     var h2 = Thermite_Internal.createElementImpl("h2");
     var h2$prime = h2([  ]);
@@ -1221,6 +1232,8 @@ PS.Thermite_Html_Elements = (function () {
     return {
         "pre'": pre$prime, 
         pre: pre, 
+        "p'": p$prime, 
+        p: p, 
         input: input, 
         "h2'": h2$prime, 
         h2: h2, 
@@ -1240,15 +1253,15 @@ PS.Main = (function () {
     var Thermite_Html_Elements = PS.Thermite_Html_Elements;
     var Thermite_Html_Attributes = PS.Thermite_Html_Attributes;
     var Thermite_Html = PS.Thermite_Html;
+    var Data_Array = PS.Data_Array;
+    var Prelude = PS.Prelude;
     var Thermite_Events = PS.Thermite_Events;
     var Thermite_Action = PS.Thermite_Action;
-    var Prelude = PS.Prelude;
     var Data_String = PS.Data_String;
     var Control_Monad_Eff_History = PS.Control_Monad_Eff_History;
     var Control_Monad_Eff_AJAX = PS.Control_Monad_Eff_AJAX;
     var Data_Foreign = PS.Data_Foreign;
     var Thermite = PS.Thermite;
-    var Data_Array = PS.Data_Array;
     var Data_Maybe = PS.Data_Maybe;
     var Data_Either = PS.Data_Either;
     var Data_Tuple = PS.Data_Tuple;
@@ -1314,13 +1327,14 @@ PS.Main = (function () {
         return Prelude[">>="](Thermite_Action.bindAction)(Thermite_Action.async(Control_Monad_Eff_AJAX.get(uri)))(function (_9) {
             return Thermite_Action.setState({
                 query: q, 
+                lastSearch: q, 
                 results: (function () {
-                    var _357 = Prelude[">>="](Data_Either.bindEither)(Data_Foreign.parseJSON(_9))(Data_Foreign_Class.read(Data_Foreign_Class.arrayIsForeign(isForeignEntry)));
-                    if (_357 instanceof Data_Either.Left) {
+                    var _358 = Prelude[">>="](Data_Either.bindEither)(Data_Foreign.parseJSON(_9))(Data_Foreign_Class.read(Data_Foreign_Class.arrayIsForeign(isForeignEntry)));
+                    if (_358 instanceof Data_Either.Left) {
                         return [  ];
                     };
-                    if (_357 instanceof Data_Either.Right) {
-                        return _357.value0;
+                    if (_358 instanceof Data_Either.Right) {
+                        return _358.value0;
                     };
                     throw new Error("Failed pattern match");
                 })()
@@ -1328,12 +1342,13 @@ PS.Main = (function () {
         });
     };
     var initialState = {
+        lastSearch: "", 
         query: "", 
         results: [  ]
     };
     var handleKey = function (e) {
-        var _360 = getKeyCode(e);
-        if (_360 === 13) {
+        var _361 = getKeyCode(e);
+        if (_361 === 13) {
             return Search.create(getValue(e));
         };
         return DoNothing.value;
@@ -1350,10 +1365,22 @@ PS.Main = (function () {
                 var searchResult = function (_291) {
                     return Thermite_Html_Elements["div'"]([ Thermite_Html_Elements["h2'"]([ Thermite_Html_Elements["code'"]([ Thermite_Html.text(_291.value1) ]) ]), Thermite_Html_Elements["div'"]([ Thermite_Html_Elements["code'"]([ Thermite_Html.text(_291.value0) ]) ]), Thermite_Html_Elements["pre'"]([ Thermite_Html.text(_291.value2) ]) ]);
                 };
+                var searchResults = (function () {
+                    if (_287.lastSearch === "") {
+                        return Thermite_Html_Elements["p'"]([ Thermite_Html.text("Enter a search term above.") ]);
+                    };
+                    if (Data_Array["null"](_287.results)) {
+                        return Thermite_Html_Elements["p'"]([ Thermite_Html.text("No results for '" + (_287.lastSearch + "'")) ]);
+                    };
+                    if (Prelude.otherwise) {
+                        return Thermite_Html_Elements["div'"](Prelude["<$>"](Data_Array.functorArray)(searchResult)(_287.results));
+                    };
+                    throw new Error("Failed pattern match");
+                })();
                 var header = Thermite_Html_Elements.div([ Thermite_Html_Attributes.className("header") ]);
                 var container = Thermite_Html_Elements.div([ Thermite_Html_Attributes.className("container-fluid") ]);
                 var body = Thermite_Html_Elements.div([ Thermite_Html_Attributes.className("body") ]);
-                return container([ header([ Thermite_Html_Elements["h1'"]([ Thermite_Html.text("Pursuit") ]), Thermite_Html_Elements["div'"]([ Thermite_Html_Elements.input([ Thermite_Html_Attributes._type("search"), Thermite_Html_Attributes.className("form-control"), Thermite_Html_Attributes.placeholder("Search..."), Thermite_Events.onChange(_286)(handleChange), Thermite_Events.onBlur(_286)(handleBlur), Thermite_Events.onKeyUp(_286)(handleKey), Thermite_Html_Attributes.autoFocus(true), Thermite_Html_Attributes.value(_287.query) ])([  ]) ]) ]), body([ Thermite_Html_Elements["div'"](Prelude["<$>"](Data_Array.functorArray)(searchResult)(_287.results)), Thermite_Html_Elements["div'"]([ Thermite_Html_Elements.a([ Thermite_Html_Attributes.href("http://github.com/purescript/pursuit") ])([ Thermite_Html.text("Source") ]), Thermite_Html.text(" | "), Thermite_Html_Elements.a([ Thermite_Html_Attributes.href("http://purescript.org") ])([ Thermite_Html.text("PureScript") ]) ]) ]) ]);
+                return container([ header([ Thermite_Html_Elements["h1'"]([ Thermite_Html.text("Pursuit") ]), Thermite_Html_Elements["div'"]([ Thermite_Html_Elements.input([ Thermite_Html_Attributes._type("search"), Thermite_Html_Attributes.className("form-control"), Thermite_Html_Attributes.placeholder("Search..."), Thermite_Events.onChange(_286)(handleChange), Thermite_Events.onBlur(_286)(handleBlur), Thermite_Events.onKeyUp(_286)(handleKey), Thermite_Html_Attributes.autoFocus(true), Thermite_Html_Attributes.value(_287.query) ])([  ]) ]) ]), body([ searchResults, Thermite_Html_Elements["div'"]([ Thermite_Html_Elements.a([ Thermite_Html_Attributes.href("http://github.com/purescript/pursuit") ])([ Thermite_Html.text("Source") ]), Thermite_Html.text(" | "), Thermite_Html_Elements.a([ Thermite_Html_Attributes.href("http://purescript.org") ])([ Thermite_Html.text("PureScript") ]) ]) ]) ]);
             };
         };
     };
@@ -1373,19 +1400,20 @@ PS.Main = (function () {
         return function (_290) {
             if (_290 instanceof Change) {
                 return Thermite_Action.modifyState(function (o) {
-                    var _374 = {};
-                    for (var _375 in o) {
-                        if (o.hasOwnProperty(_375)) {
-                            _374[_375] = o[_375];
+                    var _375 = {};
+                    for (var _376 in o) {
+                        if (o.hasOwnProperty(_376)) {
+                            _375[_376] = o[_376];
                         };
                     };
-                    _374.query = _290.value0;
-                    return _374;
+                    _375.query = _290.value0;
+                    return _375;
                 });
             };
             if (_290 instanceof Search && _290.value0 === "") {
                 return Thermite_Action.setState({
                     query: "", 
+                    lastSearch: "", 
                     results: [  ]
                 });
             };
@@ -1398,6 +1426,7 @@ PS.Main = (function () {
                 return Prelude[">>="](Thermite_Action.bindAction)(Prelude["<$>"](Thermite_Action.functorAction)(Data_String.drop(1))(Thermite_Action.sync(Control_Monad_Eff_History.locationSearch)))(function (_8) {
                     return Prelude[">>="](Thermite_Action.bindAction)(Thermite_Action.setState({
                         query: _8, 
+                        lastSearch: _8, 
                         results: [  ]
                     }))(function () {
                         if (_8 === "") {
