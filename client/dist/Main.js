@@ -1119,8 +1119,8 @@ PS.Main = (function () {
     var Thermite_Html_Attributes = PS.Thermite_Html_Attributes;
     var Thermite_Html = PS.Thermite_Html;
     var Thermite_Events = PS.Thermite_Events;
-    var Prelude = PS.Prelude;
     var Thermite_Action = PS.Thermite_Action;
+    var Prelude = PS.Prelude;
     var Control_Monad_Eff_AJAX = PS.Control_Monad_Eff_AJAX;
     var Data_Foreign = PS.Data_Foreign;
     var Control_Monad_Eff_History = PS.Control_Monad_Eff_History;
@@ -1193,17 +1193,22 @@ PS.Main = (function () {
     };
     var performAction = function (_280) {
         return function (_281) {
+            if (_281.value0 === "") {
+                return Thermite_Action.setState({
+                    results: [  ]
+                });
+            };
             return Prelude[">>="](Thermite_Action.bindAction)(Thermite_Action.sync(updateHistorySearch(_281.value0)))(function () {
                 var uri = "/search?q=" + _281.value0;
                 return Prelude[">>="](Thermite_Action.bindAction)(Thermite_Action.async(Control_Monad_Eff_AJAX.get(uri)))(function (_8) {
                     return Thermite_Action.setState({
                         results: (function () {
-                            var _353 = Prelude[">>="](Data_Either.bindEither)(Data_Foreign.parseJSON(_8))(Data_Foreign_Class.read(Data_Foreign_Class.arrayIsForeign(isForeignEntry)));
-                            if (_353 instanceof Data_Either.Left) {
+                            var _354 = Prelude[">>="](Data_Either.bindEither)(Data_Foreign.parseJSON(_8))(Data_Foreign_Class.read(Data_Foreign_Class.arrayIsForeign(isForeignEntry)));
+                            if (_354 instanceof Data_Either.Left) {
                                 return [  ];
                             };
-                            if (_353 instanceof Data_Either.Right) {
-                                return _353.value0;
+                            if (_354 instanceof Data_Either.Right) {
+                                return _354.value0;
                             };
                             throw new Error("Failed pattern match");
                         })()

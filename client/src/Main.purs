@@ -75,6 +75,7 @@ render ctx s _ = container [ header [ T.h1' [ T.text "Pursuit" ]
            ]
 
 performAction :: T.PerformAction _ Action (T.Action _ State) 
+performAction _ (Search "") = T.setState { results: [] }
 performAction _ (Search q) = do
   T.sync $ updateHistorySearch q  
   
