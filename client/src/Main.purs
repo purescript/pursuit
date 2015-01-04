@@ -9,6 +9,8 @@ import Data.Foreign.Class
 import Data.Foldable
 import Data.Traversable
 
+import qualified Data.String as S
+
 import Control.Monad.Eff
 import Control.Monad.Eff.AJAX
 import Control.Monad.Eff.History
@@ -28,12 +30,12 @@ instance isForeignEntry :: IsForeign Entry where
                      <*> readProp "name"   entry
                      <*> readProp "detail" entry
   
-data Action = Search String
+data Action = Search String | ReadQueryString
 
-type State = { results :: [Entry] }
+type State = { query :: String, results :: [Entry] }
 
 initialState :: State
-initialState = { results: [] }  
+initialState = { query: "", results: [] }  
       
 foreign import getValue 
   "function getValue(e) {\
@@ -50,6 +52,7 @@ render ctx s _ = container [ header [ T.h1' [ T.text "Pursuit" ]
                                                        , A.placeholder "Search..."
                                                        , T.onChange ctx handleOnChangeEvent
                                                        , A.autoFocus true
+                                                       , A.value s.query
                                                        ] []
                                              ]
                                     ]
@@ -75,18 +78,26 @@ render ctx s _ = container [ header [ T.h1' [ T.text "Pursuit" ]
            ]
 
 performAction :: T.PerformAction _ Action (T.Action _ State) 
-performAction _ (Search "") = T.setState { results: [] }
+performAction _ (Search "") = T.setState { query: "", results: [] }
 performAction _ (Search q) = do
   T.sync $ updateHistorySearch q  
-  
+  search q
+performAction _ ReadQueryString = do
+  q <- S.drop 1 <$> T.sync locationSearch
+  T.setState { query: q, results: [] }
+  search q     
+
+search :: String -> T.Action _ State Unit
+search q = do
   let uri = "/search?q=" <> q
   json <- T.async $ get uri
   
-  T.setState { results: case parseJSON json >>= read of
+  T.setState { query: q
+             , results: case parseJSON json >>= read of
                           Left _ -> []
                           Right results -> results 
              }
-        
+
 baseUrl :: forall eff. Eff (history :: History | eff) String
 baseUrl = do
   protocol <- locationProtocol
@@ -100,10 +111,8 @@ updateHistorySearch query = do
   replaceHistoryState {} "PURSuit" $ url ++ "?" ++ query
 
 spec :: T.Spec _ State _ Action
-spec = T.Spec { initialState: initialState
-              , performAction: performAction
-              , render: render
-              }
+spec = T.simpleSpec initialState performAction render
+         # T.componentWillMount ReadQueryString
 
 main = do
   let component = T.createClass spec
