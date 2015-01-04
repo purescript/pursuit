@@ -1,130 +1,130 @@
 [
   {
-    "gitUrl": "https://github.com/purescript/purescript-identity", 
-    "bowerName": "purescript-identity"
+    "bowerName": "purescript-arrays",
+    "gitUrl": "https://github.com/purescript/purescript-arrays"
   },
   {
-    "gitUrl": "https://github.com/purescript/purescript-foldable-traversable",
-    "bowerName": "purescript-foldable-traversable"
+    "bowerName": "purescript-bifunctors",
+    "gitUrl": "https://github.com/purescript/purescript-bifunctors"
   },
   {
-    "gitUrl": "https://github.com/purescript/purescript-monoid",
-    "bowerName": "purescript-monoid"
+    "bowerName": "purescript-canvas",
+    "gitUrl": "https://github.com/purescript-contrib/purescript-canvas"
   },
   {
-    "gitUrl": "https://github.com/purescript/purescript-transformers",
-    "bowerName": "purescript-transformers"
+    "bowerName": "purescript-const",
+    "gitUrl": "https://github.com/purescript/purescript-const"
   },
   {
-    "gitUrl": "https://github.com/purescript/purescript-sets",
-    "bowerName": "purescript-sets"
+    "bowerName": "purescript-contravariant",
+    "gitUrl": "https://github.com/purescript/purescript-contravariant"
   },
   {
-    "gitUrl": "https://github.com/purescript/purescript-lazy",
-    "bowerName": "purescript-lazy"
+    "bowerName": "purescript-control",
+    "gitUrl": "https://github.com/purescript/purescript-control"
   },
   {
-    "gitUrl": "https://github.com/purescript/purescript-foreign",
-    "bowerName": "purescript-foreign"
+    "bowerName": "purescript-distributive",
+    "gitUrl": "https://github.com/purescript/purescript-distributive"
   },
   {
-    "gitUrl": "https://github.com/purescript/purescript-maps",
-    "bowerName": "purescript-maps"
+    "bowerName": "purescript-either",
+    "gitUrl": "https://github.com/purescript/purescript-either"
   },
   {
-    "gitUrl": "https://github.com/purescript/purescript-quickcheck",
-    "bowerName": "purescript-quickcheck"
+    "bowerName": "purescript-enums",
+    "gitUrl": "https://github.com/purescript/purescript-enums"
   },
   {
-    "gitUrl": "https://github.com/purescript/purescript-free",
-    "bowerName": "purescript-free"
+    "bowerName": "purescript-exceptions",
+    "gitUrl": "https://github.com/purescript/purescript-exceptions"
   },
   {
-    "gitUrl": "https://github.com/purescript/purescript-enums",
-    "bowerName": "purescript-enums"
+    "bowerName": "purescript-exists",
+    "gitUrl": "https://github.com/purescript/purescript-exists"
   },
   {
-    "gitUrl": "https://github.com/purescript/purescript-tuples",
-    "bowerName": "purescript-tuples"
+    "bowerName": "purescript-foldable-traversable",
+    "gitUrl": "https://github.com/purescript/purescript-foldable-traversable"
   },
   {
-    "gitUrl": "https://github.com/purescript/purescript-arrays",
-    "bowerName": "purescript-arrays"
+    "bowerName": "purescript-foreign",
+    "gitUrl": "https://github.com/purescript/purescript-foreign"
   },
   {
-    "gitUrl": "https://github.com/purescript/purescript-strings",
-    "bowerName": "purescript-strings"
+    "bowerName": "purescript-free",
+    "gitUrl": "https://github.com/purescript/purescript-free"
   },
   {
-    "gitUrl": "https://github.com/purescript/purescript-refs",
-    "bowerName": "purescript-refs"
+    "bowerName": "purescript-globals",
+    "gitUrl": "https://github.com/purescript/purescript-globals"
   },
   {
-    "gitUrl": "https://github.com/purescript/purescript-bifunctors",
-    "bowerName": "purescript-bifunctors"
+    "bowerName": "purescript-graphs",
+    "gitUrl": "https://github.com/purescript/purescript-graphs"
   },
   {
-    "gitUrl": "https://github.com/purescript/purescript-globals",
-    "bowerName": "purescript-globals"
+    "bowerName": "purescript-identity",
+    "gitUrl": "https://github.com/purescript/purescript-identity"
   },
   {
-    "gitUrl": "https://github.com/purescript/purescript-exceptions",
-    "bowerName": "purescript-exceptions"
+    "bowerName": "purescript-lazy",
+    "gitUrl": "https://github.com/purescript/purescript-lazy"
   },
   {
-    "gitUrl": "https://github.com/purescript/purescript-distributive",
-    "bowerName": "purescript-distributive"
+    "bowerName": "purescript-maps",
+    "gitUrl": "https://github.com/purescript/purescript-maps"
   },
   {
-    "gitUrl": "https://github.com/purescript/purescript-control",
-    "bowerName": "purescript-control"
+    "bowerName": "purescript-math",
+    "gitUrl": "https://github.com/purescript/purescript-math"
   },
   {
-    "gitUrl": "https://github.com/purescript/purescript-exists",
-    "bowerName": "purescript-exists"
+    "bowerName": "purescript-maybe",
+    "gitUrl": "https://github.com/purescript/purescript-maybe"
   },
   {
-    "gitUrl": "https://github.com/purescript/purescript-either",
-    "bowerName": "purescript-either"
+    "bowerName": "purescript-monoid",
+    "gitUrl": "https://github.com/purescript/purescript-monoid"
   },
   {
-    "gitUrl": "https://github.com/purescript/purescript-profunctors",
-    "bowerName": "purescript-profunctors"
+    "bowerName": "purescript-profunctors",
+    "gitUrl": "https://github.com/purescript/purescript-profunctors"
   },
   {
-    "gitUrl": "https://github.com/purescript/purescript-contravariant",
-    "bowerName": "purescript-contravariant"
+    "bowerName": "purescript-quickcheck",
+    "gitUrl": "https://github.com/purescript/purescript-quickcheck"
   },
   {
-    "gitUrl": "https://github.com/purescript/purescript-const",
-    "bowerName": "purescript-const"
+    "bowerName": "purescript-random",
+    "gitUrl": "https://github.com/purescript/purescript-random"
   },
   {
-    "gitUrl": "https://github.com/purescript/purescript-graphs",
-    "bowerName": "purescript-graphs"
+    "bowerName": "purescript-refs",
+    "gitUrl": "https://github.com/purescript/purescript-refs"
   },
   {
-    "gitUrl": "https://github.com/purescript/purescript-maybe",
-    "bowerName": "purescript-maybe"
+    "bowerName": "purescript-sets",
+    "gitUrl": "https://github.com/purescript/purescript-sets"
   },
   {
-    "gitUrl": "https://github.com/purescript/purescript-validation",
-    "bowerName": "purescript-validation"
+    "bowerName": "purescript-strings",
+    "gitUrl": "https://github.com/purescript/purescript-strings"
   },
   {
-    "gitUrl": "https://github.com/purescript/purescript-random",
-    "bowerName": "purescript-random"
+    "bowerName": "purescript-transformers",
+    "gitUrl": "https://github.com/purescript/purescript-transformers"
   },
   {
-    "gitUrl": "https://github.com/purescript/purescript-math",
-    "bowerName": "purescript-math"
+    "bowerName": "purescript-tuples",
+    "gitUrl": "https://github.com/purescript/purescript-tuples"
   },
   {
-    "gitUrl": "https://github.com/purescript-contrib/purescript-canvas",
-    "bowerName": "purescript-canvas"
+    "bowerName": "purescript-validation",
+    "gitUrl": "https://github.com/purescript/purescript-validation"
   },
   {
-    "gitUrl": "https://github.com/purescript-contrib/purescript-virtual-dom",
-    "bowerName": "purescript-virtual-dom"
+    "bowerName": "purescript-virtual-dom",
+    "gitUrl": "https://github.com/purescript-contrib/purescript-virtual-dom"
   }
 ]
