@@ -11,7 +11,6 @@ import Data.Traversable
 
 import qualified Data.String as S
 
-import Control.Monad (when)
 import Control.Monad.Eff
 import Control.Monad.Eff.AJAX
 import Control.Monad.Eff.History
@@ -31,7 +30,7 @@ instance isForeignEntry :: IsForeign Entry where
                      <*> readProp "name"   entry
                      <*> readProp "detail" entry
   
-data Action = Search String | ReadQueryString
+data Action = Change String | Search String | ReadQueryString | DoNothing
 
 type State = { query :: String, results :: [Entry] }
 
@@ -41,17 +40,32 @@ initialState = { query: "", results: [] }
 foreign import getValue 
   "function getValue(e) {\
   \  return e.target.value;\
-  \}" :: T.FormEvent -> String
-      
-handleOnChangeEvent :: T.FormEvent -> Action
-handleOnChangeEvent = Search <<< getValue
+  \}" :: forall event. event -> String
+
+foreign import getKeyCode
+  "function getKeyCode(e) {\
+  \  return e.keyCode;\
+  \}" :: T.KeyboardEvent -> Number
+
+handleChange :: T.FormEvent -> Action
+handleChange e = Change (getValue e)
+
+handleKey :: T.KeyboardEvent -> Action
+handleKey e = case getKeyCode e of
+                13 -> Search $ getValue e
+                _  -> DoNothing
+
+handleBlur :: T.FocusEvent -> Action
+handleBlur e = Search $ getValue e
         
 render :: T.Render State _ Action
 render ctx s _ = container [ header [ T.h1' [ T.text "Pursuit" ]
                                     , T.div' [ T.input [ A._type "search"
                                                        , A.className "form-control"
                                                        , A.placeholder "Search..."
-                                                       , T.onChange ctx handleOnChangeEvent
+                                                       , T.onChange ctx handleChange
+                                                       , T.onBlur   ctx handleBlur
+                                                       , T.onKeyUp  ctx handleKey
                                                        , A.autoFocus true
                                                        , A.value s.query
                                                        ] []
@@ -79,6 +93,7 @@ render ctx s _ = container [ header [ T.h1' [ T.text "Pursuit" ]
            ]
 
 performAction :: T.PerformAction _ Action (T.Action _ State) 
+performAction _ (Change s) = T.modifyState \o -> o { query = s }
 performAction _ (Search "") = T.setState { query: "", results: [] }
 performAction _ (Search q) = do
   T.sync $ updateHistorySearch q  
@@ -89,22 +104,18 @@ performAction _ ReadQueryString = do
   case q of
     "" -> return unit
     _  -> search q     
+performAction _ DoNothing = return unit
 
 search :: String -> T.Action _ State Unit
 search q = do
-  old <- T.getState
-  
   let uri = "/search?q=" <> q
   json <- T.async $ get uri
 
-  new <- T.getState
-
-  when (old.query == new.query) $ do
-    T.setState { query: q
-               , results: case parseJSON json >>= read of
-                            Left _ -> []
-                            Right results -> results 
-               }
+  T.setState { query: q
+             , results: case parseJSON json >>= read of
+                          Left _ -> []
+                          Right results -> results 
+             }
 
 baseUrl :: forall eff. Eff (history :: History | eff) String
 baseUrl = do
