@@ -1347,6 +1347,9 @@ PS.Main = (function () {
                         query: _8, 
                         results: [  ]
                     }))(function () {
+                        if (_8 === "") {
+                            return Prelude["return"](Thermite_Action.monadAction)(Prelude.unit);
+                        };
                         return search(_8);
                     });
                 });

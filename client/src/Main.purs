@@ -85,7 +85,9 @@ performAction _ (Search q) = do
 performAction _ ReadQueryString = do
   q <- S.drop 1 <$> T.sync locationSearch
   T.setState { query: q, results: [] }
-  search q     
+  case q of
+    "" -> return unit
+    _  -> search q     
 
 search :: String -> T.Action _ State Unit
 search q = do
