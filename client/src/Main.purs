@@ -11,6 +11,7 @@ import Data.Traversable
 
 import qualified Data.String as S
 
+import Control.Monad (when)
 import Control.Monad.Eff
 import Control.Monad.Eff.AJAX
 import Control.Monad.Eff.History
@@ -94,11 +95,14 @@ search q = do
   let uri = "/search?q=" <> q
   json <- T.async $ get uri
   
-  T.setState { query: q
-             , results: case parseJSON json >>= read of
-                          Left _ -> []
-                          Right results -> results 
-             }
+  cur <- T.getState
+
+  when (cur.query == q) $ do
+    T.setState { query: q
+               , results: case parseJSON json >>= read of
+                            Left _ -> []
+                            Right results -> results 
+               }
 
 baseUrl :: forall eff. Eff (history :: History | eff) String
 baseUrl = do
