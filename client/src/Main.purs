@@ -92,12 +92,14 @@ performAction _ ReadQueryString = do
 
 search :: String -> T.Action _ State Unit
 search q = do
+  old <- T.getState
+  
   let uri = "/search?q=" <> q
   json <- T.async $ get uri
-  
-  cur <- T.getState
 
-  when (cur.query == q) $ do
+  new <- T.getState
+
+  when (old.query == new.query) $ do
     T.setState { query: q
                , results: case parseJSON json >>= read of
                             Left _ -> []
