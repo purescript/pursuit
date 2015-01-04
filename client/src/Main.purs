@@ -49,6 +49,7 @@ render ctx s _ = container [ header [ T.h1' [ T.text "Pursuit" ]
                                                        , A.className "form-control"
                                                        , A.placeholder "Search..."
                                                        , T.onChange ctx handleOnChangeEvent
+                                                       , A.autoFocus true
                                                        ] []
                                              ]
                                     ]
@@ -80,9 +81,10 @@ performAction _ (Search q) = do
   let uri = "/search?q=" <> q
   json <- T.async $ get uri
   
-  case parseJSON json >>= read of
-    Left _ -> return unit
-    Right results -> T.setState { results: results }
+  T.setState { results: case parseJSON json >>= read of
+                          Left _ -> []
+                          Right results -> results 
+             }
         
 baseUrl :: forall eff. Eff (history :: History | eff) String
 baseUrl = do

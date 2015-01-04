@@ -300,7 +300,7 @@ PS.Thermite_Internal = (function () {
   }
   ;
     
-  function attribute(attr) {
+  function unsafeAttribute(attr) {
     return function(value) {
       return [attr, value];
     };
@@ -347,7 +347,7 @@ PS.Thermite_Internal = (function () {
         renderImpl: renderImpl, 
         createClassImpl: createClassImpl, 
         event: event, 
-        attribute: attribute, 
+        unsafeAttribute: unsafeAttribute, 
         createElementImpl: createElementImpl, 
         textImpl: textImpl, 
         setStateImpl: setStateImpl, 
@@ -556,15 +556,17 @@ PS.Thermite_Html_Attributes = (function () {
     var Thermite_Internal = PS.Thermite_Internal;
     var Prelude = PS.Prelude;
     var Thermite_Types = PS.Thermite_Types;
-    var placeholder = Thermite_Internal.attribute("placeholder");
-    var href = Thermite_Internal.attribute("href");
-    var className = Thermite_Internal.attribute("className");
-    var _type = Thermite_Internal.attribute("type");
+    var placeholder = Thermite_Internal.unsafeAttribute("placeholder");
+    var href = Thermite_Internal.unsafeAttribute("href");
+    var className = Thermite_Internal.unsafeAttribute("className");
+    var autoFocus = Thermite_Internal.unsafeAttribute("autoFocus");
+    var _type = Thermite_Internal.unsafeAttribute("type");
     return {
         _type: _type, 
         placeholder: placeholder, 
         href: href, 
-        className: className
+        className: className, 
+        autoFocus: autoFocus
     };
 })();
 var PS = PS || {};
@@ -1173,7 +1175,7 @@ PS.Main = (function () {
                 var header = Thermite_Html_Elements.div([ Thermite_Html_Attributes.className("header") ]);
                 var container = Thermite_Html_Elements.div([ Thermite_Html_Attributes.className("container-fluid") ]);
                 var body = Thermite_Html_Elements.div([ Thermite_Html_Attributes.className("body") ]);
-                return container([ header([ Thermite_Html_Elements["h1'"]([ Thermite_Html.text("Pursuit") ]), Thermite_Html_Elements["div'"]([ Thermite_Html_Elements.input([ Thermite_Html_Attributes._type("search"), Thermite_Html_Attributes.className("form-control"), Thermite_Html_Attributes.placeholder("Search..."), Thermite_Events.onChange(_277)(handleOnChangeEvent) ])([  ]) ]) ]), body([ Thermite_Html_Elements["div'"](Prelude["<$>"](Data_Array.functorArray)(searchResult)(_278.results)), Thermite_Html_Elements["div'"]([ Thermite_Html_Elements.a([ Thermite_Html_Attributes.href("http://github.com/purescript/pursuit") ])([ Thermite_Html.text("Source") ]), Thermite_Html.text(" | "), Thermite_Html_Elements.a([ Thermite_Html_Attributes.href("http://purescript.org") ])([ Thermite_Html.text("PureScript") ]) ]) ]) ]);
+                return container([ header([ Thermite_Html_Elements["h1'"]([ Thermite_Html.text("Pursuit") ]), Thermite_Html_Elements["div'"]([ Thermite_Html_Elements.input([ Thermite_Html_Attributes._type("search"), Thermite_Html_Attributes.className("form-control"), Thermite_Html_Attributes.placeholder("Search..."), Thermite_Events.onChange(_277)(handleOnChangeEvent), Thermite_Html_Attributes.autoFocus(true) ])([  ]) ]) ]), body([ Thermite_Html_Elements["div'"](Prelude["<$>"](Data_Array.functorArray)(searchResult)(_278.results)), Thermite_Html_Elements["div'"]([ Thermite_Html_Elements.a([ Thermite_Html_Attributes.href("http://github.com/purescript/pursuit") ])([ Thermite_Html.text("Source") ]), Thermite_Html.text(" | "), Thermite_Html_Elements.a([ Thermite_Html_Attributes.href("http://purescript.org") ])([ Thermite_Html.text("PureScript") ]) ]) ]) ]);
             };
         };
     };
@@ -1194,16 +1196,18 @@ PS.Main = (function () {
             return Prelude[">>="](Thermite_Action.bindAction)(Thermite_Action.sync(updateHistorySearch(_281.value0)))(function () {
                 var uri = "/search?q=" + _281.value0;
                 return Prelude[">>="](Thermite_Action.bindAction)(Thermite_Action.async(Control_Monad_Eff_AJAX.get(uri)))(function (_8) {
-                    var _353 = Prelude[">>="](Data_Either.bindEither)(Data_Foreign.parseJSON(_8))(Data_Foreign_Class.read(Data_Foreign_Class.arrayIsForeign(isForeignEntry)));
-                    if (_353 instanceof Data_Either.Left) {
-                        return Prelude["return"](Thermite_Action.monadAction)(Prelude.unit);
-                    };
-                    if (_353 instanceof Data_Either.Right) {
-                        return Thermite_Action.setState({
-                            results: _353.value0
-                        });
-                    };
-                    throw new Error("Failed pattern match");
+                    return Thermite_Action.setState({
+                        results: (function () {
+                            var _353 = Prelude[">>="](Data_Either.bindEither)(Data_Foreign.parseJSON(_8))(Data_Foreign_Class.read(Data_Foreign_Class.arrayIsForeign(isForeignEntry)));
+                            if (_353 instanceof Data_Either.Left) {
+                                return [  ];
+                            };
+                            if (_353 instanceof Data_Either.Right) {
+                                return _353.value0;
+                            };
+                            throw new Error("Failed pattern match");
+                        })()
+                    });
                 });
             });
         };
