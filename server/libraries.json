@@ -1,15 +1,43 @@
 [
   {
+    "bowerName": "purescript-ajax",
+    "gitUrl": "https://github.com/joneshf/purescript-ajax"
+  },
+  {
+    "bowerName": "purescript-algebra",
+    "gitUrl": "https://github.com/joneshf/purescript-algebra"
+  },
+  {
+    "bowerName": "purescript-angle",
+    "gitUrl": "https://github.com/joneshf/purescript-angle"
+  },
+  {
     "bowerName": "purescript-arrays",
     "gitUrl": "https://github.com/purescript/purescript-arrays"
+  },
+  {
+    "bowerName": "purescript-automata",
+    "gitUrl": "https://github.com/joneshf/purescript-automata"
   },
   {
     "bowerName": "purescript-bifunctors",
     "gitUrl": "https://github.com/purescript/purescript-bifunctors"
   },
   {
+    "bowerName": "purescript-c3",
+    "gitUrl": "https://github.com/joneshf/purescript-c3"
+  },
+  {
     "bowerName": "purescript-canvas",
     "gitUrl": "https://github.com/purescript-contrib/purescript-canvas"
+  },
+  {
+    "bowerName": "purescript-chalk",
+    "gitUrl": "https://github.com/joneshf/purescript-chalk"
+  },
+  {
+    "bowerName": "purescript-cons",
+    "gitUrl": "https://github.com/joneshf/purescript-cons"
   },
   {
     "bowerName": "purescript-const",
@@ -28,6 +56,10 @@
     "gitUrl": "https://github.com/purescript/purescript-distributive"
   },
   {
+    "bowerName": "purescript-each",
+    "gitUrl": "https://github.com/joneshf/purescript-each"
+  },
+  {
     "bowerName": "purescript-either",
     "gitUrl": "https://github.com/purescript/purescript-either"
   },
@@ -36,12 +68,20 @@
     "gitUrl": "https://github.com/purescript/purescript-enums"
   },
   {
+    "bowerName": "purescript-events",
+    "gitUrl": "https://github.com/joneshf/purescript-events"
+  },
+  {
     "bowerName": "purescript-exceptions",
     "gitUrl": "https://github.com/purescript/purescript-exceptions"
   },
   {
     "bowerName": "purescript-exists",
     "gitUrl": "https://github.com/purescript/purescript-exists"
+  },
+  {
+    "bowerName": "purescript-featurespec",
+    "gitUrl": "https://github.com/joneshf/purescript-featurespec"
   },
   {
     "bowerName": "purescript-foldable-traversable",
@@ -64,12 +104,24 @@
     "gitUrl": "https://github.com/purescript/purescript-graphs"
   },
   {
+    "bowerName": "purescript-http",
+    "gitUrl": "https://github.com/joneshf/purescript-http"
+  },
+  {
     "bowerName": "purescript-identity",
     "gitUrl": "https://github.com/purescript/purescript-identity"
   },
   {
+    "bowerName": "purescript-index",
+    "gitUrl": "https://github.com/joneshf/purescript-index"
+  },
+  {
     "bowerName": "purescript-lazy",
     "gitUrl": "https://github.com/purescript/purescript-lazy"
+  },
+  {
+    "bowerName": "purescript-lens",
+    "gitUrl": "https://github.com/purescript-contrib/purescript-lens"
   },
   {
     "bowerName": "purescript-maps",
@@ -88,6 +140,46 @@
     "gitUrl": "https://github.com/purescript/purescript-monoid"
   },
   {
+    "bowerName": "purescript-navigator",
+    "gitUrl": "https://github.com/joneshf/purescript-navigator"
+  },
+  {
+    "bowerName": "purescript-node-child-process",
+    "gitUrl": "https://github.com/joneshf/purescript-node-child-process"
+  },
+  {
+    "bowerName": "purescript-node-domain",
+    "gitUrl": "https://github.com/joneshf/purescript-node-domain"
+  },
+  {
+    "bowerName": "purescript-node-events",
+    "gitUrl": "https://github.com/joneshf/purescript-node-events"
+  },
+  {
+    "bowerName": "purescript-node-url",
+    "gitUrl": "https://github.com/joneshf/purescript-node-url"
+  },
+  {
+    "bowerName": "purescript-node-uuid",
+    "gitUrl": "https://github.com/joneshf/purescript-node-uuid"
+  },
+  {
+    "bowerName": "purescript-node-webkit",
+    "gitUrl": "https://github.com/joneshf/purescript-node-webkit"
+  },
+  {
+    "bowerName": "purescript-oboe",
+    "gitUrl": "https://github.com/joneshf/purescript-oboe"
+  },
+  {
+    "bowerName": "purescript-optic",
+    "gitUrl": "https://github.com/joneshf/purescript-optic"
+  },
+  {
+    "bowerName": "purescript-path",
+    "gitUrl": "https://github.com/joneshf/purescript-path"
+  },
+  {
     "bowerName": "purescript-profunctors",
     "gitUrl": "https://github.com/purescript/purescript-profunctors"
   },
@@ -100,6 +192,10 @@
     "gitUrl": "https://github.com/purescript/purescript-random"
   },
   {
+    "bowerName": "purescript-refractor",
+    "gitUrl": "https://github.com/joneshf/purescript-refractor"
+  },
+  {
     "bowerName": "purescript-refs",
     "gitUrl": "https://github.com/purescript/purescript-refs"
   },
@@ -108,8 +204,20 @@
     "gitUrl": "https://github.com/purescript/purescript-sets"
   },
   {
+    "bowerName": "purescript-showdown",
+    "gitUrl": "https://github.com/joneshf/purescript-showdown"
+  },
+  {
     "bowerName": "purescript-strings",
     "gitUrl": "https://github.com/purescript/purescript-strings"
+  },
+  {
+    "bowerName": "purescript-tiny-emitter",
+    "gitUrl": "https://github.com/joneshf/purescript-tiny-emitter"
+  },
+  {
+    "bowerName": "purescript-totally",
+    "gitUrl": "https://github.com/joneshf/purescript-totally"
   },
   {
     "bowerName": "purescript-transformers",
@@ -120,11 +228,23 @@
     "gitUrl": "https://github.com/purescript/purescript-tuples"
   },
   {
+    "bowerName": "purescript-typeable",
+    "gitUrl": "https://github.com/joneshf/purescript-typeable"
+  },
+  {
     "bowerName": "purescript-validation",
     "gitUrl": "https://github.com/purescript/purescript-validation"
   },
   {
     "bowerName": "purescript-virtual-dom",
     "gitUrl": "https://github.com/purescript-contrib/purescript-virtual-dom"
+  },
+  {
+    "bowerName": "purescript-void",
+    "gitUrl": "https://github.com/joneshf/purescript-void"
+  },
+  {
+    "bowerName": "purescript-webstorage",
+    "gitUrl": "https://github.com/joneshf/purescript-webstorage"
   }
 ]
