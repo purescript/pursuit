@@ -8,7 +8,7 @@ getting your library included
 
 * Release your PureScript library on Bower
 * Make sure your released versions are tagged in git, with a tag like `v0.1.0`
-* Send a pull request modifying `generator/libraries.json`, with a new object
+* Send a pull request modifying `server/libraries.json`, with a new object
   for your library. The object should include:
   * `gitUrl`: a URL pointing to a git repository with your code in it,
   * `bowerName`: the name that your library has on the Bower registry.
