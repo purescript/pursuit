@@ -200,6 +200,10 @@
     "gitUrl": "https://github.com/purescript/purescript-refs"
   },
   {
+    "bowerName": "purescript-rx",
+    "gitUrl": "https://github.com/anttih/purescript-rx"
+  },
+  {
     "bowerName": "purescript-sets",
     "gitUrl": "https://github.com/purescript/purescript-sets"
   },
