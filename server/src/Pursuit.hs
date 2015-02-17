@@ -13,14 +13,31 @@ import Control.Applicative
 
 type GitUrl = String
 
+-- A Locator describes where to find a particular library.
+data Locator =
+  OnGithub String String
+
+toGitUrl :: Locator -> GitUrl
+toGitUrl (OnGithub user repo) =
+  "https://github.com/" ++ user ++ "/" ++ repo
+
+instance A.FromJSON Locator where
+  parseJSON (A.Object o) =
+    OnGithub <$> o .: "user"
+             <*> o .: "repo"
+  parseJSON val = fail $ "couldn't parse " ++ show val ++ " as Locator"
+
 -- The structure of one entry in the input libraries.json file.
-data Library = Library { libraryGitUrl :: GitUrl
+data Library = Library { libraryLocator :: Locator
                        , libraryBowerName :: Maybe String
                        }
 
+libraryGitUrl :: Library -> GitUrl
+libraryGitUrl = toGitUrl . libraryLocator
+
 instance A.FromJSON Library where
   parseJSON (A.Object o) =
-    Library <$> o .: "gitUrl"
+    Library <$> o .: "github"
             <*> o .:? "bowerName"
   parseJSON val = fail $ "couldn't parse " ++ show val ++ " as Library"
 
