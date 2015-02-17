@@ -1,254 +1,254 @@
 [
   {
     "bowerName": "purescript-ajax",
-    "gitUrl": "https://github.com/joneshf/purescript-ajax"
+    "github": { "user": "joneshf", "repo": "purescript-ajax" }
   },
   {
     "bowerName": "purescript-algebra",
-    "gitUrl": "https://github.com/joneshf/purescript-algebra"
+    "github": { "user": "joneshf", "repo": "purescript-algebra" }
   },
   {
     "bowerName": "purescript-angle",
-    "gitUrl": "https://github.com/joneshf/purescript-angle"
+    "github": { "user": "joneshf", "repo": "purescript-angle" }
   },
   {
     "bowerName": "purescript-arrays",
-    "gitUrl": "https://github.com/purescript/purescript-arrays"
+    "github": { "user": "purescript", "repo": "purescript-arrays" }
   },
   {
     "bowerName": "purescript-automata",
-    "gitUrl": "https://github.com/joneshf/purescript-automata"
+    "github": { "user": "joneshf", "repo": "purescript-automata" }
   },
   {
     "bowerName": "purescript-bifunctors",
-    "gitUrl": "https://github.com/purescript/purescript-bifunctors"
+    "github": { "user": "purescript", "repo": "purescript-bifunctors" }
   },
   {
     "bowerName": "purescript-c3",
-    "gitUrl": "https://github.com/joneshf/purescript-c3"
+    "github": { "user": "joneshf", "repo": "purescript-c3" }
   },
   {
     "bowerName": "purescript-canvas",
-    "gitUrl": "https://github.com/purescript-contrib/purescript-canvas"
+    "github": { "user": "purescript-contrib", "repo": "purescript-canvas" }
   },
   {
     "bowerName": "purescript-chalk",
-    "gitUrl": "https://github.com/joneshf/purescript-chalk"
+    "github": { "user": "joneshf", "repo": "purescript-chalk" }
   },
   {
     "bowerName": "purescript-cons",
-    "gitUrl": "https://github.com/joneshf/purescript-cons"
+    "github": { "user": "joneshf", "repo": "purescript-cons" }
   },
   {
     "bowerName": "purescript-const",
-    "gitUrl": "https://github.com/purescript/purescript-const"
+    "github": { "user": "purescript", "repo": "purescript-const" }
   },
   {
     "bowerName": "purescript-contravariant",
-    "gitUrl": "https://github.com/purescript/purescript-contravariant"
+    "github": { "user": "purescript", "repo": "purescript-contravariant" }
   },
   {
     "bowerName": "purescript-control",
-    "gitUrl": "https://github.com/purescript/purescript-control"
+    "github": { "user": "purescript", "repo": "purescript-control" }
   },
   {
     "bowerName": "purescript-distributive",
-    "gitUrl": "https://github.com/purescript/purescript-distributive"
+    "github": { "user": "purescript", "repo": "purescript-distributive" }
   },
   {
     "bowerName": "purescript-each",
-    "gitUrl": "https://github.com/joneshf/purescript-each"
+    "github": { "user": "joneshf", "repo": "purescript-each" }
   },
   {
     "bowerName": "purescript-either",
-    "gitUrl": "https://github.com/purescript/purescript-either"
+    "github": { "user": "purescript", "repo": "purescript-either" }
   },
   {
     "bowerName": "purescript-enums",
-    "gitUrl": "https://github.com/purescript/purescript-enums"
+    "github": { "user": "purescript", "repo": "purescript-enums" }
   },
   {
     "bowerName": "purescript-events",
-    "gitUrl": "https://github.com/joneshf/purescript-events"
+    "github": { "user": "joneshf", "repo": "purescript-events" }
   },
   {
     "bowerName": "purescript-exceptions",
-    "gitUrl": "https://github.com/purescript/purescript-exceptions"
+    "github": { "user": "purescript", "repo": "purescript-exceptions" }
   },
   {
     "bowerName": "purescript-exists",
-    "gitUrl": "https://github.com/purescript/purescript-exists"
+    "github": { "user": "purescript", "repo": "purescript-exists" }
   },
   {
     "bowerName": "purescript-featurespec",
-    "gitUrl": "https://github.com/joneshf/purescript-featurespec"
+    "github": { "user": "joneshf", "repo": "purescript-featurespec" }
   },
   {
     "bowerName": "purescript-foldable-traversable",
-    "gitUrl": "https://github.com/purescript/purescript-foldable-traversable"
+    "github": { "user": "purescript", "repo": "purescript-foldable-traversable" }
   },
   {
     "bowerName": "purescript-foreign",
-    "gitUrl": "https://github.com/purescript/purescript-foreign"
+    "github": { "user": "purescript", "repo": "purescript-foreign" }
   },
   {
     "bowerName": "purescript-free",
-    "gitUrl": "https://github.com/purescript/purescript-free"
+    "github": { "user": "purescript", "repo": "purescript-free" }
   },
   {
     "bowerName": "purescript-globals",
-    "gitUrl": "https://github.com/purescript/purescript-globals"
+    "github": { "user": "purescript", "repo": "purescript-globals" }
   },
   {
     "bowerName": "purescript-graphs",
-    "gitUrl": "https://github.com/purescript/purescript-graphs"
+    "github": { "user": "purescript", "repo": "purescript-graphs" }
   },
   {
     "bowerName": "purescript-http",
-    "gitUrl": "https://github.com/joneshf/purescript-http"
+    "github": { "user": "joneshf", "repo": "purescript-http" }
   },
   {
     "bowerName": "purescript-identity",
-    "gitUrl": "https://github.com/purescript/purescript-identity"
+    "github": { "user": "purescript", "repo": "purescript-identity" }
   },
   {
     "bowerName": "purescript-index",
-    "gitUrl": "https://github.com/joneshf/purescript-index"
+    "github": { "user": "joneshf", "repo": "purescript-index" }
   },
   {
     "bowerName": "purescript-lazy",
-    "gitUrl": "https://github.com/purescript/purescript-lazy"
+    "github": { "user": "purescript", "repo": "purescript-lazy" }
   },
   {
     "bowerName": "purescript-lens",
-    "gitUrl": "https://github.com/purescript-contrib/purescript-lens"
+    "github": { "user": "purescript-contrib", "repo": "purescript-lens" }
   },
   {
     "bowerName": "purescript-maps",
-    "gitUrl": "https://github.com/purescript/purescript-maps"
+    "github": { "user": "purescript", "repo": "purescript-maps" }
   },
   {
     "bowerName": "purescript-math",
-    "gitUrl": "https://github.com/purescript/purescript-math"
+    "github": { "user": "purescript", "repo": "purescript-math" }
   },
   {
     "bowerName": "purescript-maybe",
-    "gitUrl": "https://github.com/purescript/purescript-maybe"
+    "github": { "user": "purescript", "repo": "purescript-maybe" }
   },
   {
     "bowerName": "purescript-monoid",
-    "gitUrl": "https://github.com/purescript/purescript-monoid"
+    "github": { "user": "purescript", "repo": "purescript-monoid" }
   },
   {
     "bowerName": "purescript-navigator",
-    "gitUrl": "https://github.com/joneshf/purescript-navigator"
+    "github": { "user": "joneshf", "repo": "purescript-navigator" }
   },
   {
     "bowerName": "purescript-node-child-process",
-    "gitUrl": "https://github.com/joneshf/purescript-node-child-process"
+    "github": { "user": "joneshf", "repo": "purescript-node-child-process" }
   },
   {
     "bowerName": "purescript-node-domain",
-    "gitUrl": "https://github.com/joneshf/purescript-node-domain"
+    "github": { "user": "joneshf", "repo": "purescript-node-domain" }
   },
   {
     "bowerName": "purescript-node-events",
-    "gitUrl": "https://github.com/joneshf/purescript-node-events"
+    "github": { "user": "joneshf", "repo": "purescript-node-events" }
   },
   {
     "bowerName": "purescript-node-url",
-    "gitUrl": "https://github.com/joneshf/purescript-node-url"
+    "github": { "user": "joneshf", "repo": "purescript-node-url" }
   },
   {
     "bowerName": "purescript-node-uuid",
-    "gitUrl": "https://github.com/joneshf/purescript-node-uuid"
+    "github": { "user": "joneshf", "repo": "purescript-node-uuid" }
   },
   {
     "bowerName": "purescript-node-webkit",
-    "gitUrl": "https://github.com/joneshf/purescript-node-webkit"
+    "github": { "user": "joneshf", "repo": "purescript-node-webkit" }
   },
   {
     "bowerName": "purescript-oboe",
-    "gitUrl": "https://github.com/joneshf/purescript-oboe"
+    "github": { "user": "joneshf", "repo": "purescript-oboe" }
   },
   {
     "bowerName": "purescript-optic",
-    "gitUrl": "https://github.com/joneshf/purescript-optic"
+    "github": { "user": "joneshf", "repo": "purescript-optic" }
   },
   {
     "bowerName": "purescript-path",
-    "gitUrl": "https://github.com/joneshf/purescript-path"
+    "github": { "user": "joneshf", "repo": "purescript-path" }
   },
   {
     "bowerName": "purescript-profunctors",
-    "gitUrl": "https://github.com/purescript/purescript-profunctors"
+    "github": { "user": "purescript", "repo": "purescript-profunctors" }
   },
   {
     "bowerName": "purescript-quickcheck",
-    "gitUrl": "https://github.com/purescript/purescript-quickcheck"
+    "github": { "user": "purescript", "repo": "purescript-quickcheck" }
   },
   {
     "bowerName": "purescript-random",
-    "gitUrl": "https://github.com/purescript/purescript-random"
+    "github": { "user": "purescript", "repo": "purescript-random" }
   },
   {
     "bowerName": "purescript-refractor",
-    "gitUrl": "https://github.com/joneshf/purescript-refractor"
+    "github": { "user": "joneshf", "repo": "purescript-refractor" }
   },
   {
     "bowerName": "purescript-refs",
-    "gitUrl": "https://github.com/purescript/purescript-refs"
+    "github": { "user": "purescript", "repo": "purescript-refs" }
   },
   {
     "bowerName": "purescript-rx",
-    "gitUrl": "https://github.com/anttih/purescript-rx"
+    "github": { "user": "anttih", "repo": "purescript-rx" }
   },
   {
     "bowerName": "purescript-sets",
-    "gitUrl": "https://github.com/purescript/purescript-sets"
+    "github": { "user": "purescript", "repo": "purescript-sets" }
   },
   {
     "bowerName": "purescript-showdown",
-    "gitUrl": "https://github.com/joneshf/purescript-showdown"
+    "github": { "user": "joneshf", "repo": "purescript-showdown" }
   },
   {
     "bowerName": "purescript-strings",
-    "gitUrl": "https://github.com/purescript/purescript-strings"
+    "github": { "user": "purescript", "repo": "purescript-strings" }
   },
   {
     "bowerName": "purescript-tiny-emitter",
-    "gitUrl": "https://github.com/joneshf/purescript-tiny-emitter"
+    "github": { "user": "joneshf", "repo": "purescript-tiny-emitter" }
   },
   {
     "bowerName": "purescript-totally",
-    "gitUrl": "https://github.com/joneshf/purescript-totally"
+    "github": { "user": "joneshf", "repo": "purescript-totally" }
   },
   {
     "bowerName": "purescript-transformers",
-    "gitUrl": "https://github.com/purescript/purescript-transformers"
+    "github": { "user": "purescript", "repo": "purescript-transformers" }
   },
   {
     "bowerName": "purescript-tuples",
-    "gitUrl": "https://github.com/purescript/purescript-tuples"
+    "github": { "user": "purescript", "repo": "purescript-tuples" }
   },
   {
     "bowerName": "purescript-typeable",
-    "gitUrl": "https://github.com/joneshf/purescript-typeable"
+    "github": { "user": "joneshf", "repo": "purescript-typeable" }
   },
   {
     "bowerName": "purescript-validation",
-    "gitUrl": "https://github.com/purescript/purescript-validation"
+    "github": { "user": "purescript", "repo": "purescript-validation" }
   },
   {
     "bowerName": "purescript-virtual-dom",
-    "gitUrl": "https://github.com/purescript-contrib/purescript-virtual-dom"
+    "github": { "user": "purescript-contrib", "repo": "purescript-virtual-dom" }
   },
   {
     "bowerName": "purescript-void",
-    "gitUrl": "https://github.com/joneshf/purescript-void"
+    "github": { "user": "joneshf", "repo": "purescript-void" }
   },
   {
     "bowerName": "purescript-webstorage",
-    "gitUrl": "https://github.com/joneshf/purescript-webstorage"
+    "github": { "user": "joneshf", "repo": "purescript-webstorage" }
   }
 ]
