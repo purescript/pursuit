@@ -35,6 +35,11 @@ data Library = Library { libraryLocator :: Locator
 libraryGitUrl :: Library -> GitUrl
 libraryGitUrl = toGitUrl . libraryLocator
 
+-- This implementation will need to change if we decide to support libraries
+-- which are not on github.
+libraryWebUrl :: Library -> String
+libraryWebUrl = libraryGitUrl
+
 instance A.FromJSON Library where
   parseJSON (A.Object o) =
     Library <$> o .: "github"
@@ -42,16 +47,20 @@ instance A.FromJSON Library where
   parseJSON val = fail $ "couldn't parse " ++ show val ++ " as Library"
 
 -- The data associated with a named library in the output.
-data LibraryInfo = LibraryInfo { infoVersion :: String }
+data LibraryInfo = LibraryInfo { infoVersion :: String
+                               , infoWebUrl  :: String
+                               }
 
 instance A.FromJSON LibraryInfo where
   parseJSON (A.Object o) =
     LibraryInfo <$> o .: "version"
+                <*> o .: "webUrl"
   parseJSON val = fail $ "couldn't parse " ++ show val ++ " as LibraryInfo"
 
 instance A.ToJSON LibraryInfo where
-  toJSON (LibraryInfo vers) =
+  toJSON (LibraryInfo vers webUrl) =
     A.object [ "version" .= vers
+             , "webUrl"  .= webUrl
              ]
 
 data PursuitEntry =
