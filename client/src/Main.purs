@@ -23,10 +23,11 @@ import qualified Thermite.Action as T
 import qualified Thermite.Events as T
 import qualified Thermite.Types as T
 
-data Entry = Entry String String String
+data Entry = Entry String String String String
 
 instance isForeignEntry :: IsForeign Entry where
-  read entry = Entry <$> readProp "module" entry
+  read entry = Entry <$> readProp "library" entry
+                     <*> readProp "module" entry
                      <*> readProp "name"   entry
                      <*> readProp "detail" entry
   
@@ -94,9 +95,9 @@ render ctx s _ = container [ header [ T.h1' [ T.text "Pursuit" ]
                 | otherwise = T.div' (searchResult <$> s.results)
 
   searchResult :: Entry -> T.Html _
-  searchResult (Entry moduleName name detail) = 
+  searchResult (Entry libraryName moduleName name detail) = 
     T.div' [ T.h2'  [ T.code' [ T.text name ] ]
-           , T.div' [ T.code' [ T.text moduleName ] ]
+           , T.div' [ T.code' [ T.text moduleName ], T.text " (", T.code' [ T.text libraryName ], T.text ")" ]
            , T.pre' [ T.text detail ]
            ]
 
