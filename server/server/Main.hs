@@ -17,8 +17,7 @@ import Control.Applicative
 
 import System.Exit (exitFailure)
 import System.Console.CmdTheLine
-import qualified System.IO.UTF8 as U
-
+import System.IO (hPutStr, stderr)
 import Web.Scotty
 
 import qualified Paths_pursuit as Paths 
@@ -31,7 +30,7 @@ query q = fmap (take 20 . map snd . T.toArray) . T.lookupAll (map toLower q)
     
 runServer :: Int -> FilePath -> IO ()
 runServer portNumber path = do
-  contents <- U.readFile path
+  contents <- readFile path
   case A.eitherDecodeStrict (fromString contents) of
     Right (PursuitDatabase _ entries) -> do
       let db = buildLookup entries
@@ -40,7 +39,7 @@ runServer portNumber path = do
           q <- param "q"
           json $ query q db
     Left err -> do
-      U.putStrLn err
+      hPutStr stderr err
       exitFailure
     
 port :: Term Int

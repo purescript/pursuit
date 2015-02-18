@@ -211,7 +211,7 @@ parseFile input = do
 
 parseText :: FilePath -> T.Text -> IO [P.Module]
 parseText input text = do
-  case P.runIndentParser input P.parseModules (T.unpack text) of
+  case P.lex input (T.unpack text) >>= P.runTokenParser input P.parseModules of
     Left err -> do
       T.hPutStr stderr $ T.pack $ show err
       exitFailure
@@ -257,7 +257,7 @@ entriesForDeclaration mn (P.TypeInstanceDeclaration name constraints className t
                           [] -> ""
                           cs -> "(" ++ intercalate ", " (map (\(pn, tys') -> show pn ++ " " ++ unwords (map P.prettyPrintTypeAtom tys')) cs) ++ ") => "
   [entry mn (show name) $ "instance " ++ show name ++ " :: " ++ constraintsText ++ show className ++ " " ++ unwords (map P.prettyPrintTypeAtom tys)]
-entriesForDeclaration mn (P.PositionedDeclaration _ d) =
+entriesForDeclaration mn (P.PositionedDeclaration _ _ d) =
   entriesForDeclaration mn d
 entriesForDeclaration _ _ = []
 
