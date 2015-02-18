@@ -13,28 +13,54 @@ import Control.Applicative
 
 type GitUrl = String
 
+-- A Locator describes where to find a particular library.
+data Locator =
+  OnGithub String String
+
+toGitUrl :: Locator -> GitUrl
+toGitUrl (OnGithub user repo) =
+  "https://github.com/" ++ user ++ "/" ++ repo
+
+instance A.FromJSON Locator where
+  parseJSON (A.Object o) =
+    OnGithub <$> o .: "user"
+             <*> o .: "repo"
+  parseJSON val = fail $ "couldn't parse " ++ show val ++ " as Locator"
+
 -- The structure of one entry in the input libraries.json file.
-data Library = Library { libraryGitUrl :: GitUrl
+data Library = Library { libraryLocator :: Locator
                        , libraryBowerName :: Maybe String
                        }
 
+libraryGitUrl :: Library -> GitUrl
+libraryGitUrl = toGitUrl . libraryLocator
+
+-- This implementation will need to change if we decide to support libraries
+-- which are not on github.
+libraryWebUrl :: Library -> String
+libraryWebUrl = libraryGitUrl
+
 instance A.FromJSON Library where
   parseJSON (A.Object o) =
-    Library <$> o .: "gitUrl"
+    Library <$> o .: "github"
             <*> o .:? "bowerName"
   parseJSON val = fail $ "couldn't parse " ++ show val ++ " as Library"
 
 -- The data associated with a named library in the output.
-data LibraryInfo = LibraryInfo { infoVersion :: String }
+data LibraryInfo = LibraryInfo { infoVersion :: String
+                               , infoWebUrl  :: String
+                               }
 
 instance A.FromJSON LibraryInfo where
   parseJSON (A.Object o) =
     LibraryInfo <$> o .: "version"
+                <*> o .: "webUrl"
   parseJSON val = fail $ "couldn't parse " ++ show val ++ " as LibraryInfo"
 
 instance A.ToJSON LibraryInfo where
-  toJSON (LibraryInfo vers) =
+  toJSON (LibraryInfo vers webUrl) =
     A.object [ "version" .= vers
+             , "webUrl"  .= webUrl
              ]
 
 data PursuitEntry =

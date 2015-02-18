@@ -89,7 +89,7 @@ generateAllData = do
         let vers = dropWhile (== 'v') vers'
         p $ "selected " ++ name ++ ": " ++ vers
         gitCheckoutTag vers' dir
-        let info = LibraryInfo vers
+        let info = LibraryInfo vers (libraryWebUrl lib)
         buildLibraryDb (libraryBowerName lib) (Just info) dir
 
   preludeDb <- buildPreludeDb
@@ -188,11 +188,14 @@ entriesFromDir dir = do
   ms <- mapM parseFile files
   return $ modulesToEntries (concat ms)
 
+preludeWebUrl :: String
+preludeWebUrl = "https://github.com/purescript/purescript/tree/master/prelude"
+
 buildPreludeDb :: IO PursuitDatabase
 buildPreludeDb = do
   entries <- modulesToEntries <$> parseText "<<Prelude>>" (T.pack P.prelude)
-  let preludeInfo = LibraryInfo (showVersion Paths.version)
-  let lib = M.singleton "PureScript" preludeInfo
+  let preludeInfo = LibraryInfo (showVersion Paths.version) preludeWebUrl
+  let lib = M.singleton "Prelude" preludeInfo
   return $ PursuitDatabase lib entries
 
 modulesToEntries :: [P.Module] -> [PursuitEntry]
