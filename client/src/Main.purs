@@ -97,7 +97,11 @@ render ctx s _ = container [ header [ T.h1' [ T.text "Pursuit" ]
   searchResult :: Entry -> T.Html _
   searchResult (Entry libraryName moduleName name detail) = 
     T.div' [ T.h2'  [ T.code' [ T.text name ] ]
-           , T.div' [ T.code' [ T.text moduleName ], T.text " (", T.code' [ T.text libraryName ], T.text ")" ]
+           , T.div' [ T.code' [ T.text $ moduleName
+                                         <> " ("
+                                         <> libraryName
+                                         <> ")" 
+                              ] ]
            , T.pre' [ T.text detail ]
            ]
 

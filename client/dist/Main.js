@@ -1467,7 +1467,7 @@ PS.Main = (function () {
         return function (_293) {
             return function (_294) {
                 var searchResult = function (_297) {
-                    return Thermite_Html_Elements["div'"]([ Thermite_Html_Elements["h2'"]([ Thermite_Html_Elements["code'"]([ Thermite_Html.text(_297.value2) ]) ]), Thermite_Html_Elements["div'"]([ Thermite_Html_Elements["code'"]([ Thermite_Html.text(_297.value1) ]), Thermite_Html.text(" ("), Thermite_Html_Elements["code'"]([ Thermite_Html.text(_297.value0) ]), Thermite_Html.text(")") ]), Thermite_Html_Elements["pre'"]([ Thermite_Html.text(_297.value3) ]) ]);
+                    return Thermite_Html_Elements["div'"]([ Thermite_Html_Elements["h2'"]([ Thermite_Html_Elements["code'"]([ Thermite_Html.text(_297.value2) ]) ]), Thermite_Html_Elements["div'"]([ Thermite_Html_Elements["code'"]([ Thermite_Html.text(_297.value1 + (" (" + (_297.value0 + ")"))) ]) ]), Thermite_Html_Elements["pre'"]([ Thermite_Html.text(_297.value3) ]) ]);
                 };
                 var searchResults = (function () {
                     if (_293.lastSearch === "") {
