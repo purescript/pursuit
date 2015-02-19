@@ -14,45 +14,38 @@ data-dir: ""
 library 
     build-depends: base ==4.7.*,
                    purescript >=0.6.7,
-                   aeson -any,
-                   text -any, 
-                   containers -any
-    exposed-modules: Pursuit
-    buildable: True
-    hs-source-dirs: src
-    ghc-options: -Wall -O2
-
-executable pursuit-gen
-    build-depends: base ==4.7.*, 
-                   pursuit -any,
                    directory >=1.2.0.1 && <1.3,
                    filepath >=1.3.0.1 && <1.4,
-                   purescript >=0.6.7,
-                   aeson -any, 
-                   cmdtheline -any, 
-                   text -any, 
+                   split -any,
+                   process -any,
+                   Glob -any,
+                   aeson -any,
                    bytestring -any,
-                   split -any, 
-                   process -any, 
-                   Glob -any, 
+                   text -any, 
                    containers -any
-    main-is: Main.hs
+    exposed-modules: Pursuit, Pursuit.Generator
+    other-modules: Paths_pursuit
     buildable: True
-    hs-source-dirs: generator
-    ghc-options: -Wall -O2
+    hs-source-dirs: src
+    ghc-options: -Wall -O2 -threaded
 
 executable pursuit-server
     build-depends: base ==4.7.*, 
                    pursuit -any,
                    purescript >=0.6.7,
+                   directory -any,
+                   filepath -any,
                    aeson -any, 
                    cmdtheline -any, 
                    text -any,
+                   bytestring -any,
+                   split -any, 
+                   process -any, 
+                   Glob -any,
                    scotty -any,
                    utf8-string -any,
                    containers -any
     main-is: Main.hs
     buildable: True
     hs-source-dirs: server
-    ghc-options: -Wall -O2
-
+    ghc-options: -Wall -O2 -threaded

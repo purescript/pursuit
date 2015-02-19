@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
 --
--- Module      :  Main
+-- Module      :  Pursuit.Generator
 -- Copyright   :  (c) Phil Freeman 2014
 -- License     :  MIT
 --
@@ -13,7 +13,10 @@
 -----------------------------------------------------------------------------
 {-# LANGUAGE OverloadedStrings #-}
 
-module Main where
+module Pursuit.Generator (
+  GenerateError,
+  generateDatabase
+) where
 
 import Data.List
 import Data.Ord
@@ -28,13 +31,11 @@ import Control.Monad
 
 import Pursuit
 
-import System.Console.CmdTheLine
-import System.Exit (exitSuccess, exitFailure, ExitCode(..))
+import System.Exit (exitFailure, ExitCode(..))
 import System.IO (stderr)
-import System.Directory (createDirectoryIfMissing, getCurrentDirectory,
-                         setCurrentDirectory, doesDirectoryExist,
-                         removeDirectoryRecursive)
-import System.FilePath (takeDirectory, (</>))
+import System.Directory (getCurrentDirectory, setCurrentDirectory,
+                         doesDirectoryExist, removeDirectoryRecursive)
+import System.FilePath ((</>))
 import System.Process (readProcessWithExitCode)
 import System.FilePath.Glob (glob)
 
@@ -44,37 +45,27 @@ import qualified Data.Map as M
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 
-import qualified Data.Text.Lazy as TL
-import qualified Data.Text.Lazy.IO as TL
-import qualified Data.Text.Lazy.Builder as TL
-
 import qualified Data.Aeson as A
-import qualified Data.Aeson.Encode as A
 
 import qualified Language.PureScript as P
 import qualified Paths_pursuit as Paths
 
+-- TODO
+data GenerateError = GenerateError
+  deriving (Show, Eq)
+
 p :: String -> IO ()
 p = T.hPutStrLn stderr . T.pack
-
-pursuitGenAll :: Maybe FilePath -> IO ()
-pursuitGenAll output = do
-  entries <- generateAllData
-  let json = databaseToJson entries
-  case output of
-    Just path -> mkdirp path >> TL.writeFile path json
-    Nothing -> TL.putStrLn json
-  exitSuccess
 
 getBaseDir :: IO FilePath
 getBaseDir = do
   currentDir <- getCurrentDirectory
   return $ currentDir </> workingDir
 
-generateAllData :: IO PursuitDatabase
-generateAllData = do
+generateDatabase :: FilePath -> IO (Either GenerateError PursuitDatabase)
+generateDatabase librariesFile = do
   baseDir <- getBaseDir
-  libraries <- getLibraries
+  libraries <- getLibraries librariesFile
 
   dbs <- forM libraries $ \lib -> do
     let name = libraryName lib
@@ -94,14 +85,14 @@ generateAllData = do
 
   preludeDb <- buildPreludeDb
 
-  return $ preludeDb <> mconcat dbs
+  return $ Right $ preludeDb <> mconcat dbs
 
 workingDir :: String
 workingDir = "./tmp/"
 
-getLibraries :: IO [Library]
-getLibraries = do
-  json <- B.getContents
+getLibraries :: FilePath -> IO [Library]
+getLibraries librariesFile = do
+  json <- B.readFile librariesFile
   case A.eitherDecodeStrict json of
     Right libs -> return libs
     Left err -> do
@@ -201,9 +192,6 @@ buildPreludeDb = do
 modulesToEntries :: [P.Module] -> [PursuitEntry]
 modulesToEntries = concatMap entriesForModule
 
-databaseToJson :: PursuitDatabase -> TL.Text
-databaseToJson = TL.toLazyText . A.encodeToTextBuilder . A.toJSON
-
 parseFile :: FilePath -> IO [P.Module]
 parseFile input = do
   text <- T.readFile input
@@ -217,12 +205,6 @@ parseText input text = do
       exitFailure
     Right ms -> do
       return ms
-
-mkdirp :: FilePath -> IO ()
-mkdirp = createDirectoryIfMissing True . takeDirectory
-
-entriesToJson :: [PursuitEntry] -> TL.Text
-entriesToJson = TL.toLazyText . A.encodeToTextBuilder . A.toJSON
 
 entriesForModule :: P.Module -> [PursuitEntry]
 entriesForModule (P.Module mn ds _) = concatMap (entriesForDeclaration mn) ds
@@ -268,19 +250,3 @@ prettyPrintType' = P.prettyPrintType . P.everywhereOnTypes dePrim
     | ty == P.tyBoolean || ty == P.tyNumber || ty == P.tyString =
       P.TypeConstructor $ P.Qualified Nothing name
   dePrim other = other
-
-outputFile :: Term (Maybe FilePath)
-outputFile = value $ opt Nothing $ (optInfo [ "o", "output" ]) { optDoc = "The output .json file" }
-
-term :: Term (IO ())
-term = pursuitGenAll <$> outputFile
-
-termInfo :: TermInfo
-termInfo = defTI
-  { termName = "pursuit-gen"
-  , version  = showVersion Paths.version
-  , termDoc  = "Generate data for use with the pursuit search engine"
-  }
-
-main :: IO ()
-main = run (term, termInfo)
