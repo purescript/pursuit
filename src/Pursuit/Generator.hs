@@ -11,10 +11,12 @@
 -- | Data generator for the pursuit search engine
 --
 -----------------------------------------------------------------------------
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings, GeneralizedNewtypeDeriving, LambdaCase #-}
 
 module Pursuit.Generator (
-  GenerateError,
+  Error(..),
+  Warning(..),
+  LibraryError(..),
   generateDatabase
 ) where
 
@@ -28,6 +30,10 @@ import Text.ParserCombinators.ReadP (readP_to_S)
 
 import Control.Applicative
 import Control.Monad
+import Control.Monad.IO.Class
+import Control.Monad.Writer.Class
+import Control.Monad.Writer
+import Control.Monad.Except
 
 import Pursuit
 
@@ -47,12 +53,36 @@ import qualified Data.Text.IO as T
 
 import qualified Data.Aeson as A
 
+import qualified Text.Parsec as Parsec
+
 import qualified Language.PureScript as P
 import qualified Paths_pursuit as Paths
 
--- TODO
-data GenerateError = GenerateError
+-- A condition that means that the generator is unable to continue.
+data Error
+  = DecodeLibrariesFailed T.Text
+  | CommandFailed ExitCode T.Text T.Text
   deriving (Show, Eq)
+
+-- A condition that indicates that something is wrong and should probably be
+-- fixed, but is not severe enough that the generator is unable to continue.
+data Warning
+  = LibraryFailed Library LibraryError
+
+-- A condition that means that database entries for a particular library could
+-- not be created.
+data LibraryError
+  = NoSuitableTagsFound
+  | ParseFailed Parsec.ParseError
+
+newtype Generate a = G { unG :: WriterT [Warning] (ExceptT Error IO) a }
+  deriving (Functor, Applicative, Monad, MonadWriter [Warning], MonadIO)
+
+runGenerate :: Generate a -> IO (Either Error (a, [Warning]))
+runGenerate action = do
+  runExceptT (runWriterT (unG action)) >>= \case
+    Right x -> return (Right x)
+    Left _  -> error "lol"
 
 p :: String -> IO ()
 p = T.hPutStrLn stderr . T.pack
@@ -62,40 +92,47 @@ getBaseDir = do
   currentDir <- getCurrentDirectory
   return $ currentDir </> workingDir
 
-generateDatabase :: FilePath -> IO (Either GenerateError PursuitDatabase)
-generateDatabase librariesFile = do
-  baseDir <- getBaseDir
+generateDatabase :: FilePath -> IO (Either Error (PursuitDatabase, [Warning]))
+generateDatabase = runGenerate . generateDatabase'
+
+generateDatabase' :: FilePath -> Generate PursuitDatabase
+generateDatabase' librariesFile = do
   libraries <- getLibraries librariesFile
 
-  dbs <- forM libraries $ \lib -> do
+  dbs <- getLibraryDbs libraries
+  preludeDb <- buildPreludeDb
+
+  return $ preludeDb <> mconcat dbs
+
+getLibraryDbs :: [Library] -> Generate [PursuitDatabase]
+getLibraryDbs libraries = do
+  baseDir <- liftIO getBaseDir
+
+  forM libraries $ \lib -> do
     let name = libraryName lib
     let dir = baseDir </> name
-    gitClone (libraryGitUrl lib) dir
-    mVers <- getMostRecentTaggedVersion dir
+    liftIO $ gitClone (libraryGitUrl lib) dir
+    mVers <- liftIO $ getMostRecentTaggedVersion dir
     case mVers of
-      Nothing -> do
+      Nothing -> liftIO $ do
         p $ "error: no suitable tags found for " ++ name
         exitFailure
       Just vers' -> do
         let vers = dropWhile (== 'v') vers'
-        p $ "selected " ++ name ++ ": " ++ vers
-        gitCheckoutTag vers' dir
+        liftIO $ p $ "selected " ++ name ++ ": " ++ vers
+        liftIO $ gitCheckoutTag vers' dir
         let info = LibraryInfo vers (libraryWebUrl lib)
         buildLibraryDb (libraryBowerName lib) (Just info) dir
-
-  preludeDb <- buildPreludeDb
-
-  return $ Right $ preludeDb <> mconcat dbs
 
 workingDir :: String
 workingDir = "./tmp/"
 
-getLibraries :: FilePath -> IO [Library]
+getLibraries :: FilePath -> Generate [Library]
 getLibraries librariesFile = do
-  json <- B.readFile librariesFile
+  json <- liftIO $ B.readFile librariesFile
   case A.eitherDecodeStrict json of
     Right libs -> return libs
-    Left err -> do
+    Left err -> liftIO $ do
       T.hPutStrLn stderr (T.pack err)
       exitFailure
 
@@ -147,7 +184,7 @@ reversedSort = sortBy (comparing Down)
 
 runCommand :: FilePath -> [String] -> IO (String, String)
 runCommand program args = do
-  (code, out, err) <- readProcessWithExitCode program args ""
+  (code, out, err) <- liftIO $ readProcessWithExitCode program args ""
   case code of
     ExitSuccess -> return (out, err)
     ExitFailure _ -> do
@@ -164,7 +201,7 @@ runCommandQuiet program args =
 -- and values appear in the database. If both a library name and additional
 -- library information are supplied, then those appear in the database too.
 buildLibraryDb ::
-  Maybe String -> Maybe LibraryInfo -> FilePath -> IO PursuitDatabase
+  Maybe String -> Maybe LibraryInfo -> FilePath -> Generate PursuitDatabase
 buildLibraryDb mLibName mInfo dir = do
   entries' <- entriesFromDir dir
 
@@ -173,16 +210,15 @@ buildLibraryDb mLibName mInfo dir = do
 
   return $ PursuitDatabase (fromMaybe mempty lib) entries
 
-entriesFromDir :: FilePath -> IO [PursuitEntry]
+entriesFromDir :: FilePath -> Generate [PursuitEntry]
 entriesFromDir dir = do
-  files <- glob $ dir </> "src/**/*.purs"
-  ms <- mapM parseFile files
-  return $ modulesToEntries (concat ms)
+  files <- liftIO $ glob $ dir </> "src/**/*.purs"
+  modulesToEntries . concat <$> mapM parseFile files
 
 preludeWebUrl :: String
 preludeWebUrl = "https://github.com/purescript/purescript/tree/master/prelude"
 
-buildPreludeDb :: IO PursuitDatabase
+buildPreludeDb :: Generate PursuitDatabase
 buildPreludeDb = do
   entries <- modulesToEntries <$> parseText "<<Prelude>>" (T.pack P.prelude)
   let preludeInfo = LibraryInfo (showVersion Paths.version) preludeWebUrl
@@ -192,15 +228,15 @@ buildPreludeDb = do
 modulesToEntries :: [P.Module] -> [PursuitEntry]
 modulesToEntries = concatMap entriesForModule
 
-parseFile :: FilePath -> IO [P.Module]
+parseFile :: FilePath -> Generate [P.Module]
 parseFile input = do
-  text <- T.readFile input
+  text <- liftIO $ T.readFile input
   parseText input text
 
-parseText :: FilePath -> T.Text -> IO [P.Module]
+parseText :: FilePath -> T.Text -> Generate [P.Module]
 parseText input text = do
   case P.lex input (T.unpack text) >>= P.runTokenParser input P.parseModules of
-    Left err -> do
+    Left err -> liftIO $ do
       T.hPutStr stderr $ T.pack $ show err
       exitFailure
     Right ms -> do

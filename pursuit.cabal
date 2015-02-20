@@ -22,7 +22,10 @@ library
                    aeson -any,
                    bytestring -any,
                    text -any, 
-                   containers -any
+                   containers -any,
+                   transformers ==0.4.*,
+                   mtl >=2.2.1,
+                   parsec -any
     exposed-modules: Pursuit, Pursuit.Generator
     other-modules: Paths_pursuit
     buildable: True
@@ -36,7 +39,6 @@ executable pursuit-server
                    directory -any,
                    filepath -any,
                    aeson -any, 
-                   cmdtheline -any, 
                    text -any,
                    bytestring -any,
                    split -any, 
