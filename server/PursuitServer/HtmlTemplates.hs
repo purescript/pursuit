@@ -27,11 +27,11 @@ index = doctypehtml_ $ do
                 ]
   body_ $ do
     div_ [class_ "container-fluid"] $ do
-      div_ [class_ "header"] $
+      div_ [class_ "header"] $ do
         h1_ "Pursuit"
-      form_ [action_ "/", method_ "get"] $
-        input_ [type_ "search", class_ "form_control", placeholder_ "Search",
-                name_ "q"]
+        form_ [action_ "/", method_ "get"] $
+          input_ [type_ "search", class_ "form-control", placeholder_ "Search",
+                  name_ "q"]
 
       div_ [class_ "body"] $ do
         p_ "Enter a search term above."

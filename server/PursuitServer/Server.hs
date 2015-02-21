@@ -15,6 +15,7 @@ import System.IO (hPutStr, stderr)
 import System.Exit (exitFailure)
 
 import Web.Scotty
+import Network.Wai.Middleware.Static
 
 import Pursuit
 import Pursuit.Generator
@@ -27,10 +28,16 @@ runServer (ServerOptions {..}) = do
   db <- startGenerateThread serverLibrariesFile
 
   scotty serverPort $ do
+    serveStaticFiles "static"
+
     get "/" $ do
-      renderTemplate index
       -- q <- param "q"
       -- json $ query q db
+      renderTemplate index
+
+-- serve static files from a particular directory
+serveStaticFiles :: String -> ScottyM ()
+serveStaticFiles = middleware . staticPolicy . addBase
 
 buildLookup :: [PursuitEntry] -> T.Trie PursuitEntry
 buildLookup = foldl' (\t e -> T.insert (map toLower (entryName e)) e t) T.empty
