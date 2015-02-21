@@ -6,6 +6,8 @@ import Lucid
 import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
 
+import Web.Scotty (html)
+
 stylesheet :: T.Text -> Html ()
 stylesheet url = link_ [href_ url, rel_ "stylesheet", type_ "text/css"]
 
@@ -27,8 +29,9 @@ index = doctypehtml_ $ do
     div_ [class_ "container-fluid"] $ do
       div_ [class_ "header"] $
         h1_ "Pursuit"
-      div_ $
-        input_ [type_ "search", class_ "form_control", placeholder_ "Search"]
+      form_ [action_ "/", method_ "get"] $
+        input_ [type_ "search", class_ "form_control", placeholder_ "Search",
+                name_ "q"]
 
       div_ [class_ "body"] $ do
         p_ "Enter a search term above."
@@ -37,5 +40,4 @@ index = doctypehtml_ $ do
           " | "
           a_ [href_ "http://purescript.org"] "PureScript"
 
-renderTemplate :: Html () -> TL.Text
-renderTemplate = renderText
+renderTemplate = html . renderText
