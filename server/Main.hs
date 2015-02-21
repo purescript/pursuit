@@ -1,62 +1,45 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE LambdaCase #-}
 
 module Main where
 
-import Pursuit
-import Pursuit.Generator
-
-import Data.Char (toLower)
 import Data.Version (showVersion)
-import Data.List (foldl')
 
-import qualified Data.Trie as T
+import Options.Applicative
 
-import Control.Applicative
-
-import System.Exit (exitFailure)
-import System.IO (hPutStr, stderr)
-import Web.Scotty
+import PursuitServer.Server
+import PursuitServer.Types
 
 import qualified Paths_pursuit as Paths
 
-buildLookup :: [PursuitEntry] -> T.Trie PursuitEntry
-buildLookup = foldl' (\t e -> T.insert (map toLower (entryName e)) e t) T.empty
+port :: Parser Int
+port = option auto
+     ( value 8080
+    <> short 'p'
+    <> long "port"
+    <> help "The port to listen on"
+    <> metavar "PORT"
+     )
 
-query :: String -> T.Trie PursuitEntry -> Maybe [PursuitEntry]
-query q = fmap (take 20 . map snd . T.toArray) . T.lookupAll (map toLower q)
+librariesFile :: Parser FilePath
+librariesFile = strOption
+         ( value "libraries.json"
+        <> short 'l'
+        <> long "libraries"
+        <> help "The libraries file"
+        <> metavar "PATH"
+         )
 
-runServer :: Int -> FilePath -> IO ()
-runServer portNumber path =
-  generateDatabase path >>= \case
-    Right ((PursuitDatabase _ entries), _) -> do
-      let db = buildLookup entries
-      scotty portNumber $ do
-        get "/" $ do
-          q <- param "q"
-          json $ query q db
-    Left err -> do
-      hPutStr stderr (show err)
-      exitFailure
-
--- port :: Term Int
--- port = value $ opt 8080 $ (optInfo [ "p", "port" ]) { optDoc = "The port to listen on" }
-
--- datafile :: Term FilePath
--- datafile = value $ opt "libraries.json" $ (optInfo [ "d", "data" ]) { optDoc = "The data file" }
-
--- term :: Term (IO ())
--- term = runServer <$> port <*> datafile
-
--- termInfo :: TermInfo
--- termInfo = defTI
---   { termName = "pursuit-server"
---   , version  = showVersion Paths.version
---   , termDoc  = "Start a web server to service for Pursuit database requests"
---   }
-
--- main :: IO ()
--- main = run (term, termInfo)
+serverOptions :: Parser ServerOptions
+serverOptions = ServerOptions <$> port
+                              <*> librariesFile
 
 main :: IO ()
-main = runServer 8080 "libraries.json"
+main = execParser opts >>= runServer
+  where
+  opts = info (version <*> helper <*> serverOptions) infoModList
+  infoModList = fullDesc <> headerInfo <> footerInfo
+  headerInfo  = header   "pursuit-server - web-based search engine for PureScript code"
+  footerInfo  = footer $ "pursuit-server " ++ showVersion Paths.version
+
+  version :: Parser (a -> a)
+  version = abortOption (InfoMsg (showVersion Paths.version)) $ long "version" <> help "Show the version number" <> hidden

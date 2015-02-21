@@ -46,7 +46,8 @@ executable pursuit-server
                    Glob -any,
                    scotty -any,
                    utf8-string -any,
-                   containers -any
+                   containers -any,
+                   optparse-applicative -any
     main-is: Main.hs
     buildable: True
     hs-source-dirs: server
