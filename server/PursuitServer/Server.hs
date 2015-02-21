@@ -8,6 +8,8 @@ import Data.Char (toLower)
 import Data.List (foldl')
 import qualified Data.Trie as T
 
+import Control.Concurrent.STM
+
 import System.IO (hPutStr, stderr)
 import System.Exit (exitFailure)
 
@@ -17,19 +19,15 @@ import Pursuit
 import Pursuit.Generator
 
 import PursuitServer.Types
+import PursuitServer.HtmlTemplates
 
 runServer :: ServerOptions -> IO ()
 runServer (ServerOptions {..}) =
-  generateDatabase serverLibrariesFile >>= \case
-    Right ((PursuitDatabase _ entries), _) -> do
-      let db = buildLookup entries
-      scotty serverPort $ do
-        get "/" $ do
-          q <- param "q"
-          json $ query q db
-    Left err -> do
-      hPutStr stderr (show err)
-      exitFailure
+  scotty serverPort $ do
+    get "/" $ do
+      html $ renderTemplate index
+      -- q <- param "q"
+      -- json $ query q db
 
 buildLookup :: [PursuitEntry] -> T.Trie PursuitEntry
 buildLookup = foldl' (\t e -> T.insert (map toLower (entryName e)) e t) T.empty
