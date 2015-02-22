@@ -11,6 +11,7 @@
 -- | Data generator for the pursuit search engine
 --
 -----------------------------------------------------------------------------
+
 {-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE LambdaCase                 #-}
@@ -23,6 +24,7 @@ module Pursuit.Generator (
 ) where
 
 import Data.List
+import qualified Data.DList as DL
 import Data.Ord
 import Data.List.Split (splitOn)
 import Data.Maybe
@@ -83,18 +85,18 @@ data LibraryError
   | ParseFailed Parsec.ParseError
   deriving (Show)
 
-newtype Generate a = G { unG :: WriterT [Warning] (ExceptT Error IO) a }
-  deriving (Functor, Applicative, Monad, MonadWriter [Warning], MonadIO,
-            MonadError Error)
+newtype Generate a =
+  G { unG :: WriterT (DL.DList Warning) (ExceptT Error IO) a }
+  deriving (Functor, Applicative, Monad, MonadWriter (DL.DList Warning),
+            MonadIO, MonadError Error)
 
 runGenerate :: Generate a -> IO (Either Error (a, [Warning]))
-runGenerate action = do
-  runExceptT (runWriterT (unG action)) >>= \case
-    Right x -> return (Right x)
-    Left _  -> error "lol"
+runGenerate action =
+  fmap (fmap (fmap DL.toList))
+       (runExceptT (runWriterT (unG action)))
 
 warn :: Warning -> Generate ()
-warn w = tell [w]
+warn w = tell (DL.singleton w)
 
 getBaseDir :: IO FilePath
 getBaseDir = do
