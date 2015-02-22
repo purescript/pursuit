@@ -20,7 +20,7 @@ index = doctypehtml_ $ do
 
     meta_ [name_ "viewport", content_ "width=device-width,user-scalable=no"]
 
-    stylesheets [ "http://fonts.googleapis.com/css?family=Roboto:400,300,700"
+    stylesheets [ "https://fonts.googleapis.com/css?family=Roboto:400,300,700"
                 , "/css/bootstrap.min.css"
                 , "/css/style.css"
                 ]
