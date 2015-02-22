@@ -10,6 +10,14 @@
 --
 -- | Data generator for the pursuit search engine
 --
+-- TODO
+-- ====
+--
+-- Convert commented out calls to 'p' to an actual logging system.
+--
+-- Just `git pull` rather than deleting and downloading the whole repo again
+-- (but check this will work)
+--
 -----------------------------------------------------------------------------
 
 {-# LANGUAGE OverloadedStrings          #-}
