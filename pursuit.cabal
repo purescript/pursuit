@@ -37,6 +37,8 @@ executable pursuit-server
     build-depends: base ==4.7.*,
                    pursuit -any,
                    purescript >=0.6.7,
+                   transformers ==0.4.*,
+                   mtl >=2.2.1,
                    directory -any,
                    filepath -any,
                    aeson -any,
