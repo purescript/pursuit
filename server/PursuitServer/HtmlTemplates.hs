@@ -4,9 +4,8 @@ module PursuitServer.HtmlTemplates where
 
 import Lucid
 import qualified Data.Text as T
-import qualified Data.Text.Lazy as TL
 
-import Web.Scotty (html)
+import Web.Scotty (html, ActionM)
 
 stylesheet :: T.Text -> Html ()
 stylesheet url = link_ [href_ url, rel_ "stylesheet", type_ "text/css"]
@@ -40,4 +39,5 @@ index = doctypehtml_ $ do
           " | "
           a_ [href_ "http://purescript.org"] "PureScript"
 
+renderTemplate :: Html () -> ActionM ()
 renderTemplate = html . renderText

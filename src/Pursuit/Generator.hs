@@ -31,21 +31,17 @@ import Data.Maybe
 import Data.Monoid
 import Data.Version (showVersion, parseVersion, Version)
 import Text.ParserCombinators.ReadP (readP_to_S)
-import Data.Traversable (traverse)
 
 import Control.Applicative
 import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Writer.Class
 import Control.Monad.Writer
-import Control.Monad.Reader.Class
-import Control.Monad.Reader
 import Control.Monad.Except (ExceptT, runExceptT, MonadError, throwError)
 
 import Pursuit
 
 import System.Exit (ExitCode(..))
-import System.IO (stderr)
 import System.Directory (getCurrentDirectory, setCurrentDirectory,
                          doesDirectoryExist, removeDirectoryRecursive)
 import System.FilePath ((</>))
@@ -127,11 +123,14 @@ getLibraryDbs libraries = do
     case mVers of
       Nothing -> failLibrary lib NoSuitableTagsFound
       Just vers' -> do
+        gitCheckoutTag vers' dir
         let vers = dropWhile (== 'v') vers'
         -- p $ "selected " ++ name ++ ": " ++ vers
-        gitCheckoutTag vers' dir
-        let info = LibraryInfo vers (libraryWebUrl lib)
-        buildLibraryDb lib (libraryBowerName lib) (Just info) dir
+
+        let info = libraryBowerName lib
+                      >>= (\n -> Just (n, mkLibraryInfo lib vers))
+
+        buildLibraryDb lib info dir
 
 failLibrary :: Library -> LibraryError -> Generate PursuitDatabase
 failLibrary lib reason = do
@@ -213,17 +212,25 @@ runCommandQuiet program args =
 -- and values appear in the database. If both a library name and additional
 -- library information are supplied, then those appear in the database too.
 buildLibraryDb ::
-  Library -> Maybe String -> Maybe LibraryInfo -> FilePath -> Generate PursuitDatabase
-buildLibraryDb lib mLibName mInfo dir = do
+  Library -> Maybe (String, LibraryInfo) -> FilePath -> Generate PursuitDatabase
+buildLibraryDb lib extraInfo dir = do
   entriesFromDir dir >>= \case
     Left err -> failLibrary lib (ParseFailed err)
-    Right entries' -> return $ databaseFromEntries mLibName mInfo entries'
+    Right entries' -> return $ databaseFromEntries extraInfo entries'
 
-  where
-  databaseFromEntries mLibName mInfo entries' =
-    let entries = map (\e -> e { entryLibraryName = mLibName }) entries'
-        lib = M.singleton <$> mLibName <*> mInfo
-    in PursuitDatabase (fromMaybe mempty lib) entries
+-- Build a PursuitDatabase from a list of entries, optionally also with details
+-- of the library they come from.
+databaseFromEntries ::
+  Maybe (String, LibraryInfo) -> [PursuitEntry] -> PursuitDatabase
+databaseFromEntries extraInfo entries' =
+  let mLibName = fst <$> extraInfo
+      mInfo    = snd <$> extraInfo
+      entries  = map (\e -> e { entryLibraryName = mLibName }) entries'
+      lib      = M.singleton <$> mLibName <*> mInfo
+  in PursuitDatabase (fromMaybe mempty lib) entries
+
+mkLibraryInfo :: Library -> String -> LibraryInfo
+mkLibraryInfo lib version = LibraryInfo version (libraryWebUrl lib)
 
 entriesFromDir :: FilePath -> Generate (Either Parsec.ParseError [PursuitEntry])
 entriesFromDir dir = do
