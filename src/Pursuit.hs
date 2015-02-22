@@ -16,6 +16,7 @@ type GitUrl = String
 -- A Locator describes where to find a particular library.
 data Locator =
   OnGithub String String
+  deriving (Show, Eq)
 
 toGitUrl :: Locator -> GitUrl
 toGitUrl (OnGithub user repo) =
@@ -31,6 +32,7 @@ instance A.FromJSON Locator where
 data Library = Library { libraryLocator :: Locator
                        , libraryBowerName :: Maybe String
                        }
+                       deriving (Show, Eq)
 
 libraryGitUrl :: Library -> GitUrl
 libraryGitUrl = toGitUrl . libraryLocator

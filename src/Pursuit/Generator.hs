@@ -11,7 +11,9 @@
 -- | Data generator for the pursuit search engine
 --
 -----------------------------------------------------------------------------
-{-# LANGUAGE OverloadedStrings, GeneralizedNewtypeDeriving, LambdaCase #-}
+{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE LambdaCase                 #-}
 
 module Pursuit.Generator (
   Error(..),
@@ -27,17 +29,20 @@ import Data.Maybe
 import Data.Monoid
 import Data.Version (showVersion, parseVersion, Version)
 import Text.ParserCombinators.ReadP (readP_to_S)
+import Data.Traversable (traverse)
 
 import Control.Applicative
 import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Writer.Class
 import Control.Monad.Writer
-import Control.Monad.Except
+import Control.Monad.Reader.Class
+import Control.Monad.Reader
+import Control.Monad.Except (ExceptT, runExceptT, MonadError, throwError)
 
 import Pursuit
 
-import System.Exit (exitFailure, ExitCode(..))
+import System.Exit (ExitCode(..))
 import System.IO (stderr)
 import System.Directory (getCurrentDirectory, setCurrentDirectory,
                          doesDirectoryExist, removeDirectoryRecursive)
@@ -61,22 +66,26 @@ import qualified Paths_pursuit as Paths
 -- A condition that means that the generator is unable to continue.
 data Error
   = DecodeLibrariesFailed T.Text
-  | CommandFailed ExitCode T.Text T.Text
-  deriving (Show, Eq)
+  | CommandFailed Int T.Text T.Text
+  | PreludeFailed LibraryError
+  deriving (Show)
 
 -- A condition that indicates that something is wrong and should probably be
 -- fixed, but is not severe enough that the generator is unable to continue.
 data Warning
   = LibraryFailed Library LibraryError
+  deriving (Show)
 
 -- A condition that means that database entries for a particular library could
 -- not be created.
 data LibraryError
   = NoSuitableTagsFound
   | ParseFailed Parsec.ParseError
+  deriving (Show)
 
 newtype Generate a = G { unG :: WriterT [Warning] (ExceptT Error IO) a }
-  deriving (Functor, Applicative, Monad, MonadWriter [Warning], MonadIO)
+  deriving (Functor, Applicative, Monad, MonadWriter [Warning], MonadIO,
+            MonadError Error)
 
 runGenerate :: Generate a -> IO (Either Error (a, [Warning]))
 runGenerate action = do
@@ -84,8 +93,8 @@ runGenerate action = do
     Right x -> return (Right x)
     Left _  -> error "lol"
 
-p :: String -> IO ()
-p = T.hPutStrLn stderr . T.pack
+warn :: Warning -> Generate ()
+warn w = tell [w]
 
 getBaseDir :: IO FilePath
 getBaseDir = do
@@ -111,18 +120,21 @@ getLibraryDbs libraries = do
   forM libraries $ \lib -> do
     let name = libraryName lib
     let dir = baseDir </> name
-    liftIO $ gitClone (libraryGitUrl lib) dir
-    mVers <- liftIO $ getMostRecentTaggedVersion dir
+    gitClone (libraryGitUrl lib) dir
+    mVers <- getMostRecentTaggedVersion dir
     case mVers of
-      Nothing -> liftIO $ do
-        p $ "error: no suitable tags found for " ++ name
-        exitFailure
+      Nothing -> failLibrary lib NoSuitableTagsFound
       Just vers' -> do
         let vers = dropWhile (== 'v') vers'
-        liftIO $ p $ "selected " ++ name ++ ": " ++ vers
-        liftIO $ gitCheckoutTag vers' dir
+        -- p $ "selected " ++ name ++ ": " ++ vers
+        gitCheckoutTag vers' dir
         let info = LibraryInfo vers (libraryWebUrl lib)
-        buildLibraryDb (libraryBowerName lib) (Just info) dir
+        buildLibraryDb lib (libraryBowerName lib) (Just info) dir
+
+failLibrary :: Library -> LibraryError -> Generate PursuitDatabase
+failLibrary lib reason = do
+  warn (LibraryFailed lib reason)
+  return mempty
 
 workingDir :: String
 workingDir = "./tmp/"
@@ -132,30 +144,29 @@ getLibraries librariesFile = do
   json <- liftIO $ B.readFile librariesFile
   case A.eitherDecodeStrict json of
     Right libs -> return libs
-    Left err -> liftIO $ do
-      T.hPutStrLn stderr (T.pack err)
-      exitFailure
+    Left err -> throwError (DecodeLibrariesFailed (T.pack err))
 
 libraryName :: Library -> String
 libraryName lib =
   fromMaybe (last $ splitOn "/" $ libraryGitUrl lib) (libraryBowerName lib)
 
 -- Clone the specified repository into the specified directory.
-gitClone :: GitUrl -> FilePath -> IO ()
+gitClone :: GitUrl -> FilePath -> Generate ()
 gitClone url dir = do
-  exists <- doesDirectoryExist dir
-  when exists $
-    removeDirectoryRecursive dir
+  liftIO $ do
+    exists <- doesDirectoryExist dir
+    when exists $
+      removeDirectoryRecursive dir
 
-  p $ "cloning: " ++ url
+  -- p $ "cloning: " ++ url
   runCommandQuiet "git" ["clone", url, dir]
 
-gitCheckoutTag :: String -> FilePath -> IO ()
+gitCheckoutTag :: String -> FilePath -> Generate ()
 gitCheckoutTag tag gitDir = do
   pushd gitDir $ do
     runCommandQuiet "git" ["checkout", tag]
 
-getMostRecentTaggedVersion :: FilePath -> IO (Maybe String)
+getMostRecentTaggedVersion :: FilePath -> Generate (Maybe String)
 getMostRecentTaggedVersion gitDir = do
   pushd gitDir $ do
     (out, _) <- runCommand "git" ["tag", "--list"]
@@ -163,12 +174,12 @@ getMostRecentTaggedVersion gitDir = do
     let vers = listToMaybe $ reversedSort versions
     return $ fmap snd vers
 
-pushd :: FilePath -> IO a -> IO a
+pushd :: (Monad m, MonadIO m) => FilePath -> m a -> m a
 pushd dir action = do
-  oldDir <- getCurrentDirectory
-  setCurrentDirectory dir
+  oldDir <- liftIO $ getCurrentDirectory
+  liftIO $ setCurrentDirectory dir
   result <- action
-  setCurrentDirectory oldDir
+  liftIO $ setCurrentDirectory oldDir
   return result
 
 parseVersion' :: String -> Maybe (Version, String)
@@ -182,17 +193,16 @@ parseVersion' str =
 reversedSort :: Ord a => [a] -> [a]
 reversedSort = sortBy (comparing Down)
 
-runCommand :: FilePath -> [String] -> IO (String, String)
+runCommand :: FilePath -> [String] -> Generate (String, String)
 runCommand program args = do
   (code, out, err) <- liftIO $ readProcessWithExitCode program args ""
   case code of
-    ExitSuccess -> return (out, err)
-    ExitFailure _ -> do
-      T.hPutStr stderr (T.pack out)
-      T.hPutStr stderr (T.pack err)
-      exitFailure
+    ExitSuccess ->
+      return (out, err)
+    ExitFailure n ->
+      throwError (CommandFailed n (T.pack out) (T.pack err))
 
-runCommandQuiet :: FilePath -> [String] -> IO ()
+runCommandQuiet :: FilePath -> [String] -> Generate ()
 runCommandQuiet program args =
   void $ runCommand program args
 
@@ -201,26 +211,35 @@ runCommandQuiet program args =
 -- and values appear in the database. If both a library name and additional
 -- library information are supplied, then those appear in the database too.
 buildLibraryDb ::
-  Maybe String -> Maybe LibraryInfo -> FilePath -> Generate PursuitDatabase
-buildLibraryDb mLibName mInfo dir = do
-  entries' <- entriesFromDir dir
+  Library -> Maybe String -> Maybe LibraryInfo -> FilePath -> Generate PursuitDatabase
+buildLibraryDb lib mLibName mInfo dir = do
+  entriesFromDir dir >>= \case
+    Left err -> failLibrary lib (ParseFailed err)
+    Right entries' -> return $ databaseFromEntries mLibName mInfo entries'
 
-  let entries = map (\e -> e { entryLibraryName = mLibName }) entries'
-  let lib = M.singleton <$> mLibName <*> mInfo
+  where
+  databaseFromEntries mLibName mInfo entries' =
+    let entries = map (\e -> e { entryLibraryName = mLibName }) entries'
+        lib = M.singleton <$> mLibName <*> mInfo
+    in PursuitDatabase (fromMaybe mempty lib) entries
 
-  return $ PursuitDatabase (fromMaybe mempty lib) entries
-
-entriesFromDir :: FilePath -> Generate [PursuitEntry]
+entriesFromDir :: FilePath -> Generate (Either Parsec.ParseError [PursuitEntry])
 entriesFromDir dir = do
   files <- liftIO $ glob $ dir </> "src/**/*.purs"
-  modulesToEntries . concat <$> mapM parseFile files
+  parsedFiles <- mapM parseFile files
+
+  return (modulesToEntries . concat <$> sequence parsedFiles)
 
 preludeWebUrl :: String
 preludeWebUrl = "https://github.com/purescript/purescript/tree/master/prelude"
 
 buildPreludeDb :: Generate PursuitDatabase
 buildPreludeDb = do
-  entries <- modulesToEntries <$> parseText "<<Prelude>>" (T.pack P.prelude)
+  modules <- parseText "<<Prelude>>" (T.pack P.prelude) >>= \case
+    Left err -> throwError (PreludeFailed (ParseFailed err))
+    Right ms -> return ms
+
+  let entries = modulesToEntries modules
   let preludeInfo = LibraryInfo (showVersion Paths.version) preludeWebUrl
   let lib = M.singleton "Prelude" preludeInfo
   return $ PursuitDatabase lib entries
@@ -228,19 +247,15 @@ buildPreludeDb = do
 modulesToEntries :: [P.Module] -> [PursuitEntry]
 modulesToEntries = concatMap entriesForModule
 
-parseFile :: FilePath -> Generate [P.Module]
+parseFile :: FilePath -> Generate (Either Parsec.ParseError [P.Module])
 parseFile input = do
   text <- liftIO $ T.readFile input
   parseText input text
 
-parseText :: FilePath -> T.Text -> Generate [P.Module]
-parseText input text = do
-  case P.lex input (T.unpack text) >>= P.runTokenParser input P.parseModules of
-    Left err -> liftIO $ do
-      T.hPutStr stderr $ T.pack $ show err
-      exitFailure
-    Right ms -> do
-      return ms
+parseText ::
+  FilePath -> T.Text -> Generate (Either Parsec.ParseError [P.Module])
+parseText input text =
+  return (P.lex input (T.unpack text) >>= P.runTokenParser input P.parseModules)
 
 entriesForModule :: P.Module -> [PursuitEntry]
 entriesForModule (P.Module mn ds _) = concatMap (entriesForDeclaration mn) ds
