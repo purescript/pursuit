@@ -13,8 +13,6 @@
 -- TODO
 -- ====
 --
--- Convert commented out calls to 'p' to an actual logging system.
---
 -- Just `git pull` rather than deleting and downloading the whole repo again
 -- (but check this will work)
 --
@@ -30,6 +28,8 @@ module Pursuit.Generator (
   LibraryError(..),
   generateDatabase
 ) where
+
+import Prelude hiding (log)
 
 import Data.List
 import qualified Data.DList as DL
@@ -89,26 +89,50 @@ data LibraryError
   | ParseFailed Parsec.ParseError
   deriving (Show)
 
+data LogMessage
+  = CloningRepo GitUrl
+  | SelectedVersion String String
+
+data GenerateWriter =
+  GenerateWriter (DL.DList Warning) (DL.DList LogMessage)
+
+instance Monoid GenerateWriter where
+  mempty = GenerateWriter mempty mempty
+  mappend (GenerateWriter a b) (GenerateWriter c d) =
+    GenerateWriter (mappend a c) (mappend b d)
+
+unpackGenerateWriter :: GenerateWriter -> ([Warning], [LogMessage])
+unpackGenerateWriter (GenerateWriter warns msgs) =
+  (DL.toList warns, DL.toList msgs)
+
 newtype Generate a =
-  G { unG :: WriterT (DL.DList Warning) (ExceptT Error IO) a }
-  deriving (Functor, Applicative, Monad, MonadWriter (DL.DList Warning),
+  G { unG :: ExceptT Error (WriterT GenerateWriter IO) a }
+  deriving (Functor, Applicative, Monad, MonadWriter GenerateWriter,
             MonadIO, MonadError Error)
 
-runGenerate :: Generate a -> IO (Either Error (a, [Warning]))
+runGenerate :: Generate a -> IO ([Warning], [LogMessage], Either Error a)
 runGenerate action =
-  fmap (fmap (fmap DL.toList))
-       (runExceptT (runWriterT (unG action)))
+  fmap shuffle (runWriterT (runExceptT (unG action)))
+  where
+  shuffle (result, generateWriter) =
+    let (warns, logs) = unpackGenerateWriter generateWriter
+    in (warns, logs, result)
 
 warn :: Warning -> Generate ()
-warn w = tell (DL.singleton w)
+warn w = tell (GenerateWriter (DL.singleton w) DL.empty)
+
+log :: LogMessage -> Generate ()
+log m = tell (GenerateWriter DL.empty (DL.singleton m))
 
 getBaseDir :: IO FilePath
 getBaseDir = do
   currentDir <- getCurrentDirectory
   return $ currentDir </> workingDir
 
-generateDatabase :: FilePath -> IO (Either Error (PursuitDatabase, [Warning]))
-generateDatabase = runGenerate . generateDatabase'
+generateDatabase ::
+  FilePath -> IO ([Warning], [LogMessage], Either Error PursuitDatabase)
+generateDatabase =
+  runGenerate . generateDatabase'
 
 generateDatabase' :: FilePath -> Generate PursuitDatabase
 generateDatabase' librariesFile = do
@@ -133,11 +157,10 @@ getLibraryDbs libraries = do
       Just vers' -> do
         gitCheckoutTag vers' dir
         let vers = dropWhile (== 'v') vers'
-        -- p $ "selected " ++ name ++ ": " ++ vers
+        log (SelectedVersion name vers)
 
         let info = libraryBowerName lib
                       >>= (\n -> Just (n, mkLibraryInfo lib vers))
-
         buildLibraryDb lib info dir
 
 failLibrary :: Library -> LibraryError -> Generate PursuitDatabase
@@ -167,7 +190,7 @@ gitClone url dir = do
     when exists $
       removeDirectoryRecursive dir
 
-  -- p $ "cloning: " ++ url
+  log (CloningRepo url)
   runCommandQuiet "git" ["clone", url, dir]
 
 gitCheckoutTag :: String -> FilePath -> Generate ()

@@ -60,8 +60,8 @@ startGenerateThread librariesFile = do
     putStrLn "Regenerating database..."
 
     generateDatabase librariesFile >>= \case
-      Left err -> putStrLn (show err)
-      Right ((PursuitDatabase _ entries), warnings) -> do
+      (_, _, Left err) -> putStrLn (show err)
+      (warnings, _, Right (PursuitDatabase _ entries)) -> do
         atomically (writeTVar tvar (buildLookup entries))
         if (null warnings)
           then putStrLn "Done. No warnings."
