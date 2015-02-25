@@ -19,6 +19,8 @@ import Control.Monad.IO.Class
 import Web.Scotty
 import Network.Wai.Middleware.Static
 
+import System.Exit (exitFailure)
+
 import Pursuit
 import Pursuit.Generator
 
@@ -52,22 +54,34 @@ serveStaticFiles = middleware . staticPolicy . addBase
 buildLookup :: [PursuitEntry] -> T.Trie PursuitEntry
 buildLookup = foldl' (\t e -> T.insert (map toLower (entryName e)) e t) T.empty
 
+-- Generate the database for the first time, return it as a TVar, and also
+-- kick off a thread to rebuild it periodically.
+--
+-- If the first attempt to rebuild the database fails, exit the program.
 startGenerateThread :: FilePath -> IO (TVar (T.Trie PursuitEntry))
 startGenerateThread librariesFile = do
   tvar <- newTVarIO T.empty
+  buildDb tvar (\err -> do putStrLn err
+                           exitFailure)
 
   void $ forkIO $ hourly $ do
     putStrLn "Regenerating database..."
+    buildDb tvar (\err -> do putStrLn "failed to rebuild database:"
+                             putStrLn err)
 
+  return tvar
+
+  where
+  -- Build the database, put it in the supplied tvar, and also allow the user
+  -- to pass a callback in case an error occurs.
+  buildDb tvar onError =
     generateDatabase librariesFile >>= \case
-      (_, _, Left err) -> putStrLn (show err)
+      (_, _, Left err) -> onError (show err)
       (warnings, _, Right (PursuitDatabase _ entries)) -> do
         atomically (writeTVar tvar (buildLookup entries))
         if (null warnings)
           then putStrLn "Done. No warnings."
           else mapM_ (putStrLn . show) warnings
-
-  return tvar
 
 hourly :: IO a -> IO a
 hourly action = forever (action >> threadDelay (3600 * 1000000))
