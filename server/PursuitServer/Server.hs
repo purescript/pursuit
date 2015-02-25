@@ -61,6 +61,7 @@ buildLookup = foldl' (\t e -> T.insert (map toLower (entryName e)) e t) T.empty
 startGenerateThread :: FilePath -> IO (TVar (T.Trie PursuitEntry))
 startGenerateThread librariesFile = do
   tvar <- newTVarIO T.empty
+  putStrLn "Building database..."
   buildDb tvar (\err -> do putStrLn err
                            exitFailure)
 
