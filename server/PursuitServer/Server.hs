@@ -7,7 +7,6 @@ module PursuitServer.Server where
 import Data.Char (toLower)
 import Data.List (foldl')
 import Data.Maybe
-import qualified Data.Trie as T
 import qualified Data.Text.Lazy as TL
 
 import Control.Monad (void, forever)
@@ -51,9 +50,6 @@ safeParam name = fmap Just (param name) `rescue` const (return Nothing)
 serveStaticFiles :: String -> ScottyM ()
 serveStaticFiles = middleware . staticPolicy . addBase
 
-buildLookup :: [PursuitEntry] -> T.Trie PursuitEntry
-buildLookup = foldl' (\t e -> T.insert (map toLower (entryName e)) e t) T.empty
-
 -- Generate the database for the first time, return it as a TVar, and also
 -- kick off a thread to rebuild it periodically.
 --
@@ -87,5 +83,5 @@ startGenerateThread librariesFile = do
 hourly :: IO a -> IO a
 hourly action = forever (action >> threadDelay (3600 * 1000000))
 
-query :: String -> T.Trie PursuitEntry -> [PursuitEntry]
-query q = fromMaybe [] . fmap (take 20 . map snd . T.toArray) . T.lookupAll (map toLower q)
+queryDecls :: String -> PursuitDatabase -> [Decl]
+queryDecls q = 

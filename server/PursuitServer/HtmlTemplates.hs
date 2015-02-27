@@ -15,8 +15,8 @@ stylesheet url = link_ [href_ url, rel_ "stylesheet", type_ "text/css"]
 stylesheets :: [T.Text] -> Html ()
 stylesheets = mapM_ stylesheet
 
-index :: Maybe [PursuitEntry] -> Html ()
-index mEntries =
+index :: Maybe [Decl] -> Html ()
+index mDecls =
   doctypehtml_ $ do
     head_ $ do
       title_ "Pursuit"
@@ -36,22 +36,28 @@ index mEntries =
                     name_ "q"]
 
         div_ [class_ "body"] $ do
-          renderEntries mEntries
+          renderDecls mDecls
           div_ $ do
             a_ [href_ "https://github.com/purescript/pursuit"] "Source"
             " | "
             a_ [href_ "http://purescript.org"] "PureScript"
 
-renderEntries :: Maybe [PursuitEntry] -> Html ()
-renderEntries Nothing = p_ "Enter a search term above."
-renderEntries (Just entries) = mapM_ renderEntry entries
+renderDecls :: Maybe [Decl] -> Html ()
+renderDecls Nothing = p_ "Enter a search term above."
+renderDecls (Just decls) = mapM_ renderDecl decls
 
-renderEntry :: PursuitEntry -> Html ()
-renderEntry (PursuitEntry name modl detail libraryName) =
+renderDecl :: Decl -> Html ()
+renderDecl decl =
   div_ $ do
-    h2_ (toHtml name)
-    code_ (toHtml (modl ++ maybe "" (\n -> " (" ++ n ++ ")") libraryName))
-    pre_ (toHtml detail)
+    h2_ (toHtml (declName decl))
+    code_ $ do
+      toHtml modName
+      " ("
+      toHtml pkgName
+      ")"
+    pre_ (toHtml (declDetail decl))
+  where
+  (modName, pkgName) = declModule decl
 
 renderTemplate :: Html () -> ActionM ()
 renderTemplate = html . renderText

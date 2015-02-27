@@ -26,7 +26,9 @@ library
                    containers -any,
                    transformers ==0.4.*,
                    mtl >=2.2.1,
-                   parsec -any
+                   parsec -any,
+                   lucid -any,
+                   ixset -any
     exposed-modules: Pursuit, Pursuit.Generator
     other-modules: Paths_pursuit
     buildable: True

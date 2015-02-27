@@ -30,15 +30,14 @@ module Pursuit.Generator (
   generateDatabase
 ) where
 
-import Prelude hiding (log)
+import Prelude hiding (log, mod)
 
 import Data.List
 import qualified Data.DList as DL
 import Data.Ord
-import Data.List.Split (splitOn)
 import Data.Maybe
 import Data.Monoid
-import Data.Version (showVersion, parseVersion, Version(..))
+import Data.Version (parseVersion, Version(..))
 import Text.ParserCombinators.ReadP (readP_to_S)
 
 import Control.Applicative
@@ -48,7 +47,8 @@ import Control.Monad.Writer.Class
 import Control.Monad.Writer
 import Control.Monad.Except (ExceptT, runExceptT, MonadError, throwError)
 
-import Pursuit
+import Pursuit.Data
+import Pursuit.Database
 
 import System.Exit (ExitCode(..))
 import System.Directory (getCurrentDirectory, setCurrentDirectory,
@@ -58,7 +58,6 @@ import System.Process (readProcessWithExitCode)
 import System.FilePath.Glob (glob)
 
 import qualified Data.ByteString as B
-import qualified Data.Map as M
 
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
@@ -68,7 +67,6 @@ import qualified Data.Aeson as A
 import qualified Text.Parsec as Parsec
 
 import qualified Language.PureScript as P
-import qualified Paths_pursuit as Paths
 
 -- A condition that means that the generator is unable to continue.
 data Error
@@ -80,7 +78,7 @@ data Error
 -- A condition that indicates that something is wrong and should probably be
 -- fixed, but is not severe enough that the generator is unable to continue.
 data Warning
-  = PackageFailed PackageDesc PackageError
+  = PackageFailed PackageName PackageError
   deriving (Show)
 
 -- A condition that means that database entries for a particular package could
@@ -181,7 +179,7 @@ getPackageDbs packageDescs = do
     mVers <- getMostRecentTaggedVersion dir
     case mVers of
       Nothing ->
-        failPackage pkgDesc NoSuitableTagsFound
+        failPackage name NoSuitableTagsFound
       Just (version, versionStr) -> do
         gitCheckoutTag versionStr dir
         log (SelectedVersion name version)
@@ -196,9 +194,9 @@ buildPackage (PackageDesc{..}) version =
           , packageVersion = version
           }
 
-failPackage :: PackageDesc -> PackageError -> Generate PursuitDatabase
-failPackage pkg reason = do
-  warn (PackageFailed pkg reason)
+failPackage :: PackageName -> PackageError -> Generate PursuitDatabase
+failPackage pkgName reason = do
+  warn (PackageFailed pkgName reason)
   return mempty
 
 workingDir :: String
@@ -272,28 +270,29 @@ runCommandQuiet program args =
 -- package information are supplied, then those appear in the database too.
 buildPackageDb :: Package ->  FilePath -> Generate PursuitDatabase
 buildPackageDb pkg dir = do
-  entriesFromDir dir >>= \case
-    Left err -> failPackage pkg (ParseFailed err)
-    Right entries' -> return $ databaseFromDecls pkg entries'
+  declsFromDir dir >>= \case
+    Left err ->
+      failPackage (packageName pkg) (ParseFailed err)
+    Right decls' ->
+      let databases = map (databaseFromDecls pkg) decls'
+      in return (mconcat databases)
 
 -- Build a PursuitDatabase from a list of entries, optionally also with details
 -- of the package they come from.
 databaseFromDecls :: Package -> (Module', [Decl']) -> PursuitDatabase
-databaseFromDecls pkg (module', decls') =
-  createDatabase [pkg]
-                 [completeModule' pkg module']
-                 (map (completeDecl' pkg) decls')
+databaseFromDecls pkg (mod', decls') =
+  createDatabase [pkg] [mod]
+                 (map (completeDecl' (moduleName mod) (packageName pkg)) decls')
+  where
+  mod = completeModule' (packageName pkg) mod'
 
-entriesFromDir ::
-  FilePath -> Generate (Either Parsec.ParseError [Decl])
-entriesFromDir dir = do
+declsFromDir ::
+  FilePath -> Generate (Either Parsec.ParseError [(Module', [Decl'])])
+declsFromDir dir = do
   files <- liftIO $ glob $ dir </> "src/**/*.purs"
   parsedFiles <- mapM parseFile files
 
   return (modulesToDecls . concat <$> sequence parsedFiles)
-
-preludeWebUrl :: String
-preludeWebUrl = "https://github.com/purescript/purescript/tree/master/prelude"
 
 buildPreludeDb :: Generate PursuitDatabase
 buildPreludeDb = do
@@ -332,7 +331,7 @@ parseText input text =
   return (P.lex input (T.unpack text) >>= P.runTokenParser input P.parseModules)
 
 declsForModule :: P.Module -> (Module', [Decl'])
-declsForModule mod@(P.Module mn ds _) =
+declsForModule mod@(P.Module _ ds _) =
   (toModule' mod, concatMap toDecls' ds)
 
 toModule' :: P.Module -> Module'
