@@ -21,11 +21,12 @@
 {-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE LambdaCase                 #-}
+{-# LANGUAGE RecordWildCards            #-}
 
 module Pursuit.Generator (
   Error(..),
   Warning(..),
-  LibraryError(..),
+  PackageError(..),
   generateDatabase
 ) where
 
@@ -37,7 +38,7 @@ import Data.Ord
 import Data.List.Split (splitOn)
 import Data.Maybe
 import Data.Monoid
-import Data.Version (showVersion, parseVersion, Version)
+import Data.Version (showVersion, parseVersion, Version(..))
 import Text.ParserCombinators.ReadP (readP_to_S)
 
 import Control.Applicative
@@ -73,25 +74,25 @@ import qualified Paths_pursuit as Paths
 data Error
   = DecodeLibrariesFailed T.Text
   | CommandFailed Int T.Text T.Text
-  | PreludeFailed LibraryError
+  | PreludeFailed PackageError
   deriving (Show)
 
 -- A condition that indicates that something is wrong and should probably be
 -- fixed, but is not severe enough that the generator is unable to continue.
 data Warning
-  = LibraryFailed Library LibraryError
+  = PackageFailed PackageDesc PackageError
   deriving (Show)
 
--- A condition that means that database entries for a particular library could
+-- A condition that means that database entries for a particular package could
 -- not be created.
-data LibraryError
+data PackageError
   = NoSuitableTagsFound
   | ParseFailed Parsec.ParseError
   deriving (Show)
 
 data LogMessage
   = CloningRepo GitUrl
-  | SelectedVersion String String
+  | SelectedVersion PackageName Version
 
 data GenerateWriter =
   GenerateWriter (DL.DList Warning) (DL.DList LogMessage)
@@ -124,6 +125,31 @@ warn w = tell (GenerateWriter (DL.singleton w) DL.empty)
 log :: LogMessage -> Generate ()
 log m = tell (GenerateWriter DL.empty (DL.singleton m))
 
+-- A Module except that it doesn't have a Package yet.
+type Module' = ModuleName
+
+-- A Decl except that it doesn't have a Package or a Module yet.
+type Decl' = (DeclName, DeclDetail)
+
+completeModule' :: PackageName -> Module' -> Module
+completeModule' pkgName modName =
+  Module { moduleName        = modName
+         , modulePackageName = pkgName
+         }
+
+completeDecl' :: ModuleName -> PackageName -> Decl' -> Decl
+completeDecl' modName pkgName (declName, declDetail) =
+  Decl { declName = declName
+       , declDetail = declDetail
+       , declModule = (modName, pkgName)
+       }
+
+completeAll :: PackageName -> (Module', [Decl']) -> (Module, [Decl])
+completeAll pkgName (mod', decls') = (mod, decls)
+  where
+  mod   = completeModule' pkgName mod'
+  decls = map (completeDecl' (moduleName mod) pkgName) decls'
+
 getBaseDir :: IO FilePath
 getBaseDir = do
   currentDir <- getCurrentDirectory
@@ -135,52 +161,55 @@ generateDatabase =
   runGenerate . generateDatabase'
 
 generateDatabase' :: FilePath -> Generate PursuitDatabase
-generateDatabase' librariesFile = do
-  libraries <- getLibraries librariesFile
+generateDatabase' packagesFile = do
+  packages <- getPackageDescs packagesFile
 
-  dbs <- getLibraryDbs libraries
+  dbs <- getPackageDbs packages
   preludeDb <- buildPreludeDb
 
   return $ preludeDb <> mconcat dbs
 
-getLibraryDbs :: [Library] -> Generate [PursuitDatabase]
-getLibraryDbs libraries = do
+getPackageDbs :: [PackageDesc] -> Generate [PursuitDatabase]
+getPackageDbs packageDescs = do
   baseDir <- liftIO getBaseDir
 
-  forM libraries $ \lib -> do
-    let name = libraryName lib
-    let dir = baseDir </> name
-    gitClone (libraryGitUrl lib) dir
+  forM packageDescs $ \pkgDesc -> do
+    let name = packageDescName pkgDesc
+    let dir = baseDir </> runPackageName name
+
+    gitClone (packageDescGitUrl pkgDesc) dir
     mVers <- getMostRecentTaggedVersion dir
     case mVers of
-      Nothing -> failLibrary lib NoSuitableTagsFound
-      Just vers' -> do
-        gitCheckoutTag vers' dir
-        let vers = dropWhile (== 'v') vers'
-        log (SelectedVersion name vers)
+      Nothing ->
+        failPackage pkgDesc NoSuitableTagsFound
+      Just (version, versionStr) -> do
+        gitCheckoutTag versionStr dir
+        log (SelectedVersion name version)
 
-        let info = libraryBowerName lib
-                      >>= (\n -> Just (n, mkLibraryInfo lib vers))
-        buildLibraryDb lib info dir
+        let pkg = buildPackage pkgDesc version
+        buildPackageDb pkg dir
 
-failLibrary :: Library -> LibraryError -> Generate PursuitDatabase
-failLibrary lib reason = do
-  warn (LibraryFailed lib reason)
+buildPackage :: PackageDesc -> Version -> Package
+buildPackage (PackageDesc{..}) version =
+  Package { packageName = packageDescName
+          , packageLocator = packageDescLocator
+          , packageVersion = version
+          }
+
+failPackage :: PackageDesc -> PackageError -> Generate PursuitDatabase
+failPackage pkg reason = do
+  warn (PackageFailed pkg reason)
   return mempty
 
 workingDir :: String
 workingDir = "./tmp/"
 
-getLibraries :: FilePath -> Generate [Library]
-getLibraries librariesFile = do
-  json <- liftIO $ B.readFile librariesFile
+getPackageDescs :: FilePath -> Generate [PackageDesc]
+getPackageDescs packagesFile = do
+  json <- liftIO $ B.readFile packagesFile
   case A.eitherDecodeStrict json of
     Right libs -> return libs
     Left err -> throwError (DecodeLibrariesFailed (T.pack err))
-
-libraryName :: Library -> String
-libraryName lib =
-  fromMaybe (last $ splitOn "/" $ libraryGitUrl lib) (libraryBowerName lib)
 
 -- Clone the specified repository into the specified directory.
 gitClone :: GitUrl -> FilePath -> Generate ()
@@ -198,13 +227,12 @@ gitCheckoutTag tag gitDir = do
   pushd gitDir $ do
     runCommandQuiet "git" ["checkout", tag]
 
-getMostRecentTaggedVersion :: FilePath -> Generate (Maybe String)
+getMostRecentTaggedVersion :: FilePath -> Generate (Maybe (Version, String))
 getMostRecentTaggedVersion gitDir = do
   pushd gitDir $ do
     (out, _) <- runCommand "git" ["tag", "--list"]
-    let versions = mapMaybe parseVersion' $ lines out
-    let vers = listToMaybe $ reversedSort versions
-    return $ fmap snd vers
+    let versions = mapMaybe parseVersion' (lines out)
+    return (listToMaybe (reversedSort versions))
 
 pushd :: (Monad m, MonadIO m) => FilePath -> m a -> m a
 pushd dir action = do
@@ -238,37 +266,31 @@ runCommandQuiet :: FilePath -> [String] -> Generate ()
 runCommandQuiet program args =
   void $ runCommand program args
 
--- Build a subset of the full database for a single library, which may or may
+-- Build a subset of the full database for a single package, which may or may
 -- not have a name or associated information. In all cases, the exported types
--- and values appear in the database. If both a library name and additional
--- library information are supplied, then those appear in the database too.
-buildLibraryDb ::
-  Library -> Maybe (String, LibraryInfo) -> FilePath -> Generate PursuitDatabase
-buildLibraryDb lib extraInfo dir = do
+-- and values appear in the database. If both a package name and additional
+-- package information are supplied, then those appear in the database too.
+buildPackageDb :: Package ->  FilePath -> Generate PursuitDatabase
+buildPackageDb pkg dir = do
   entriesFromDir dir >>= \case
-    Left err -> failLibrary lib (ParseFailed err)
-    Right entries' -> return $ databaseFromEntries extraInfo entries'
+    Left err -> failPackage pkg (ParseFailed err)
+    Right entries' -> return $ databaseFromDecls pkg entries'
 
 -- Build a PursuitDatabase from a list of entries, optionally also with details
--- of the library they come from.
-databaseFromEntries ::
-  Maybe (String, LibraryInfo) -> [PursuitEntry] -> PursuitDatabase
-databaseFromEntries extraInfo entries' =
-  let mLibName = fst <$> extraInfo
-      mInfo    = snd <$> extraInfo
-      entries  = map (\e -> e { entryLibraryName = mLibName }) entries'
-      lib      = M.singleton <$> mLibName <*> mInfo
-  in PursuitDatabase (fromMaybe mempty lib) entries
+-- of the package they come from.
+databaseFromDecls :: Package -> (Module', [Decl']) -> PursuitDatabase
+databaseFromDecls pkg (module', decls') =
+  createDatabase [pkg]
+                 [completeModule' pkg module']
+                 (map (completeDecl' pkg) decls')
 
-mkLibraryInfo :: Library -> String -> LibraryInfo
-mkLibraryInfo lib version = LibraryInfo version (libraryWebUrl lib)
-
-entriesFromDir :: FilePath -> Generate (Either Parsec.ParseError [PursuitEntry])
+entriesFromDir ::
+  FilePath -> Generate (Either Parsec.ParseError [Decl])
 entriesFromDir dir = do
   files <- liftIO $ glob $ dir </> "src/**/*.purs"
   parsedFiles <- mapM parseFile files
 
-  return (modulesToEntries . concat <$> sequence parsedFiles)
+  return (modulesToDecls . concat <$> sequence parsedFiles)
 
 preludeWebUrl :: String
 preludeWebUrl = "https://github.com/purescript/purescript/tree/master/prelude"
@@ -279,13 +301,25 @@ buildPreludeDb = do
     Left err -> throwError (PreludeFailed (ParseFailed err))
     Right ms -> return ms
 
-  let entries = modulesToEntries modules
-  let preludeInfo = LibraryInfo (showVersion Paths.version) preludeWebUrl
-  let lib = M.singleton "Prelude" preludeInfo
-  return $ PursuitDatabase lib entries
+  let (mods, decls) = getModulesAndDecls (packageName preludePkg) modules
+  return (createDatabase [preludePkg] mods decls)
+  where
+  -- TODO: Use the actual version of PureScript
+  preludePkg = Package { packageName    = PackageName "prelude"
+                       , packageLocator = BundledWithCompiler
+                       , packageVersion = Version [0,6,8] []
+                       }
 
-modulesToEntries :: [P.Module] -> [PursuitEntry]
-modulesToEntries = concatMap entriesForModule
+getModulesAndDecls :: PackageName -> [P.Module] -> ([Module], [Decl])
+getModulesAndDecls pkgName =
+  shuffle . map (completeAll pkgName) . modulesToDecls
+  where
+  shuffle = foldr (\(mod, decls) (mods, decls') ->
+                      (mod : mods, decls ++ decls'))
+                  ([], [])
+
+modulesToDecls :: [P.Module] -> [(Module', [Decl'])]
+modulesToDecls = map declsForModule
 
 parseFile :: FilePath -> Generate (Either Parsec.ParseError [P.Module])
 parseFile input = do
@@ -297,42 +331,46 @@ parseText ::
 parseText input text =
   return (P.lex input (T.unpack text) >>= P.runTokenParser input P.parseModules)
 
-entriesForModule :: P.Module -> [PursuitEntry]
-entriesForModule (P.Module mn ds _) = concatMap (entriesForDeclaration mn) ds
+declsForModule :: P.Module -> (Module', [Decl'])
+declsForModule mod@(P.Module mn ds _) =
+  (toModule' mod, concatMap toDecls' ds)
 
-entry :: P.ModuleName -> String -> String -> PursuitEntry
-entry mn name detail = PursuitEntry name (show mn) detail Nothing
+toModule' :: P.Module -> Module'
+toModule' (P.Module mn _ _) = ModuleName (show mn)
 
-entriesForDeclaration :: P.ModuleName -> P.Declaration -> [PursuitEntry]
-entriesForDeclaration mn (P.TypeDeclaration ident ty) =
-  [entry mn (show ident) $ show ident ++ " :: " ++ prettyPrintType' ty]
-entriesForDeclaration mn (P.ExternDeclaration _ ident _ ty) =
-  [entry mn (show ident) $ show ident ++ " :: " ++ prettyPrintType' ty]
-entriesForDeclaration mn (P.DataDeclaration dtype name args ctors) =
+decl' :: String -> String -> Decl'
+decl' name detail = (DeclName name, DeclDetail detail)
+
+toDecls' :: P.Declaration -> [Decl']
+toDecls' (P.TypeDeclaration ident ty) =
+  [decl' (show ident) $ show ident ++ " :: " ++ prettyPrintType' ty]
+toDecls' (P.ExternDeclaration _ ident _ ty) =
+  [decl' (show ident) $ show ident ++ " :: " ++ prettyPrintType' ty]
+toDecls' (P.DataDeclaration dtype name args ctors) =
   let typeName = P.runProperName name ++ (if null args then "" else " " ++ unwords (map fst args))
       detail = show dtype ++ " " ++ typeName ++ (if null ctors then "" else " = ") ++
         intercalate " | " (map (\(ctor, tys) ->
           intercalate " " (P.runProperName ctor : map P.prettyPrintTypeAtom tys)) ctors)
-  in entry mn (show name) detail : map (\(ctor, _) -> entry mn (show ctor) detail) ctors
-entriesForDeclaration mn (P.ExternDataDeclaration name kind) =
-  [entry mn (show name) $ "data " ++ P.runProperName name ++ " :: " ++ P.prettyPrintKind kind]
-entriesForDeclaration mn (P.TypeSynonymDeclaration name args ty) =
+  in decl' (show name) detail : map (\(ctor, _) -> decl' (show ctor) detail) ctors
+toDecls' (P.ExternDataDeclaration name kind) =
+  [decl' (show name) $ "data " ++ P.runProperName name ++ " :: " ++ P.prettyPrintKind kind]
+toDecls' (P.TypeSynonymDeclaration name args ty) =
   let typeName = P.runProperName name ++ " " ++ unwords (map fst args)
-  in [entry mn (show name) $ "type " ++ typeName ++ " = " ++ prettyPrintType' ty]
-entriesForDeclaration mn (P.TypeClassDeclaration name args implies ds) =
+  in [decl' (show name) $ "type " ++ typeName ++ " = " ++ prettyPrintType' ty]
+toDecls' (P.TypeClassDeclaration name args implies ds) =
   let impliesText = case implies of
                       [] -> ""
                       is -> "(" ++ intercalate ", " (map (\(pn, tys') -> show pn ++ " " ++ unwords (map P.prettyPrintTypeAtom tys')) is) ++ ") <= "
       detail = "class " ++ impliesText ++ P.runProperName name ++ " " ++ unwords (map fst args) ++ " where"
-  in entry mn (show name) detail : concatMap (entriesForDeclaration mn) ds
-entriesForDeclaration mn (P.TypeInstanceDeclaration name constraints className tys _) = do
+  in decl' (show name) detail : concatMap toDecls' ds
+toDecls' (P.TypeInstanceDeclaration name constraints className tys _) = do
   let constraintsText = case constraints of
                           [] -> ""
                           cs -> "(" ++ intercalate ", " (map (\(pn, tys') -> show pn ++ " " ++ unwords (map P.prettyPrintTypeAtom tys')) cs) ++ ") => "
-  [entry mn (show name) $ "instance " ++ show name ++ " :: " ++ constraintsText ++ show className ++ " " ++ unwords (map P.prettyPrintTypeAtom tys)]
-entriesForDeclaration mn (P.PositionedDeclaration _ _ d) =
-  entriesForDeclaration mn d
-entriesForDeclaration _ _ = []
+  [decl' (show name) $ "instance " ++ show name ++ " :: " ++ constraintsText ++ show className ++ " " ++ unwords (map P.prettyPrintTypeAtom tys)]
+toDecls' (P.PositionedDeclaration _ _ d) =
+  toDecls' d
+toDecls' _ = []
 
 prettyPrintType' :: P.Type -> String
 prettyPrintType' = P.prettyPrintType . P.everywhereOnTypes dePrim
