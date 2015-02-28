@@ -16,7 +16,6 @@ module Pursuit.Database (
 
 import Prelude hiding (mod)
 
-import Data.Char (toLower)
 import Data.Monoid
 import Data.Maybe
 import Data.IxSet hiding ((&&&))
@@ -57,7 +56,7 @@ runQuery = runReader . unQuery
 queryDecls :: T.Text -> Query [Decl]
 queryDecls q = go <$> asks dbDecls
   where
-  go decls = toList (decls @= DeclName (T.map toLower q))
+  go decls = toList (decls @= DeclName (T.toLower q))
 
 getModuleByPK :: (ModuleName, PackageName) -> Query (Maybe Module)
 getModuleByPK key = go <$> asks dbModules

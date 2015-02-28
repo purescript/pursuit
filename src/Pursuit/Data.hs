@@ -26,7 +26,6 @@ module Pursuit.Data (
 import Prelude hiding (mod)
 
 import Data.Version
-import Data.Char (toLower)
 import Data.Typeable
 import Data.IxSet hiding ((&&&))
 
@@ -151,7 +150,7 @@ instance Indexable Module where
 instance Indexable Decl where
   empty = ixSet [ ixFun (\d -> let (mod, pkg) = declModule d
                                in singleton (declName d, mod, pkg))
-                , ixFun (singleton . withDeclName (T.map toLower) . declName)
+                , ixFun (singleton . withDeclName (T.toLower) . declName)
                 , ixFun (singleton . declDetail)
                 ]
 
