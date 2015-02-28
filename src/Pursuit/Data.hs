@@ -9,6 +9,8 @@ module Pursuit.Data (
   Decl(..),
   GitUrl(),
 
+  DeclJ(), ModuleJ(),
+
   PackageName(..), runPackageName, withPackageName,
   ModuleName(..),  runModuleName,  withModuleName,
   DeclName(..),    runDeclName,    withDeclName,
@@ -166,3 +168,9 @@ instance Indexable Decl where
                 , ixFun (singleton . lowerD . declName)
                 , ixFun (singleton . declDetail)
                 ]
+
+-- | "Decl-joined"; a Declaration, together with its parent Module and Package.
+type DeclJ = (Decl, Module, Package)
+
+-- | "Module-joined"; a Module, together with its parent Package.
+type ModuleJ = (Module, Package)
