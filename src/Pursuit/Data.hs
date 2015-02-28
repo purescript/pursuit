@@ -2,7 +2,24 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 
-module Pursuit.Data where
+module Pursuit.Data (
+  PackageDesc(..),
+  Package(..),
+  Module(..),
+  Decl(..),
+  GitUrl(),
+
+  PackageName(..), runPackageName, withPackageName,
+  ModuleName(..),  runModuleName,  withModuleName,
+  DeclName(..),    runDeclName,    withDeclName,
+
+  Locator(..),
+  DeclDetail(..),
+
+  preludeWebUrl,
+  packageDescGitUrl,
+  packageWebUrl
+) where
 
 import Prelude hiding (mod)
 
@@ -90,8 +107,11 @@ data Module = Module { moduleName        :: ModuleName
 newtype ModuleName = ModuleName String
   deriving (Show, Eq, Ord, Typeable, L.ToHtml)
 
+runModuleName :: ModuleName -> String
+runModuleName (ModuleName n) = n
+
 withModuleName :: (String -> String) -> ModuleName -> ModuleName
-withModuleName f (ModuleName str) = ModuleName (f str)
+withModuleName f = ModuleName . f . runModuleName
 
 -- A Decl belongs to exactly one Module. The primary key is composite:
 -- (declName, declModule)
@@ -103,11 +123,15 @@ data Decl = Decl { declName   :: DeclName
 
 newtype DeclName = DeclName String
   deriving (Show, Eq, Ord, Typeable, L.ToHtml)
-newtype DeclDetail = DeclDetail TL.Text
-  deriving (Show, Eq, Ord, Typeable, L.ToHtml)
+
+runDeclName :: DeclName -> String
+runDeclName (DeclName n) = n
 
 withDeclName :: (String -> String) -> DeclName -> DeclName
 withDeclName f (DeclName str) = DeclName (f str)
+
+newtype DeclDetail = DeclDetail TL.Text
+  deriving (Show, Eq, Ord, Typeable, L.ToHtml)
 
 singleton :: a -> [a]
 singleton = (:[])
