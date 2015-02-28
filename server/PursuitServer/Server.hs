@@ -79,4 +79,4 @@ startGenerateThread librariesFile = do
           else mapM_ (putStrLn . show) warnings
 
 hourly :: IO a -> IO a
-hourly action = forever (action >> threadDelay (3600 * 1000000))
+hourly action = forever (threadDelay (3600 * 1000000) >> action)
