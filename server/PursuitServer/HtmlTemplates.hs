@@ -2,6 +2,8 @@
 
 module PursuitServer.HtmlTemplates where
 
+import Prelude hiding (mod)
+
 import Lucid
 import qualified Data.Text as T
 
@@ -15,7 +17,7 @@ stylesheet url = link_ [href_ url, rel_ "stylesheet", type_ "text/css"]
 stylesheets :: [T.Text] -> Html ()
 stylesheets = mapM_ stylesheet
 
-index :: Maybe [Decl] -> Html ()
+index :: Maybe [DeclJ] -> Html ()
 index mDecls =
   doctypehtml_ $ do
     head_ $ do
@@ -42,18 +44,19 @@ index mDecls =
             " | "
             a_ [href_ "http://purescript.org"] "PureScript"
 
-renderDecls :: Maybe [Decl] -> Html ()
-renderDecls Nothing = p_ "Enter a search term above."
+renderDecls :: Maybe [DeclJ] -> Html ()
+renderDecls Nothing      = p_ "Enter a search term above."
+renderDecls (Just [])    = p_ "No results."
 renderDecls (Just decls) = mapM_ renderDecl decls
 
-renderDecl :: Decl -> Html ()
-renderDecl decl =
+renderDecl :: DeclJ -> Html ()
+renderDecl (decl, _, pkg) =
   div_ $ do
     h2_ (toHtml (declName decl))
     p_ $ code_ $ do
       toHtml modName
       " ("
-      toHtml pkgName
+      a_ [href_ (packageWebUrl pkg)] (toHtml pkgName)
       ")"
     toHtmlRaw (declDetail decl)
   where

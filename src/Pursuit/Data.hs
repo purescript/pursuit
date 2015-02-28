@@ -2,7 +2,26 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 
-module Pursuit.Data where
+module Pursuit.Data (
+  PackageDesc(..),
+  Package(..),
+  Module(..),
+  Decl(..),
+  GitUrl(),
+
+  DeclJ(), ModuleJ(),
+
+  PackageName(..), runPackageName, withPackageName,
+  ModuleName(..),  runModuleName,  withModuleName,
+  DeclName(..),    runDeclName,    withDeclName,
+
+  Locator(..),
+  DeclDetail(..),
+
+  preludeWebUrl,
+  packageDescGitUrl,
+  packageWebUrl
+) where
 
 import Prelude hiding (mod)
 
@@ -15,6 +34,7 @@ import Data.Aeson ((.:))
 import qualified Data.Aeson as A
 
 import qualified Data.Text.Lazy as TL
+import qualified Data.Text as T
 
 import qualified Lucid as L
 
@@ -77,8 +97,8 @@ data Package = Package { packageName    :: PackageName
 
 -- This will need to change if we decide to support packages which are not
 -- hosted on GitHub.
-packageWebUrl :: Package -> String
-packageWebUrl = toGitUrl . packageLocator
+packageWebUrl :: Package -> T.Text
+packageWebUrl = T.pack . toGitUrl . packageLocator
 
 -- A Module belongs to exactly one Package. The primary key is composite:
 -- (moduleName, modulePackageName)
@@ -90,8 +110,11 @@ data Module = Module { moduleName        :: ModuleName
 newtype ModuleName = ModuleName String
   deriving (Show, Eq, Ord, Typeable, L.ToHtml)
 
+runModuleName :: ModuleName -> String
+runModuleName (ModuleName n) = n
+
 withModuleName :: (String -> String) -> ModuleName -> ModuleName
-withModuleName f (ModuleName str) = ModuleName (f str)
+withModuleName f = ModuleName . f . runModuleName
 
 -- A Decl belongs to exactly one Module. The primary key is composite:
 -- (declName, declModule)
@@ -103,42 +126,37 @@ data Decl = Decl { declName   :: DeclName
 
 newtype DeclName = DeclName String
   deriving (Show, Eq, Ord, Typeable, L.ToHtml)
-newtype DeclDetail = DeclDetail TL.Text
-  deriving (Show, Eq, Ord, Typeable, L.ToHtml)
+
+runDeclName :: DeclName -> String
+runDeclName (DeclName n) = n
 
 withDeclName :: (String -> String) -> DeclName -> DeclName
 withDeclName f (DeclName str) = DeclName (f str)
 
+newtype DeclDetail = DeclDetail TL.Text
+  deriving (Show, Eq, Ord, Typeable, L.ToHtml)
+
 singleton :: a -> [a]
 singleton = (:[])
 
-lower :: String -> String
-lower = map toLower
-
-lowerP :: PackageName -> PackageName
-lowerP = withPackageName lower
-
-lowerM :: ModuleName -> ModuleName
-lowerM = withModuleName lower
-
-lowerD :: DeclName -> DeclName
-lowerD = withDeclName lower
-
 instance Indexable Package where
-  empty = ixSet [ ixFun (singleton . lowerP . packageName) ]
+  empty = ixSet [ ixFun (singleton . packageName) ]
 
 instance Indexable Module where
-  empty = ixSet [ ixFun (singleton . (lowerM . moduleName &&&
-                                      lowerP . modulePackageName))
-                , ixFun (singleton . lowerM . moduleName)
-                , ixFun (singleton . lowerP . modulePackageName)
+  empty = ixSet [ ixFun (singleton . (moduleName &&& modulePackageName))
+                , ixFun (singleton . moduleName)
+                , ixFun (singleton . modulePackageName)
                 ]
 
 instance Indexable Decl where
   empty = ixSet [ ixFun (\d -> let (mod, pkg) = declModule d
-                               in singleton (lowerD (declName d),
-                                             lowerM mod,
-                                             lowerP pkg))
-                , ixFun (singleton . lowerD . declName)
+                               in singleton (declName d, mod, pkg))
+                , ixFun (singleton . withDeclName (map toLower) . declName)
                 , ixFun (singleton . declDetail)
                 ]
+
+-- | "Decl-joined"; a Declaration, together with its parent Module and Package.
+type DeclJ = (Decl, Module, Package)
+
+-- | "Module-joined"; a Module, together with its parent Package.
+type ModuleJ = (Module, Package)

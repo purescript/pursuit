@@ -1,8 +1,29 @@
-module Pursuit.Database where
+{-# LANGUAGE TupleSections #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
+module Pursuit.Database (
+  PursuitDatabase(),
+  createDatabase,
+
+  Query(),
+  runQuery,
+
+  queryDecls,
+  getModuleByPK,
+  getPackageByPK,
+  queryDeclsJ
+) where
+
+import Prelude hiding (mod)
 
 import Data.Char (toLower)
 import Data.Monoid
+import Data.Maybe
 import Data.IxSet hiding ((&&&))
+
+import Control.Applicative
+import Control.Monad.Reader
+import Control.Monad.Trans.Maybe
 
 import Pursuit.Data
 
@@ -25,6 +46,33 @@ instance Monoid PursuitDatabase where
                     (mappend b1 b2)
                     (mappend c1 c2)
 
+newtype Query a = Query { unQuery :: Reader PursuitDatabase a }
+  deriving (Functor, Applicative, Monad, MonadReader PursuitDatabase)
+
+runQuery :: Query a -> PursuitDatabase -> a
+runQuery = runReader . unQuery
+
 -- Search for declarations with names matching the query.
-queryDecls :: String -> PursuitDatabase -> [Decl]
-queryDecls q db = toList (dbDecls db @= DeclName (map toLower q))
+queryDecls :: String -> Query [Decl]
+queryDecls q = go <$> asks dbDecls
+  where
+  go decls = toList (decls @= DeclName (map toLower q))
+
+getModuleByPK :: (ModuleName, PackageName) -> Query (Maybe Module)
+getModuleByPK key = go <$> asks dbModules
+  where
+  go modules = getOne (modules @= key)
+
+getPackageByPK :: PackageName -> Query (Maybe Package)
+getPackageByPK key = go <$> asks dbPackages
+  where
+  go packages = getOne (packages @= key)
+
+queryDeclsJ :: String -> Query [DeclJ]
+queryDeclsJ q = catMaybes <$> (queryDecls q >>= mapM joinDecl)
+
+joinDecl :: Decl -> Query (Maybe DeclJ)
+joinDecl d = runMaybeT $ do
+  mod     <- MaybeT (getModuleByPK (declModule d))
+  package <- MaybeT (getPackageByPK (modulePackageName mod))
+  return (d,mod,package)
