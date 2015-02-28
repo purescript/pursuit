@@ -32,8 +32,8 @@ index mDecls =
         div_ [class_ "header"] $ do
           h1_ "Pursuit"
           form_ [action_ "/", method_ "get"] $
-            input_ [type_ "search", class_ "form-control", placeholder_ "Search",
-                    name_ "q"]
+            input_ [type_ "search", class_ "form-control",
+                    placeholder_ "Search", name_ "q", autofocus_ ]
 
         div_ [class_ "body"] $ do
           renderDecls mDecls
