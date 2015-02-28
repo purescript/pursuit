@@ -96,6 +96,10 @@
     "github": { "user": "purescript", "repo": "purescript-free" }
   },
   {
+    "bowerName": "purescript-free-canvas",
+    "github": { "user": "paf31", "repo": "purescript-free-canvas" }
+  },
+  {
     "bowerName": "purescript-globals",
     "github": { "user": "purescript", "repo": "purescript-globals" }
   },
