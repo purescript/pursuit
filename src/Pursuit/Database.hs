@@ -1,5 +1,6 @@
 module Pursuit.Database where
 
+import Data.Char (toLower)
 import Data.Monoid
 import Data.IxSet hiding ((&&&))
 
@@ -26,4 +27,4 @@ instance Monoid PursuitDatabase where
 
 -- Search for declarations with names matching the query.
 queryDecls :: String -> PursuitDatabase -> [Decl]
-queryDecls q db = toList (dbDecls db @= DeclName q)
+queryDecls q db = toList (dbDecls db @= DeclName (map toLower q))

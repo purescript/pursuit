@@ -7,6 +7,7 @@ module Pursuit.Data where
 import Prelude hiding (mod)
 
 import Data.Version
+import Data.Char (toLower)
 import Data.Typeable
 import Data.IxSet hiding ((&&&))
 
@@ -32,6 +33,9 @@ instance A.FromJSON PackageDesc where
 
 newtype PackageName = PackageName String
   deriving (Show, Eq, Ord, Typeable, A.FromJSON, L.ToHtml)
+
+withPackageName :: (String -> String) -> PackageName -> PackageName
+withPackageName f (PackageName str) = PackageName (f str)
 
 runPackageName :: PackageName -> String
 runPackageName (PackageName n) = n
@@ -84,6 +88,9 @@ data Module = Module { moduleName        :: ModuleName
 newtype ModuleName = ModuleName String
   deriving (Show, Eq, Ord, Typeable, L.ToHtml)
 
+withModuleName :: (String -> String) -> ModuleName -> ModuleName
+withModuleName f (ModuleName str) = ModuleName (f str)
+
 -- A Decl belongs to exactly one Module. The primary key is composite:
 -- (declName, declModule)
 data Decl = Decl { declName   :: DeclName
@@ -97,22 +104,39 @@ newtype DeclName = DeclName String
 newtype DeclDetail = DeclDetail String
   deriving (Show, Eq, Ord, Typeable, L.ToHtml)
 
+withDeclName :: (String -> String) -> DeclName -> DeclName
+withDeclName f (DeclName str) = DeclName (f str)
 
 singleton :: a -> [a]
 singleton = (:[])
 
+lower :: String -> String
+lower = map toLower
+
+lowerP :: PackageName -> PackageName
+lowerP = withPackageName lower
+
+lowerM :: ModuleName -> ModuleName
+lowerM = withModuleName lower
+
+lowerD :: DeclName -> DeclName
+lowerD = withDeclName lower
+
 instance Indexable Package where
-  empty = ixSet [ ixFun (singleton . packageName) ]
+  empty = ixSet [ ixFun (singleton . lowerP . packageName) ]
 
 instance Indexable Module where
-  empty = ixSet [ ixFun (singleton . (moduleName &&& modulePackageName))
-                , ixFun (singleton . moduleName)
-                , ixFun (singleton . modulePackageName)
+  empty = ixSet [ ixFun (singleton . (lowerM . moduleName &&&
+                                      lowerP . modulePackageName))
+                , ixFun (singleton . lowerM . moduleName)
+                , ixFun (singleton . lowerP . modulePackageName)
                 ]
 
 instance Indexable Decl where
   empty = ixSet [ ixFun (\d -> let (mod, pkg) = declModule d
-                               in singleton (declName d, mod, pkg))
-                , ixFun (singleton . declName)
+                               in singleton (lowerD (declName d),
+                                             lowerM mod,
+                                             lowerP pkg))
+                , ixFun (singleton . lowerD . declName)
                 , ixFun (singleton . declDetail)
                 ]
