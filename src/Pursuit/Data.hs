@@ -26,7 +26,6 @@ module Pursuit.Data (
 import Prelude hiding (mod)
 
 import Data.Version
-import Data.Char (toLower)
 import Data.Typeable
 import Data.IxSet hiding ((&&&))
 
@@ -53,13 +52,13 @@ instance A.FromJSON PackageDesc where
                 <*> o .: "github"
   parseJSON val = fail $ "couldn't parse " ++ show val ++ " as PackageDesc"
 
-newtype PackageName = PackageName String
+newtype PackageName = PackageName T.Text
   deriving (Show, Eq, Ord, Typeable, A.FromJSON, L.ToHtml)
 
-withPackageName :: (String -> String) -> PackageName -> PackageName
+withPackageName :: (T.Text -> T.Text) -> PackageName -> PackageName
 withPackageName f (PackageName str) = PackageName (f str)
 
-runPackageName :: PackageName -> String
+runPackageName :: PackageName -> T.Text
 runPackageName (PackageName n) = n
 
 -- A Locator describes where to find a particular package.
@@ -107,13 +106,13 @@ data Module = Module { moduleName        :: ModuleName
                      }
                      deriving (Show, Eq, Ord, Typeable)
 
-newtype ModuleName = ModuleName String
+newtype ModuleName = ModuleName T.Text
   deriving (Show, Eq, Ord, Typeable, L.ToHtml)
 
-runModuleName :: ModuleName -> String
+runModuleName :: ModuleName -> T.Text
 runModuleName (ModuleName n) = n
 
-withModuleName :: (String -> String) -> ModuleName -> ModuleName
+withModuleName :: (T.Text -> T.Text) -> ModuleName -> ModuleName
 withModuleName f = ModuleName . f . runModuleName
 
 -- A Decl belongs to exactly one Module. The primary key is composite:
@@ -124,13 +123,13 @@ data Decl = Decl { declName   :: DeclName
                  }
                  deriving (Show, Eq, Ord, Typeable)
 
-newtype DeclName = DeclName String
+newtype DeclName = DeclName T.Text
   deriving (Show, Eq, Ord, Typeable, L.ToHtml)
 
-runDeclName :: DeclName -> String
+runDeclName :: DeclName -> T.Text
 runDeclName (DeclName n) = n
 
-withDeclName :: (String -> String) -> DeclName -> DeclName
+withDeclName :: (T.Text -> T.Text) -> DeclName -> DeclName
 withDeclName f (DeclName str) = DeclName (f str)
 
 newtype DeclDetail = DeclDetail TL.Text
@@ -151,7 +150,7 @@ instance Indexable Module where
 instance Indexable Decl where
   empty = ixSet [ ixFun (\d -> let (mod, pkg) = declModule d
                                in singleton (declName d, mod, pkg))
-                , ixFun (singleton . withDeclName (map toLower) . declName)
+                , ixFun (singleton . withDeclName (T.toLower) . declName)
                 , ixFun (singleton . declDetail)
                 ]
 
