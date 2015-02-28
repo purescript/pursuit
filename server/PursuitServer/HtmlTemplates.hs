@@ -50,12 +50,12 @@ renderDecl :: Decl -> Html ()
 renderDecl decl =
   div_ $ do
     h2_ (toHtml (declName decl))
-    code_ $ do
+    p_ $ code_ $ do
       toHtml modName
       " ("
       toHtml pkgName
       ")"
-    pre_ (toHtml (declDetail decl))
+    toHtmlRaw (declDetail decl)
   where
   (modName, pkgName) = declModule decl
 

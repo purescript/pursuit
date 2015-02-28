@@ -14,6 +14,8 @@ import Data.IxSet hiding ((&&&))
 import Data.Aeson ((.:))
 import qualified Data.Aeson as A
 
+import qualified Data.Text.Lazy as TL
+
 import qualified Lucid as L
 
 import Control.Arrow
@@ -101,7 +103,7 @@ data Decl = Decl { declName   :: DeclName
 
 newtype DeclName = DeclName String
   deriving (Show, Eq, Ord, Typeable, L.ToHtml)
-newtype DeclDetail = DeclDetail String
+newtype DeclDetail = DeclDetail TL.Text
   deriving (Show, Eq, Ord, Typeable, L.ToHtml)
 
 withDeclName :: (String -> String) -> DeclName -> DeclName

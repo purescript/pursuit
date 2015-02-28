@@ -48,6 +48,7 @@ import Control.Monad.Writer
 import Control.Monad.Except (ExceptT, runExceptT, MonadError, throwError)
 
 import Pursuit.Data
+import Pursuit.Docs
 import Pursuit.Database
 
 import System.Exit (ExitCode(..))
@@ -61,6 +62,7 @@ import qualified Data.ByteString as B
 
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
+import qualified Data.Text.Lazy as TL
 
 import qualified Data.Aeson as A
 
@@ -331,50 +333,35 @@ parseText input text =
   return (P.lex input (T.unpack text) >>= P.runTokenParser input P.parseModules)
 
 declsForModule :: P.Module -> (Module', [Decl'])
-declsForModule mod@(P.Module _ ds _) =
-  (toModule' mod, concatMap toDecls' ds)
+declsForModule mod@(P.Module _ ds exps) =
+  (toModule' mod, concatMap (toDecls' exps) ds)
 
 toModule' :: P.Module -> Module'
 toModule' (P.Module mn _ _) = ModuleName (show mn)
 
-decl' :: String -> String -> Decl'
-decl' name detail = (DeclName name, DeclDetail detail)
-
-toDecls' :: P.Declaration -> [Decl']
-toDecls' (P.TypeDeclaration ident ty) =
-  [decl' (show ident) $ show ident ++ " :: " ++ prettyPrintType' ty]
-toDecls' (P.ExternDeclaration _ ident _ ty) =
-  [decl' (show ident) $ show ident ++ " :: " ++ prettyPrintType' ty]
-toDecls' (P.DataDeclaration dtype name args ctors) =
-  let typeName = P.runProperName name ++ (if null args then "" else " " ++ unwords (map fst args))
-      detail = show dtype ++ " " ++ typeName ++ (if null ctors then "" else " = ") ++
-        intercalate " | " (map (\(ctor, tys) ->
-          intercalate " " (P.runProperName ctor : map P.prettyPrintTypeAtom tys)) ctors)
-  in decl' (show name) detail : map (\(ctor, _) -> decl' (show ctor) detail) ctors
-toDecls' (P.ExternDataDeclaration name kind) =
-  [decl' (show name) $ "data " ++ P.runProperName name ++ " :: " ++ P.prettyPrintKind kind]
-toDecls' (P.TypeSynonymDeclaration name args ty) =
-  let typeName = P.runProperName name ++ " " ++ unwords (map fst args)
-  in [decl' (show name) $ "type " ++ typeName ++ " = " ++ prettyPrintType' ty]
-toDecls' (P.TypeClassDeclaration name args implies ds) =
-  let impliesText = case implies of
-                      [] -> ""
-                      is -> "(" ++ intercalate ", " (map (\(pn, tys') -> show pn ++ " " ++ unwords (map P.prettyPrintTypeAtom tys')) is) ++ ") <= "
-      detail = "class " ++ impliesText ++ P.runProperName name ++ " " ++ unwords (map fst args) ++ " where"
-  in decl' (show name) detail : concatMap toDecls' ds
-toDecls' (P.TypeInstanceDeclaration name constraints className tys _) = do
-  let constraintsText = case constraints of
-                          [] -> ""
-                          cs -> "(" ++ intercalate ", " (map (\(pn, tys') -> show pn ++ " " ++ unwords (map P.prettyPrintTypeAtom tys')) cs) ++ ") => "
-  [decl' (show name) $ "instance " ++ show name ++ " :: " ++ constraintsText ++ show className ++ " " ++ unwords (map P.prettyPrintTypeAtom tys)]
-toDecls' (P.PositionedDeclaration _ _ d) =
-  toDecls' d
-toDecls' _ = []
-
-prettyPrintType' :: P.Type -> String
-prettyPrintType' = P.prettyPrintType . P.everywhereOnTypes dePrim
+toDecls' :: Maybe [P.DeclarationRef] -> P.Declaration -> [Decl']
+toDecls' exps = go
   where
-  dePrim ty@(P.TypeConstructor (P.Qualified _ name))
-    | ty == P.tyBoolean || ty == P.tyNumber || ty == P.tyString =
-      P.TypeConstructor $ P.Qualified Nothing name
-  dePrim other = other
+  go d = case getName d of
+           Just name -> makeDecl name (declarationDocs exps d) : concatMap go (relatedDecls d)
+           _ -> []
+  
+  getName :: P.Declaration -> Maybe String
+  getName (P.TypeDeclaration name _)                = Just (show name)
+  getName (P.ExternDeclaration _ name _ _)          = Just (show name)
+  getName (P.DataDeclaration _ name _ _)            = Just (show name)
+  getName (P.ExternDataDeclaration name _)          = Just (show name)
+  getName (P.TypeSynonymDeclaration name _ _)       = Just (show name)
+  getName (P.TypeClassDeclaration name _ _ _)       = Just (show name)
+  getName (P.TypeInstanceDeclaration name _ _ _ _)  = Just (show name)
+  getName (P.PositionedDeclaration _ _ d)           = getName d
+  getName _                                         = Nothing
+  
+  relatedDecls :: P.Declaration -> [P.Declaration]
+  relatedDecls (P.TypeClassDeclaration _ _ _ ds)         = ds
+  relatedDecls (P.PositionedDeclaration _ _ d)           = relatedDecls d
+  relatedDecls _                                         = []
+  
+  makeDecl :: String -> TL.Text -> Decl'
+  makeDecl name detail = (DeclName name, DeclDetail detail)
+  

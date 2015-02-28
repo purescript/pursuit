@@ -28,8 +28,11 @@ library
                    mtl >=2.2.1,
                    parsec -any,
                    lucid -any,
-                   ixset -any
-    exposed-modules: Pursuit, Pursuit.Generator, Pursuit.Database, Pursuit.Data
+                   ixset -any,
+                   blaze-html -any,
+                   cheapskate -any,
+                   data-default -any
+    exposed-modules: Pursuit, Pursuit.Generator, Pursuit.Database, Pursuit.Data, Pursuit.Docs
     other-modules: Paths_pursuit
     buildable: True
     hs-source-dirs: src
