@@ -138,34 +138,19 @@ newtype DeclDetail = DeclDetail TL.Text
 singleton :: a -> [a]
 singleton = (:[])
 
-lower :: String -> String
-lower = map toLower
-
-lowerP :: PackageName -> PackageName
-lowerP = withPackageName lower
-
-lowerM :: ModuleName -> ModuleName
-lowerM = withModuleName lower
-
-lowerD :: DeclName -> DeclName
-lowerD = withDeclName lower
-
 instance Indexable Package where
-  empty = ixSet [ ixFun (singleton . lowerP . packageName) ]
+  empty = ixSet [ ixFun (singleton . packageName) ]
 
 instance Indexable Module where
-  empty = ixSet [ ixFun (singleton . (lowerM . moduleName &&&
-                                      lowerP . modulePackageName))
-                , ixFun (singleton . lowerM . moduleName)
-                , ixFun (singleton . lowerP . modulePackageName)
+  empty = ixSet [ ixFun (singleton . (moduleName &&& modulePackageName))
+                , ixFun (singleton . moduleName)
+                , ixFun (singleton . modulePackageName)
                 ]
 
 instance Indexable Decl where
   empty = ixSet [ ixFun (\d -> let (mod, pkg) = declModule d
-                               in singleton (lowerD (declName d),
-                                             lowerM mod,
-                                             lowerP pkg))
-                , ixFun (singleton . lowerD . declName)
+                               in singleton (declName d, mod, pkg))
+                , ixFun (singleton . withDeclName (map toLower) . declName)
                 , ixFun (singleton . declDetail)
                 ]
 
