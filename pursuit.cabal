@@ -1,0 +1,66 @@
+name: pursuit
+version: 0.1.0.0
+cabal-version: >=1.8
+build-type: Simple
+license: MIT
+license-file: LICENSE
+copyright: (c) Phil Freeman 2014
+maintainer: paf31@cantab.net
+synopsis: Library and tools for the pursuit search engine
+category: Tools
+author: Phil Freeman
+data-dir: ""
+
+library
+    build-depends: base ==4.7.*,
+                   purescript >=0.6.7,
+                   directory >=1.2.0.1 && <1.3,
+                   filepath >=1.3.0.1 && <1.4,
+                   split -any,
+                   process -any,
+                   dlist -any,
+                   Glob -any,
+                   aeson -any,
+                   bytestring -any,
+                   text -any,
+                   containers -any,
+                   transformers ==0.4.*,
+                   mtl >=2.2.1,
+                   parsec -any,
+                   lucid -any,
+                   ixset -any,
+                   blaze-html -any,
+                   cheapskate -any,
+                   data-default -any
+    exposed-modules: Pursuit, Pursuit.Generator, Pursuit.Database, Pursuit.Data, Pursuit.Docs
+    other-modules: Paths_pursuit
+    buildable: True
+    hs-source-dirs: src
+    ghc-options: -Wall -O2 -threaded
+
+executable pursuit-server
+    build-depends: base ==4.7.*,
+                   pursuit -any,
+                   purescript >=0.6.7,
+                   transformers ==0.4.*,
+                   mtl >=2.2.1,
+                   directory -any,
+                   filepath -any,
+                   aeson -any,
+                   text -any,
+                   bytestring -any,
+                   split -any,
+                   process -any,
+                   Glob -any,
+                   wai -any,
+                   scotty -any,
+                   wai-middleware-static -any,
+                   utf8-string -any,
+                   containers -any,
+                   optparse-applicative -any,
+                   lucid -any,
+                   stm -any
+    main-is: Main.hs
+    buildable: True
+    hs-source-dirs: server
+    ghc-options: -Wall -O2 -threaded
