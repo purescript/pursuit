@@ -34,7 +34,7 @@ runServer (ServerOptions {..}) = do
       safeParam "q" >>= \case
         Just q -> do
           db <- liftIO $ readTVarIO dbvar
-          let result = queryDecls q db
+          let result = runQuery (queryDeclsJ q) db
           renderTemplate (index (Just result))
         _ ->
           renderTemplate (index Nothing)

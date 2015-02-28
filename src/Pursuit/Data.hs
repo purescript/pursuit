@@ -34,6 +34,7 @@ import Data.Aeson ((.:))
 import qualified Data.Aeson as A
 
 import qualified Data.Text.Lazy as TL
+import qualified Data.Text as T
 
 import qualified Lucid as L
 
@@ -96,8 +97,8 @@ data Package = Package { packageName    :: PackageName
 
 -- This will need to change if we decide to support packages which are not
 -- hosted on GitHub.
-packageWebUrl :: Package -> String
-packageWebUrl = toGitUrl . packageLocator
+packageWebUrl :: Package -> T.Text
+packageWebUrl = T.pack . toGitUrl . packageLocator
 
 -- A Module belongs to exactly one Package. The primary key is composite:
 -- (moduleName, modulePackageName)
