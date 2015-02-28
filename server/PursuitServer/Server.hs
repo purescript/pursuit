@@ -6,6 +6,7 @@ module PursuitServer.Server where
 
 import Data.Monoid
 import qualified Data.Text.Lazy as TL
+import qualified Data.Text as T
 
 import Control.Monad (void, forever)
 
@@ -35,7 +36,7 @@ runServer (ServerOptions {..}) = do
         Just q -> do
           db <- liftIO $ readTVarIO dbvar
           let result = runQuery (queryDeclsJ q) db
-          renderTemplate (index (Just result))
+          renderTemplate (index (Just (T.pack q, result)))
         _ ->
           renderTemplate (index Nothing)
 

@@ -5,7 +5,10 @@ module PursuitServer.HtmlTemplates where
 import Prelude hiding (mod)
 
 import Lucid
+
 import qualified Data.Text as T
+
+import Control.Applicative
 
 import Web.Scotty (html, ActionM)
 
@@ -17,8 +20,8 @@ stylesheet url = link_ [href_ url, rel_ "stylesheet", type_ "text/css"]
 stylesheets :: [T.Text] -> Html ()
 stylesheets = mapM_ stylesheet
 
-index :: Maybe [DeclJ] -> Html ()
-index mDecls =
+index :: Maybe (T.Text, [DeclJ]) -> Html ()
+index mQueryAndResults =
   doctypehtml_ $ do
     head_ $ do
       title_ "Pursuit"
@@ -34,8 +37,9 @@ index mDecls =
         div_ [class_ "header"] $ do
           h1_ "Pursuit"
           form_ [action_ "/", method_ "get"] $
-            input_ [type_ "search", class_ "form-control",
-                    placeholder_ "Search", name_ "q", autofocus_ ]
+            input_ ([type_ "search", class_ "form-control",
+                     placeholder_ "Search", name_ "q", autofocus_ ]
+                     ++ maybe [] (\q -> [value_ q]) mQuery)
 
         div_ [class_ "body"] $ do
           renderDecls mDecls
@@ -43,6 +47,9 @@ index mDecls =
             a_ [href_ "https://github.com/purescript/pursuit"] "Source"
             " | "
             a_ [href_ "http://purescript.org"] "PureScript"
+  where
+  mQuery = fst <$> mQueryAndResults
+  mDecls = snd <$> mQueryAndResults
 
 renderDecls :: Maybe [DeclJ] -> Html ()
 renderDecls Nothing      = p_ "Enter a search term above."
