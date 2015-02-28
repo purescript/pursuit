@@ -1,8 +1,7 @@
 module Pursuit.Database where
 
 import Data.Monoid
-
-import Data.IxSet
+import Data.IxSet hiding ((&&&))
 
 import Pursuit.Data
 
@@ -14,12 +13,9 @@ data PursuitDatabase =
 
 createDatabase :: [Package] -> [Module] -> [Decl] -> PursuitDatabase
 createDatabase pkgs mods decls =
-  PursuitDatabase (makeMap packageName pkgs)
-                  (makeMap (\m -> (moduleName m, modulePackageName m)) mods)
-                  (makeMap (\d -> let m = declModule d
-                                  in (declName d, fst m, snd m)) decls)
-  where
-  makeMap key = foldr (\x -> M.insert (key x) x) M.empty
+  PursuitDatabase (fromList pkgs)
+                  (fromList mods)
+                  (fromList decls)
 
 instance Monoid PursuitDatabase where
   mempty = PursuitDatabase mempty mempty mempty
@@ -28,5 +24,6 @@ instance Monoid PursuitDatabase where
                     (mappend b1 b2)
                     (mappend c1 c2)
 
+-- Search for declarations with names matching the query.
 queryDecls :: String -> PursuitDatabase -> [Decl]
-queryDecls q db = []
+queryDecls q db = toList (dbDecls db @= DeclName q)

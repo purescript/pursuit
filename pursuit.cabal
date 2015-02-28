@@ -29,7 +29,7 @@ library
                    parsec -any,
                    lucid -any,
                    ixset -any
-    exposed-modules: Pursuit, Pursuit.Generator
+    exposed-modules: Pursuit, Pursuit.Generator, Pursuit.Database, Pursuit.Data
     other-modules: Paths_pursuit
     buildable: True
     hs-source-dirs: src

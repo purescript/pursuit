@@ -4,9 +4,7 @@
 
 module PursuitServer.Server where
 
-import Data.Char (toLower)
-import Data.List (foldl')
-import Data.Maybe
+import Data.Monoid
 import qualified Data.Text.Lazy as TL
 
 import Control.Monad (void, forever)
@@ -21,7 +19,6 @@ import Network.Wai.Middleware.Static
 import System.Exit (exitFailure)
 
 import Pursuit
-import Pursuit.Generator
 
 import PursuitServer.Types
 import PursuitServer.HtmlTemplates
@@ -37,7 +34,7 @@ runServer (ServerOptions {..}) = do
       safeParam "q" >>= \case
         Just q -> do
           db <- liftIO $ readTVarIO dbvar
-          let result = query q db
+          let result = queryDecls q db
           renderTemplate (index (Just result))
         _ ->
           renderTemplate (index Nothing)
@@ -54,9 +51,9 @@ serveStaticFiles = middleware . staticPolicy . addBase
 -- kick off a thread to rebuild it periodically.
 --
 -- If the first attempt to rebuild the database fails, exit the program.
-startGenerateThread :: FilePath -> IO (TVar (T.Trie PursuitEntry))
+startGenerateThread :: FilePath -> IO (TVar PursuitDatabase)
 startGenerateThread librariesFile = do
-  tvar <- newTVarIO T.empty
+  tvar <- newTVarIO mempty
   putStrLn "Building database..."
   buildDb tvar (\err -> do putStrLn err
                            exitFailure)
@@ -74,14 +71,11 @@ startGenerateThread librariesFile = do
   buildDb tvar onError =
     generateDatabase librariesFile >>= \case
       (_, _, Left err) -> onError (show err)
-      (warnings, _, Right (PursuitDatabase _ entries)) -> do
-        atomically (writeTVar tvar (buildLookup entries))
+      (warnings, _, Right db) -> do
+        atomically (writeTVar tvar db)
         if (null warnings)
           then putStrLn "Done. No warnings."
           else mapM_ (putStrLn . show) warnings
 
 hourly :: IO a -> IO a
 hourly action = forever (action >> threadDelay (3600 * 1000000))
-
-queryDecls :: String -> PursuitDatabase -> [Decl]
-queryDecls q = 
