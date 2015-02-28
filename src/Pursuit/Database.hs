@@ -20,6 +20,7 @@ import Data.Char (toLower)
 import Data.Monoid
 import Data.Maybe
 import Data.IxSet hiding ((&&&))
+import qualified Data.Text as T
 
 import Control.Applicative
 import Control.Monad.Reader
@@ -53,10 +54,10 @@ runQuery :: Query a -> PursuitDatabase -> a
 runQuery = runReader . unQuery
 
 -- Search for declarations with names matching the query.
-queryDecls :: String -> Query [Decl]
+queryDecls :: T.Text -> Query [Decl]
 queryDecls q = go <$> asks dbDecls
   where
-  go decls = toList (decls @= DeclName (map toLower q))
+  go decls = toList (decls @= DeclName (T.map toLower q))
 
 getModuleByPK :: (ModuleName, PackageName) -> Query (Maybe Module)
 getModuleByPK key = go <$> asks dbModules
@@ -68,7 +69,7 @@ getPackageByPK key = go <$> asks dbPackages
   where
   go packages = getOne (packages @= key)
 
-queryDeclsJ :: String -> Query [DeclJ]
+queryDeclsJ :: T.Text -> Query [DeclJ]
 queryDeclsJ q = catMaybes <$> (queryDecls q >>= mapM joinDecl)
 
 joinDecl :: Decl -> Query (Maybe DeclJ)

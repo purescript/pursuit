@@ -175,7 +175,7 @@ getPackageDbs packageDescs = do
 
   forM packageDescs $ \pkgDesc -> do
     let name = packageDescName pkgDesc
-    let dir = baseDir </> runPackageName name
+    let dir = baseDir </> T.unpack (runPackageName name)
 
     gitClone (packageDescGitUrl pkgDesc) dir
     mVers <- getMostRecentTaggedVersion dir
@@ -337,7 +337,7 @@ declsForModule mod@(P.Module _ ds exps) =
   (toModule' mod, concatMap (toDecls' exps) ds)
 
 toModule' :: P.Module -> Module'
-toModule' (P.Module mn _ _) = ModuleName (show mn)
+toModule' (P.Module mn _ _) = ModuleName (T.pack (show mn))
 
 toDecls' :: Maybe [P.DeclarationRef] -> P.Declaration -> [Decl']
 toDecls' exps = go
@@ -363,5 +363,5 @@ toDecls' exps = go
   relatedDecls _                                         = []
   
   makeDecl :: String -> TL.Text -> Decl'
-  makeDecl name detail = (DeclName name, DeclDetail detail)
+  makeDecl name detail = (DeclName (T.pack name), DeclDetail detail)
   
