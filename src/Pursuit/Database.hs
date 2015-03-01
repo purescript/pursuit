@@ -1,5 +1,6 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Pursuit.Database (
   PursuitDatabase(),
@@ -54,9 +55,13 @@ runQuery = runReader . unQuery
 
 -- Search for declarations with names matching the query.
 queryDecls :: T.Text -> Query [Decl]
-queryDecls q = go <$> asks dbDecls
+queryDecls q' = go <$> asks dbDecls
   where
-  go decls = toList (decls @= DeclName (T.toLower q))
+  q = stripParens (T.toLower q')
+  go decls = toList (decls @+ [DeclName q, DeclName ("(" <> q <> ")")])
+
+  stripParens' = T.stripPrefix "(" >=> T.stripSuffix ")"
+  stripParens t = fromMaybe t (stripParens' t)
 
 getModuleByPK :: (ModuleName, PackageName) -> Query (Maybe Module)
 getModuleByPK key = go <$> asks dbModules
