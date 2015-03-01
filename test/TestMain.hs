@@ -1,4 +1,12 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Main where
+
+import Data.Monoid
+import qualified Data.Text as T
+import qualified Data.Text.Lazy as TL
+
+import Control.Monad
 
 import System.Exit (exitFailure)
 
@@ -11,7 +19,7 @@ testLibrariesFile = "./test/libraries-minimal.json"
 
 getDatabase :: IO PursuitDatabase
 getDatabase = do
-  (warns, logs, eitherDb) <- generateDatabase testLibrariesFile
+  (warns, _, eitherDb) <- generateDatabase testLibrariesFile
 
   if (null warns)
 	then putStrLn "Generated database. No warnings."
@@ -24,5 +32,60 @@ getDatabase = do
 main :: IO ()
 main = do
   db <- getDatabase
+  let query q = runQuery (queryDeclsJ q) db
+  
   hspec $ do
-	return ()
+	describe "ADTs" $ do
+	  describe "with non-exported data constructors" $ do
+		specify "are not included in results" $ do
+		  query "ThisShouldNotBeExported" `shouldBe` []
+		  query "NeitherShouldThis" `shouldBe` []
+
+	  describe "with exported data constructors" $ do
+		specify "are included in results" $ do
+		  query "ThisShouldBeExported" `shouldSatisfy` not . null
+		  query "SoShouldThis" `shouldSatisfy` not . null
+
+	describe "Values" $ do
+	  describe "which are exported" $ do
+		specify "should be included in results" $ do
+		  query "exportedFn" `shouldSatisfy` not . null
+
+	  describe "which are not exported" $ do
+		specify "should not be included in results" $ do
+		  query "nonExportedFn" `shouldBe` []
+
+	  describe "without type signatures" $ do
+		specify "should still be included" $ do
+		  query "withoutTypeSig" `shouldSatisfy` not . null
+
+	  describe "with symbolic names" $ do
+		specify "should not require parenthesis" $ do
+		  let withParens = query "(<++>)"
+		  let noParens   = query "<++>"
+
+		  withParens `shouldSatisfy` not . null
+		  withParens `shouldBe` noParens
+
+	describe "Typeclass members" $ do
+	  specify "should include the correct constraints in their types" $ do
+		let result = map (\(d, _, _) -> d) (query "thingy")
+		let thingy' = filter ((== DeclName "thingy") . declName) result
+
+		thingy <- exactlyOne thingy'
+		runDeclDetail (declDetail thingy) `shouldHaveSubstring` "(Thingy a) =>"
+	
+	describe "Primitive types" $ do
+	  describe "should appear in the results" $ do
+		forM_ ["Function", "String", "Number", "Array", "Object", "Boolean"] $ \prim -> do
+		  specify (T.unpack prim) $
+			query prim `shouldSatisfy` not . null
+
+  where
+  exactlyOne :: [a] -> IO a
+  exactlyOne [x] = return x
+  exactlyOne _ = expectationFailure "expected a list with exactly one element"
+				  >> return undefined
+
+  shouldHaveSubstring str substr =
+	str `shouldSatisfy` (not . null) . TL.breakOnAll substr

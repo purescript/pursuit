@@ -16,7 +16,7 @@ module Pursuit.Data (
   DeclName(..),    runDeclName,    withDeclName,
 
   Locator(..),
-  DeclDetail(..),
+  DeclDetail(..), runDeclDetail,
 
   preludeWebUrl,
   packageDescGitUrl,
@@ -134,6 +134,9 @@ withDeclName f (DeclName str) = DeclName (f str)
 
 newtype DeclDetail = DeclDetail TL.Text
   deriving (Show, Eq, Ord, Typeable, L.ToHtml)
+
+runDeclDetail :: DeclDetail -> TL.Text
+runDeclDetail (DeclDetail d) = d
 
 singleton :: a -> [a]
 singleton = (:[])
