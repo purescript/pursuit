@@ -128,6 +128,10 @@
     "github": { "user": "purescript-contrib", "repo": "purescript-lens" }
   },
   {
+    "bowerName": "purescript-lists",
+    "github": { "user": "purescript-contrib", "repo": "purescript-lists" }
+  },
+  {
     "bowerName": "purescript-maps",
     "github": { "user": "purescript", "repo": "purescript-maps" }
   },
