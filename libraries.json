@@ -220,6 +220,10 @@
     "github": { "user": "joneshf", "repo": "purescript-showdown" }
   },
   {
+    "bowerName": "purescript-signal",
+    "github": { "user": "bodil", "repo": "purescript-signal" }
+  },
+  {
     "bowerName": "purescript-strings",
     "github": { "user": "purescript", "repo": "purescript-strings" }
   },
