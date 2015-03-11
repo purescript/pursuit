@@ -56,6 +56,10 @@
     "github": { "user": "purescript", "repo": "purescript-distributive" }
   },
   {
+    "bowerName": "purescript-dom",
+    "github": { "user": "purescript-contrib", "repo": "purescript-dom" }
+  },
+  {
     "bowerName": "purescript-each",
     "github": { "user": "joneshf", "repo": "purescript-each" }
   },
@@ -222,6 +226,10 @@
   {
     "bowerName": "purescript-signal",
     "github": { "user": "bodil", "repo": "purescript-signal" }
+  },
+  {
+    "bowerName": "purescript-simple-dom",
+    "github": { "user": "aktowns", "repo": "purescript-simple-dom" }
   },
   {
     "bowerName": "purescript-strings",
