@@ -59,7 +59,9 @@ executable pursuit-server
                    containers -any,
                    optparse-applicative -any,
                    lucid -any,
-                   stm -any
+                   stm -any,
+                   time -any,
+                   old-locale -any
     main-is: Main.hs
     buildable: True
     hs-source-dirs: server

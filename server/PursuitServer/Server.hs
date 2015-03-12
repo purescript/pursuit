@@ -7,6 +7,10 @@ module PursuitServer.Server where
 import Data.Monoid
 import qualified Data.Text.Lazy as TL
 
+import Data.Time.Clock (getCurrentTime)
+import Data.Time.Format (formatTime)
+import System.Locale (defaultTimeLocale)
+
 import Control.Monad (void, forever)
 
 import Control.Concurrent (threadDelay, forkIO)
@@ -59,7 +63,7 @@ startGenerateThread librariesFile = do
                            exitFailure)
 
   void $ forkIO $ hourly $ do
-    putStrLn "Regenerating database..."
+    putStrLnWithTime "Regenerating database..."
     buildDb tvar (\err -> do putStrLn "failed to rebuild database:"
                              putStrLn err)
 
@@ -70,12 +74,28 @@ startGenerateThread librariesFile = do
   -- to pass a callback in case an error occurs.
   buildDb tvar onError =
     generateDatabase librariesFile >>= \case
-      (_, _, Left err) -> onError (show err)
-      (warnings, _, Right db) -> do
-        atomically (writeTVar tvar db)
+      (warnings, logs, eitherDb) -> do
         if (null warnings)
           then putStrLn "Done. No warnings."
-          else mapM_ (putStrLn . show) warnings
+          else printAll warnings
+        printAll logs
+
+        case eitherDb of
+          Left err -> onError (show err)
+          Right db -> atomically (writeTVar tvar db)
+
+  printAll :: Show a => [a] -> IO ()
+  printAll = mapM_ (putStrLn . show)
 
 hourly :: IO a -> IO a
 hourly action = forever (threadDelay (3600 * 1000000) >> action)
+
+getTimestamp :: IO String
+getTimestamp = do
+  time <- getCurrentTime
+  return (formatTime defaultTimeLocale "[%Y-%m-%d %H:%M:%S]" time)
+
+putStrLnWithTime :: String -> IO ()
+putStrLnWithTime str = do
+  t <- getTimestamp
+  putStrLn (t ++ " " ++ str)

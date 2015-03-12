@@ -2,7 +2,6 @@
 
 module Main where
 
-import Data.Monoid
 import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
 
@@ -66,6 +65,10 @@ main = do
 
           withParens `shouldSatisfy` not . null
           withParens `shouldBe` noParens
+
+      specify "should not be case sensitive" $ do
+        let q = "ThisShouldBeExported"
+        query q `shouldBe` query (T.toLower q)
 
     describe "Typeclass members" $ do
       specify "should include the correct constraints in their types" $ do
