@@ -93,6 +93,7 @@ data PackageError
 data LogMessage
   = CloningRepo GitUrl
   | SelectedVersion PackageName Version
+  deriving (Show)
 
 data GenerateWriter =
   GenerateWriter (DL.DList Warning) (DL.DList LogMessage)
