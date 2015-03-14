@@ -63,6 +63,9 @@ import qualified Data.Aeson as A
 
 import qualified Text.Parsec as Parsec
 
+import Github.Repos (tagsFor, tagName)
+import qualified Github.Data.Definitions as Github
+
 import qualified Language.PureScript as P
 
 -- A condition that means that the generator is unable to continue.
@@ -70,6 +73,7 @@ data Error
   = DecodeLibrariesFailed T.Text
   | CommandFailed Int T.Text T.Text
   | PreludeFailed PackageError
+  | GithubError Github.Error
   | IOExceptionThrown IOException
   deriving (Show)
 
@@ -118,6 +122,13 @@ io act =
   where
   liftIO :: IO a -> Generate a
   liftIO = G . lift . lift
+
+-- | Lift a GitHub action into the Generate monad.
+github :: IO (Either Github.Error a) -> Generate a
+github act =
+  io act >>= \case
+    Left err -> throwError (GithubError err)
+    Right x  -> return x
 
 runGenerate :: Generate a -> IO ([Warning], [LogMessage], Either Error a)
 runGenerate action =
@@ -186,7 +197,7 @@ getPackageDbs packageDescs = do
     let dir = baseDir </> T.unpack (runPackageName name)
 
     gitClone (packageDescGitUrl pkgDesc) dir
-    mVers <- getMostRecentTaggedVersion dir
+    mVers <- getMostRecentTaggedVersion pkgDesc
     case mVers of
       Nothing ->
         failPackage name NoSuitableTagsFound
@@ -235,12 +246,13 @@ gitCheckoutTag tag gitDir = do
   pushd gitDir $ do
     runCommandQuiet "git" ["checkout", tag]
 
-getMostRecentTaggedVersion :: FilePath -> Generate (Maybe (Version, String))
-getMostRecentTaggedVersion gitDir = do
-  pushd gitDir $ do
-    (out, _) <- runCommand "git" ["tag", "--list"]
-    let versions = mapMaybe parseVersion' (lines out)
-    return (listToMaybe (reversedSort versions))
+getMostRecentTaggedVersion :: PackageDesc -> Generate (Maybe (Version, String))
+getMostRecentTaggedVersion pkgDesc = do
+  tags <- map tagName <$> github (tagsFor owner repo)
+  let versions = mapMaybe parseVersion' tags
+  return (listToMaybe (reversedSort versions))
+  where
+  OnGithub owner repo = packageDescLocator pkgDesc
 
 pushd :: FilePath -> Generate a -> Generate a
 pushd dir action = do
