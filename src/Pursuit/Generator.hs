@@ -10,12 +10,6 @@
 --
 -- | Data generator for the pursuit search engine
 --
--- TODO
--- ====
---
--- Just `git pull` rather than deleting and downloading the whole repo again
--- (but check this will work)
---
 -----------------------------------------------------------------------------
 
 {-# LANGUAGE OverloadedStrings          #-}
@@ -42,10 +36,11 @@ import Text.ParserCombinators.ReadP (readP_to_S)
 
 import Control.Applicative
 import Control.Monad
-import Control.Monad.IO.Class
-import Control.Monad.Writer.Class
-import Control.Monad.Writer
+import Control.Monad.Trans.Class (lift)
+import Control.Monad.Writer.Class (tell, MonadWriter)
+import Control.Monad.Writer (runWriterT, WriterT)
 import Control.Monad.Except (ExceptT, runExceptT, MonadError, throwError)
+import Control.Exception (try, IOException)
 
 import Pursuit.Data
 import Pursuit.Docs
@@ -75,6 +70,7 @@ data Error
   = DecodeLibrariesFailed T.Text
   | CommandFailed Int T.Text T.Text
   | PreludeFailed PackageError
+  | IOExceptionThrown IOException
   deriving (Show)
 
 -- A condition that indicates that something is wrong and should probably be
@@ -110,7 +106,18 @@ unpackGenerateWriter (GenerateWriter warns msgs) =
 newtype Generate a =
   G { unG :: ExceptT Error (WriterT GenerateWriter IO) a }
   deriving (Functor, Applicative, Monad, MonadWriter GenerateWriter,
-            MonadIO, MonadError Error)
+            MonadError Error)
+
+-- | Lift an IO action into the Generate monad. If an IOException occurs, it is
+-- handled by the ExceptT part of the Generate stack.
+io :: IO a -> Generate a
+io act =
+  liftIO (try act) >>= \case
+    Left exc -> throwError (IOExceptionThrown exc)
+    Right x  -> return x
+  where
+  liftIO :: IO a -> Generate a
+  liftIO = G . lift . lift
 
 runGenerate :: Generate a -> IO ([Warning], [LogMessage], Either Error a)
 runGenerate action =
@@ -172,7 +179,7 @@ generateDatabase' packagesFile = do
 
 getPackageDbs :: [PackageDesc] -> Generate [PursuitDatabase]
 getPackageDbs packageDescs = do
-  baseDir <- liftIO getBaseDir
+  baseDir <- io getBaseDir
 
   forM packageDescs $ \pkgDesc -> do
     let name = packageDescName pkgDesc
@@ -207,7 +214,7 @@ workingDir = "./tmp/"
 
 getPackageDescs :: FilePath -> Generate [PackageDesc]
 getPackageDescs packagesFile = do
-  json <- liftIO $ B.readFile packagesFile
+  json <- io $ B.readFile packagesFile
   case A.eitherDecodeStrict json of
     Right libs -> return libs
     Left err -> throwError (DecodeLibrariesFailed (T.pack err))
@@ -215,7 +222,7 @@ getPackageDescs packagesFile = do
 -- Clone the specified repository into the specified directory.
 gitClone :: GitUrl -> FilePath -> Generate ()
 gitClone url dir = do
-  liftIO $ do
+  io $ do
     exists <- doesDirectoryExist dir
     when exists $
       removeDirectoryRecursive dir
@@ -235,12 +242,12 @@ getMostRecentTaggedVersion gitDir = do
     let versions = mapMaybe parseVersion' (lines out)
     return (listToMaybe (reversedSort versions))
 
-pushd :: (Monad m, MonadIO m) => FilePath -> m a -> m a
+pushd :: FilePath -> Generate a -> Generate a
 pushd dir action = do
-  oldDir <- liftIO $ getCurrentDirectory
-  liftIO $ setCurrentDirectory dir
+  oldDir <- io $ getCurrentDirectory
+  io $ setCurrentDirectory dir
   result <- action
-  liftIO $ setCurrentDirectory oldDir
+  io $ setCurrentDirectory oldDir
   return result
 
 parseVersion' :: String -> Maybe (Version, String)
@@ -256,7 +263,7 @@ reversedSort = sortBy (comparing Down)
 
 runCommand :: FilePath -> [String] -> Generate (String, String)
 runCommand program args = do
-  (code, out, err) <- liftIO $ readProcessWithExitCode program args ""
+  (code, out, err) <- io $ readProcessWithExitCode program args ""
   case code of
     ExitSuccess ->
       return (out, err)
@@ -292,7 +299,7 @@ databaseFromDecls pkg (mod', decls') =
 declsFromDir ::
   FilePath -> Generate (Either Parsec.ParseError [(Module', [Decl'])])
 declsFromDir dir = do
-  files <- liftIO $ glob $ dir </> "src/**/*.purs"
+  files <- io $ glob $ dir </> "src/**/*.purs"
   parsedFiles <- mapM parseFile files
 
   return (modulesToDecls . concat <$> sequence parsedFiles)
@@ -325,7 +332,7 @@ modulesToDecls = map declsForModule
 
 parseFile :: FilePath -> Generate (Either Parsec.ParseError [P.Module])
 parseFile input = do
-  text <- liftIO $ T.readFile input
+  text <- io $ T.readFile input
   parseText input text
 
 parseText ::
@@ -346,7 +353,7 @@ toDecls' exps = go
   go d = case getName d of
            Just name -> makeDecl name (declarationDocs exps d) : concatMap go (relatedDecls d)
            _ -> []
-  
+
   getName :: P.Declaration -> Maybe String
   getName (P.TypeDeclaration name _)                = Just (show name)
   getName (P.ExternDeclaration _ name _ _)          = Just (show name)
@@ -357,12 +364,12 @@ toDecls' exps = go
   getName (P.TypeInstanceDeclaration name _ _ _ _)  = Just (show name)
   getName (P.PositionedDeclaration _ _ d)           = getName d
   getName _                                         = Nothing
-  
+
   relatedDecls :: P.Declaration -> [P.Declaration]
   relatedDecls (P.TypeClassDeclaration _ _ _ ds)         = ds
   relatedDecls (P.PositionedDeclaration _ _ d)           = relatedDecls d
   relatedDecls _                                         = []
-  
+
   makeDecl :: String -> TL.Text -> Decl'
   makeDecl name detail = (DeclName (T.pack name), DeclDetail detail)
-  
+
