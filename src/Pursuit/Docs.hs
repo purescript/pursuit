@@ -23,8 +23,10 @@ import qualified Cheapskate
 
 import Pursuit.Data
 
-declarationDocs :: Maybe [P.DeclarationRef] -> P.Declaration -> TL.Text
-declarationDocs exps decl = H.renderHtml (renderDeclaration exps decl)
+declarationDocs :: Maybe [P.DeclarationRef] -> P.Declaration -> Maybe TL.Text
+declarationDocs exps decl = do
+  guard (P.isExported exps decl)
+  return $ H.renderHtml (renderDeclaration exps decl)
   where
   renderDeclaration :: Maybe [P.DeclarationRef] -> P.Declaration -> H.Html
   renderDeclaration _ (P.TypeDeclaration ident ty) =
@@ -245,8 +247,6 @@ dataConstructorDocs exps (tyName, ctorName, args) = do
   tyCtor :: P.Type
   tyCtor = P.TypeConstructor (P.Qualified Nothing tyName)
 
-      
-
 itemDocs :: Maybe [P.DeclarationRef] -> Item -> Maybe TL.Text
-itemDocs exps (ItemDecl d)     = Just (declarationDocs exps d)
+itemDocs exps (ItemDecl d)     = declarationDocs exps d
 itemDocs exps (ItemDataCtor c) = dataConstructorDocs exps c
