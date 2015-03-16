@@ -43,7 +43,7 @@ import Control.Monad.Except (ExceptT, runExceptT, MonadError, throwError)
 import Control.Exception (try, IOException)
 
 import Pursuit.Data
-import Pursuit.Docs
+import Pursuit.Docs (itemDocs)
 import Pursuit.Database
 
 import System.Exit (ExitCode(..))
@@ -63,6 +63,9 @@ import qualified Data.Aeson as A
 
 import qualified Text.Parsec as Parsec
 
+import Github.Repos (tagsFor, tagName)
+import qualified Github.Data.Definitions as Github
+
 import qualified Language.PureScript as P
 
 -- A condition that means that the generator is unable to continue.
@@ -70,6 +73,7 @@ data Error
   = DecodeLibrariesFailed T.Text
   | CommandFailed Int T.Text T.Text
   | PreludeFailed PackageError
+  | GithubError Github.Error
   | IOExceptionThrown IOException
   deriving (Show)
 
@@ -118,6 +122,13 @@ io act =
   where
   liftIO :: IO a -> Generate a
   liftIO = G . lift . lift
+
+-- | Lift a GitHub action into the Generate monad.
+github :: IO (Either Github.Error a) -> Generate a
+github act =
+  io act >>= \case
+    Left err -> throwError (GithubError err)
+    Right x  -> return x
 
 runGenerate :: Generate a -> IO ([Warning], [LogMessage], Either Error a)
 runGenerate action =
@@ -186,7 +197,7 @@ getPackageDbs packageDescs = do
     let dir = baseDir </> T.unpack (runPackageName name)
 
     gitClone (packageDescGitUrl pkgDesc) dir
-    mVers <- getMostRecentTaggedVersion dir
+    mVers <- getMostRecentTaggedVersion pkgDesc
     case mVers of
       Nothing ->
         failPackage name NoSuitableTagsFound
@@ -235,12 +246,13 @@ gitCheckoutTag tag gitDir = do
   pushd gitDir $ do
     runCommandQuiet "git" ["checkout", tag]
 
-getMostRecentTaggedVersion :: FilePath -> Generate (Maybe (Version, String))
-getMostRecentTaggedVersion gitDir = do
-  pushd gitDir $ do
-    (out, _) <- runCommand "git" ["tag", "--list"]
-    let versions = mapMaybe parseVersion' (lines out)
-    return (listToMaybe (reversedSort versions))
+getMostRecentTaggedVersion :: PackageDesc -> Generate (Maybe (Version, String))
+getMostRecentTaggedVersion pkgDesc = do
+  tags <- map tagName <$> github (tagsFor owner repo)
+  let versions = mapMaybe parseVersion' tags
+  return (listToMaybe (reversedSort versions))
+  where
+  OnGithub owner repo = packageDescLocator pkgDesc
 
 pushd :: FilePath -> Generate a -> Generate a
 pushd dir action = do
@@ -348,28 +360,44 @@ toModule' :: P.Module -> Module'
 toModule' (P.Module mn _ _) = ModuleName (T.pack (show mn))
 
 toDecls' :: Maybe [P.DeclarationRef] -> P.Declaration -> [Decl']
-toDecls' exps = go
+toDecls' exps = go . ItemDecl
   where
-  go d = case getName d of
-           Just name -> makeDecl name (declarationDocs exps d) : concatMap go (relatedDecls d)
-           _ -> []
+  go d =
+    case getName d of
+      Just name -> let mDecl = makeDecl name (itemDocs exps d)
+                       rest = concatMap go (relatedItems d)
+                   in maybe id (:) mDecl rest
+      _ -> []
 
-  getName :: P.Declaration -> Maybe String
-  getName (P.TypeDeclaration name _)                = Just (show name)
-  getName (P.ExternDeclaration _ name _ _)          = Just (show name)
-  getName (P.DataDeclaration _ name _ _)            = Just (show name)
-  getName (P.ExternDataDeclaration name _)          = Just (show name)
-  getName (P.TypeSynonymDeclaration name _ _)       = Just (show name)
-  getName (P.TypeClassDeclaration name _ _ _)       = Just (show name)
-  getName (P.TypeInstanceDeclaration name _ _ _ _)  = Just (show name)
-  getName (P.PositionedDeclaration _ _ d)           = getName d
-  getName _                                         = Nothing
+  getName :: Item -> Maybe String
+  getName (ItemDecl d)     = getDeclName d
+  getName (ItemDataCtor c) = getDataCtorName c
 
-  relatedDecls :: P.Declaration -> [P.Declaration]
-  relatedDecls (P.TypeClassDeclaration _ _ _ ds)         = ds
-  relatedDecls (P.PositionedDeclaration _ _ d)           = relatedDecls d
-  relatedDecls _                                         = []
+  getDeclName :: P.Declaration -> Maybe String
+  getDeclName (P.TypeDeclaration name _)                = Just (show name)
+  getDeclName (P.ExternDeclaration _ name _ _)          = Just (show name)
+  getDeclName (P.DataDeclaration _ name _ _)            = Just (show name)
+  getDeclName (P.ExternDataDeclaration name _)          = Just (show name)
+  getDeclName (P.TypeSynonymDeclaration name _ _)       = Just (show name)
+  getDeclName (P.TypeClassDeclaration name _ _ _)       = Just (show name)
+  getDeclName (P.TypeInstanceDeclaration name _ _ _ _)  = Just (show name)
+  getDeclName (P.PositionedDeclaration _ _ d)           = getDeclName d
+  getDeclName _                                         = Nothing
 
-  makeDecl :: String -> TL.Text -> Decl'
-  makeDecl name detail = (DeclName (T.pack name), DeclDetail detail)
+  getDataCtorName :: (P.ProperName, P.ProperName, [P.Type]) -> Maybe String
+  getDataCtorName (_, n, _) = Just (P.runProperName n)
 
+  relatedItems :: Item -> [Item]
+  relatedItems (ItemDecl d)     = relatedItems' d
+  relatedItems (ItemDataCtor _) = []
+
+  relatedItems' :: P.Declaration -> [Item]
+  relatedItems' (P.TypeClassDeclaration _ _ _ ds) = ItemDecl <$> ds
+  relatedItems' (P.PositionedDeclaration _ _ d)   = relatedItems' d
+  relatedItems' (P.DataDeclaration _ ty _ cs)     = (\(c, as) -> ItemDataCtor (ty, c, as)) <$> cs
+  relatedItems' _                                 = []
+
+  makeDecl :: String -> Maybe TL.Text -> Maybe Decl'
+  makeDecl name mDetail = go' <$> mDetail
+    where
+    go' detail = (DeclName (T.pack name), DeclDetail detail)
