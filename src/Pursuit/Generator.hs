@@ -43,7 +43,7 @@ import Control.Monad.Except (ExceptT, runExceptT, MonadError, throwError)
 import Control.Exception (try, IOException)
 
 import Pursuit.Data
-import Pursuit.Docs
+import Pursuit.Docs (itemDocs)
 import Pursuit.Database
 
 import System.Exit (ExitCode(..))
@@ -360,28 +360,44 @@ toModule' :: P.Module -> Module'
 toModule' (P.Module mn _ _) = ModuleName (T.pack (show mn))
 
 toDecls' :: Maybe [P.DeclarationRef] -> P.Declaration -> [Decl']
-toDecls' exps = go
+toDecls' exps = go . ItemDecl
   where
-  go d = case getName d of
-           Just name -> makeDecl name (declarationDocs exps d) : concatMap go (relatedDecls d)
-           _ -> []
+  go d =
+    case getName d of
+      Just name -> let mDecl = makeDecl name (itemDocs exps d)
+                       rest = concatMap go (relatedItems d)
+                   in maybe id (:) mDecl rest
+      _ -> []
 
-  getName :: P.Declaration -> Maybe String
-  getName (P.TypeDeclaration name _)                = Just (show name)
-  getName (P.ExternDeclaration _ name _ _)          = Just (show name)
-  getName (P.DataDeclaration _ name _ _)            = Just (show name)
-  getName (P.ExternDataDeclaration name _)          = Just (show name)
-  getName (P.TypeSynonymDeclaration name _ _)       = Just (show name)
-  getName (P.TypeClassDeclaration name _ _ _)       = Just (show name)
-  getName (P.TypeInstanceDeclaration name _ _ _ _)  = Just (show name)
-  getName (P.PositionedDeclaration _ _ d)           = getName d
-  getName _                                         = Nothing
+  getName :: Item -> Maybe String
+  getName (ItemDecl d)     = getDeclName d
+  getName (ItemDataCtor c) = getDataCtorName c
 
-  relatedDecls :: P.Declaration -> [P.Declaration]
-  relatedDecls (P.TypeClassDeclaration _ _ _ ds)         = ds
-  relatedDecls (P.PositionedDeclaration _ _ d)           = relatedDecls d
-  relatedDecls _                                         = []
+  getDeclName :: P.Declaration -> Maybe String
+  getDeclName (P.TypeDeclaration name _)                = Just (show name)
+  getDeclName (P.ExternDeclaration _ name _ _)          = Just (show name)
+  getDeclName (P.DataDeclaration _ name _ _)            = Just (show name)
+  getDeclName (P.ExternDataDeclaration name _)          = Just (show name)
+  getDeclName (P.TypeSynonymDeclaration name _ _)       = Just (show name)
+  getDeclName (P.TypeClassDeclaration name _ _ _)       = Just (show name)
+  getDeclName (P.TypeInstanceDeclaration name _ _ _ _)  = Just (show name)
+  getDeclName (P.PositionedDeclaration _ _ d)           = getDeclName d
+  getDeclName _                                         = Nothing
 
-  makeDecl :: String -> TL.Text -> Decl'
-  makeDecl name detail = (DeclName (T.pack name), DeclDetail detail)
+  getDataCtorName :: (P.ProperName, P.ProperName, [P.Type]) -> Maybe String
+  getDataCtorName (_, n, _) = Just (P.runProperName n)
 
+  relatedItems :: Item -> [Item]
+  relatedItems (ItemDecl d)     = relatedItems' d
+  relatedItems (ItemDataCtor _) = []
+
+  relatedItems' :: P.Declaration -> [Item]
+  relatedItems' (P.TypeClassDeclaration _ _ _ ds) = ItemDecl <$> ds
+  relatedItems' (P.PositionedDeclaration _ _ d)   = relatedItems' d
+  relatedItems' (P.DataDeclaration _ ty _ cs)     = (\(c, as) -> ItemDataCtor (ty, c, as)) <$> cs
+  relatedItems' _                                 = []
+
+  makeDecl :: String -> Maybe TL.Text -> Maybe Decl'
+  makeDecl name mDetail = go' <$> mDetail
+    where
+    go' detail = (DeclName (T.pack name), DeclDetail detail)

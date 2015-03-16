@@ -18,6 +18,8 @@ module Pursuit.Data (
   Locator(..),
   DeclDetail(..), runDeclDetail,
 
+  Item(..),
+
   preludeWebUrl,
   packageDescGitUrl,
   packageWebUrl
@@ -39,6 +41,8 @@ import qualified Lucid as L
 
 import Control.Arrow
 import Control.Applicative
+
+import qualified Language.PureScript as P
 
 -- This is what appears in the packages.json file
 data PackageDesc = PackageDesc { packageDescName    :: PackageName
@@ -137,6 +141,13 @@ newtype DeclDetail = DeclDetail TL.Text
 
 runDeclDetail :: DeclDetail -> TL.Text
 runDeclDetail (DeclDetail d) = d
+
+-- | An item to be included in the docs.
+data Item
+  = ItemDecl P.Declaration
+  -- | A data constructor, with a type name, constructor name, and constructor
+  -- arguments.
+  | ItemDataCtor (P.ProperName, P.ProperName, [P.Type])
 
 singleton :: a -> [a]
 singleton = (:[])
