@@ -24,9 +24,9 @@ import qualified Cheapskate
 import Pursuit.Data
 
 declarationDocs :: Maybe [P.DeclarationRef] -> P.Declaration -> Maybe TL.Text
-declarationDocs exps decl = do
-  guard (P.isExported exps decl)
-  return $ H.renderHtml (renderDeclaration exps decl)
+declarationDocs exps' decl = do
+  guard (P.isExported exps' decl)
+  return $ H.renderHtml (renderDeclaration exps' decl)
   where
   renderDeclaration :: Maybe [P.DeclarationRef] -> P.Declaration -> H.Html
   renderDeclaration _ (P.TypeDeclaration ident ty) =
@@ -48,8 +48,8 @@ declarationDocs exps decl = do
       typeToHtml typeApp
     unless (null exported) $ do
       H.ul $ for_ exported $ \(ctor, tys) -> H.li . H.code $ do
-        let typeApp = foldl P.TypeApp (P.TypeConstructor (P.Qualified Nothing ctor)) tys
-        typeToHtml typeApp
+        let typeApp' = foldl P.TypeApp (P.TypeConstructor (P.Qualified Nothing ctor)) tys
+        typeToHtml typeApp'
   renderDeclaration _ (P.ExternDataDeclaration name kind) = do
     para "decl" $ H.code $ do
       withClass "keyword" . text $ "data"
@@ -145,7 +145,7 @@ typeToHtml = go 0 . P.everywhereOnTypes dePrim . P.everywhereOnTypesTopDown conv
     withClass "syntax" (text "[")
     go 0 ty
     withClass "syntax" (text "]")
-  go _ (P.TypeConstructor ctor@(P.Qualified _ name)) = H.a ! A.href (fromString ("/?q=" ++ show name)) $ withClass "ctor" (text (show name))
+  go _ (P.TypeConstructor (P.Qualified _ name)) = H.a ! A.href (fromString ("/?q=" ++ show name)) $ withClass "ctor" (text (show name))
   go n (P.ConstrainedType deps ty) = do
     withClass "syntax" (text "(")
     intercalateA_ (withClass "syntax" (text ",") <* sp) $ flip map deps $ \(pn, tys) -> do
@@ -187,10 +187,10 @@ typeToHtml = go 0 . P.everywhereOnTypes dePrim . P.everywhereOnTypesTopDown conv
   convert (P.TypeApp o r) | o == P.tyObject = P.PrettyPrintObject r
   convert other = other
 
-  convertForAlls (P.ForAll ident ty _) = go [ident] ty
+  convertForAlls (P.ForAll ident ty _) = go' [ident] ty
     where
-    go idents (P.ForAll ident' ty' _) = go (ident' : idents) ty'
-    go idents other = P.PrettyPrintForAll idents other
+    go' idents (P.ForAll ident' ty' _) = go' (ident' : idents) ty'
+    go' idents other = P.PrettyPrintForAll idents other
   convertForAlls other = other
 
 rowToHtml :: P.Type -> H.Html
