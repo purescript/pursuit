@@ -103,4 +103,5 @@ test-suite pursuit-tests
                       blaze-html -any,
                       cheapskate -any,
                       data-default -any,
-                      hspec -any
+                      hspec -any,
+                      github -any
