@@ -53,7 +53,7 @@ declarationDocs exps decl = H.renderHtml (renderDeclaration exps decl)
     let typeApp  = foldl P.TypeApp (P.TypeConstructor (P.Qualified Nothing name)) (map toTypeVar args)
         exported = filter (P.isDctorExported name exps . fst) ctors
     para "decl" $ H.code $ do
-      withClass "keyword" . text $ show dtype  
+      withClass "keyword" . text $ show dtype
       sp
       typeToHtml typeApp
     unless (null exported) $ do
@@ -62,7 +62,7 @@ declarationDocs exps decl = H.renderHtml (renderDeclaration exps decl)
         typeToHtml typeApp
   renderDeclaration _ (P.ExternDataDeclaration name kind) = do
     para "decl" $ H.code $ do
-      withClass "keyword" . text $ "data"  
+      withClass "keyword" . text $ "data"
       sp
       typeToHtml $ P.TypeConstructor (P.Qualified Nothing name)
       sp *> withClass "syntax" (text "::") <* sp
@@ -70,7 +70,7 @@ declarationDocs exps decl = H.renderHtml (renderDeclaration exps decl)
   renderDeclaration _ (P.TypeSynonymDeclaration name args ty) = do
     let typeApp  = foldl P.TypeApp (P.TypeConstructor (P.Qualified Nothing name)) (map toTypeVar args)
     para "decl" $ H.code $ do
-      withClass "keyword" . text $ "type" 
+      withClass "keyword" . text $ "type"
       sp
       typeToHtml typeApp
       sp *> withClass "syntax" (text "=") <* sp

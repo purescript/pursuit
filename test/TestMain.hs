@@ -32,7 +32,7 @@ main :: IO ()
 main = do
   db <- getDatabase
   let query q = runQuery (queryDeclsJ q) db
-  
+
   hspec $ do
     describe "ADTs" $ do
       describe "with non-exported data constructors" $ do
@@ -77,7 +77,7 @@ main = do
 
         thingy <- exactlyOne thingy'
         runDeclDetail (declDetail thingy) `shouldHaveSubstring` "(Thingy a) =>"
-    
+
     describe "Primitive types" $ do
       describe "should appear in the results" $ do
         forM_ ["Function", "String", "Number", "Array", "Object", "Boolean"] $ \prim -> do
