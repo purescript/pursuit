@@ -16,6 +16,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE LambdaCase                 #-}
 {-# LANGUAGE RecordWildCards            #-}
+{-# LANGUAGE TemplateHaskell            #-}
 
 module Pursuit.Generator (
   Error(..),
@@ -56,10 +57,13 @@ import System.FilePath.Glob (glob)
 import qualified Data.ByteString as B
 
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as TE
 import qualified Data.Text.IO as T
 import qualified Data.Text.Lazy as TL
 
 import qualified Data.Aeson as A
+
+import Data.FileEmbed (embedFile)
 
 import qualified Text.Parsec as Parsec
 
@@ -318,17 +322,26 @@ declsFromDir dir = do
 
 buildPreludeDb :: Generate PursuitDatabase
 buildPreludeDb = do
-  modules <- parseText "<<Prelude>>" (T.pack P.prelude) >>= \case
-    Left err -> throwError (PreludeFailed (ParseFailed err))
-    Right ms -> return ms
+  preludeModules <- parseModules "<<Prelude>>" (T.pack P.prelude)
+  primModules    <- parseModules "<<Prim>>" primMod
 
-  let (mods, decls) = getModulesAndDecls (packageName preludePkg) modules
-  return (createDatabase [preludePkg] mods decls)
+  let (mods, decls) = getModulesAndDecls (packageName basePkg)
+                                         (preludeModules <> primModules)
+
+  return (createDatabase [basePkg] mods decls)
   where
-  preludePkg = Package { packageName    = PackageName "prelude"
-                       , packageLocator = BundledWithCompiler
-                       , packageVersion = P.version
-                       }
+  parseModules name sourceText =
+      parseText name sourceText >>= \case
+        Left err -> throwError (PreludeFailed (ParseFailed err))
+        Right ms -> return ms
+
+  basePkg = Package { packageName    = PackageName "purescript"
+                    , packageLocator = BundledWithCompiler
+                    , packageVersion = P.version
+                    }
+
+primMod :: T.Text
+primMod = TE.decodeUtf8 $(embedFile "prim/Prim.purs")
 
 getModulesAndDecls :: PackageName -> [P.Module] -> ([Module], [Decl])
 getModulesAndDecls pkgName =
@@ -396,7 +409,7 @@ toDecls' mod = go . ItemDecl
   relatedItems' (P.DataDeclaration _ ty _ cs)     = (\(c, as) -> ItemDataCtor (ty, c, as)) <$> cs
   relatedItems' _                                 = []
 
-  makeDecl :: String -> Maybe TL.Text -> Maybe Decl'
-  makeDecl name mDetail = go' <$> mDetail
-    where
-    go' detail = (DeclName (T.pack name), DeclDetail detail)
+makeDecl :: String -> Maybe TL.Text -> Maybe Decl'
+makeDecl name mDetail = go' <$> mDetail
+  where
+  go' detail = (DeclName (T.pack name), DeclDetail detail)
