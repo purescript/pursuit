@@ -13,7 +13,7 @@ data-dir: ""
 
 library
     build-depends: base ==4.7.*,
-                   purescript >=0.6.7,
+                   purescript >=0.6.9.3,
                    directory >=1.2.0.1 && <1.3,
                    filepath >=1.3.0.1 && <1.4,
                    split -any,
@@ -42,7 +42,7 @@ library
 executable pursuit-server
     build-depends: base ==4.7.*,
                    pursuit -any,
-                   purescript >=0.6.7,
+                   purescript >=0.6.9.3,
                    transformers ==0.4.*,
                    mtl >=2.2.1,
                    directory -any,
@@ -75,7 +75,7 @@ test-suite pursuit-tests
     ghc-options: -Wall -O2 -threaded
     build-depends:    base ==4.7.*,
                       pursuit -any,
-                      purescript >=0.6.7,
+                      purescript >=0.6.9.3,
                       transformers ==0.4.*,
                       mtl >=2.2.1,
                       directory -any,
