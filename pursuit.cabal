@@ -67,7 +67,7 @@ executable pursuit-server
 test-suite pursuit-tests
     type: exitcode-stdio-1.0
     hs-source-dirs: test
-    main-is: TestMain.hs
+    main-is: Main.hs
     ghc-options: -Wall -O2 -threaded
     build-depends:    base ==4.7.*,
                       pursuit -any,
