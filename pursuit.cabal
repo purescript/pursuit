@@ -77,38 +77,10 @@ executable pursuit-server
 
 test-suite pursuit-tests
     type: exitcode-stdio-1.0
-    hs-source-dirs: test src server
+    hs-source-dirs: test
     main-is: TestMain.hs
     ghc-options: -Wall -O2 -threaded
     build-depends:    base ==4.7.*,
                       pursuit -any,
-                      purescript >=0.6.9.3,
-                      transformers ==0.4.*,
-                      mtl >=2.2.1,
-                      directory -any,
-                      filepath -any,
-                      aeson -any,
                       text -any,
-                      bytestring -any,
-                      split -any,
-                      process -any,
-                      Glob -any,
-                      wai -any,
-                      scotty -any,
-                      wai-middleware-static -any,
-                      utf8-string -any,
-                      containers -any,
-                      optparse-applicative -any,
-                      lucid -any,
-                      stm -any,
-                      directory >=1.2.0.1 && <1.3,
-                      filepath >=1.3.0.1 && <1.4,
-                      split -any,
-                      dlist -any,
-                      parsec -any,
-                      ixset -any,
-                      blaze-html -any,
-                      cheapskate -any,
-                      data-default -any,
-                      hspec -any,
-                      github -any
+                      hspec -any
