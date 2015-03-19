@@ -2,6 +2,8 @@
 
 module Pursuit.Docs where
 
+import Prelude hiding (mod)
+
 import Control.Applicative
 import Control.Monad
 
@@ -23,41 +25,41 @@ import qualified Cheapskate
 
 import Pursuit.Data
 
-declarationDocs :: Maybe [P.DeclarationRef] -> P.Declaration -> Maybe TL.Text
-declarationDocs exps' decl = do
-  guard (P.isExported exps' decl)
-  return $ H.renderHtml (renderDeclaration exps' decl)
+declarationDocs :: P.Module -> P.Declaration -> TL.Text
+declarationDocs mod = H.renderHtml . renderDeclaration
   where
-  renderDeclaration :: Maybe [P.DeclarationRef] -> P.Declaration -> H.Html
-  renderDeclaration _ (P.TypeDeclaration ident ty) =
+  renderDeclaration :: P.Declaration -> H.Html
+  renderDeclaration (P.TypeDeclaration ident ty) =
     para "decl" $ H.code $ do
       withClass "ident" . text . show $ ident
       sp *> withClass "syntax" (text "::") <* sp
       typeToHtml ty
-  renderDeclaration _ (P.ExternDeclaration _ ident _ ty) =
+  renderDeclaration (P.ExternDeclaration _ ident _ ty) =
     para "decl" $ H.code $ do
       withClass "ident" . text . show $ ident
       sp *> withClass "syntax" (text "::") <* sp
       typeToHtml ty
-  renderDeclaration exps (P.DataDeclaration dtype name args ctors) = do
-    let typeApp  = foldl P.TypeApp (P.TypeConstructor (P.Qualified Nothing name)) (map toTypeVar args)
+  renderDeclaration (P.DataDeclaration dtype name args ctors) =
+    let (P.Module _ _ _ exps) = mod
+        typeApp  = foldl P.TypeApp (P.TypeConstructor (P.Qualified Nothing name)) (map toTypeVar args)
         exported = filter (P.isDctorExported name exps . fst) ctors
-    para "decl" $ H.code $ do
-      withClass "keyword" . text $ show dtype
-      sp
-      typeToHtml typeApp
-    unless (null exported) $ do
-      H.ul $ for_ exported $ \(ctor, tys) -> H.li . H.code $ do
-        let typeApp' = foldl P.TypeApp (P.TypeConstructor (P.Qualified Nothing ctor)) tys
-        typeToHtml typeApp'
-  renderDeclaration _ (P.ExternDataDeclaration name kind) = do
+    in do
+      para "decl" $ H.code $ do
+        withClass "keyword" . text $ show dtype
+        sp
+        typeToHtml typeApp
+      unless (null exported) $ do
+        H.ul $ for_ exported $ \(ctor, tys) -> H.li . H.code $ do
+          let typeApp' = foldl P.TypeApp (P.TypeConstructor (P.Qualified Nothing ctor)) tys
+          typeToHtml typeApp'
+  renderDeclaration (P.ExternDataDeclaration name kind) = do
     para "decl" $ H.code $ do
       withClass "keyword" . text $ "data"
       sp
       typeToHtml $ P.TypeConstructor (P.Qualified Nothing name)
       sp *> withClass "syntax" (text "::") <* sp
       text $ P.prettyPrintKind kind
-  renderDeclaration _ (P.TypeSynonymDeclaration name args ty) = do
+  renderDeclaration (P.TypeSynonymDeclaration name args ty) = do
     let typeApp  = foldl P.TypeApp (P.TypeConstructor (P.Qualified Nothing name)) (map toTypeVar args)
     para "decl" $ H.code $ do
       withClass "keyword" . text $ "type"
@@ -65,7 +67,7 @@ declarationDocs exps' decl = do
       typeToHtml typeApp
       sp *> withClass "syntax" (text "=") <* sp
       typeToHtml ty
-  renderDeclaration _ (P.TypeClassDeclaration name args implies ds) = do
+  renderDeclaration (P.TypeClassDeclaration name args implies ds) = do
     para "decl" $ H.code $ do
       withClass "keyword" (text "class") <* sp
       case implies of
@@ -88,7 +90,7 @@ declarationDocs exps' decl = do
         sp *> withClass "syntax" (text "::") <* sp
         typeToHtml ty
     renderClassMember _ = error "Invalid argument to renderClassMember."
-  renderDeclaration _ (P.TypeInstanceDeclaration name constraints className tys _) = do
+  renderDeclaration (P.TypeInstanceDeclaration name constraints className tys _) = do
     para "decl" $ H.code $ do
       withClass "keyword" (text "instance") <* sp
       withClass "ident" (text (show name)) <* sp
@@ -102,10 +104,10 @@ declarationDocs exps' decl = do
                 withClass "syntax" $ text ") => "
       let classApp = foldl P.TypeApp (P.TypeConstructor className) tys
       typeToHtml classApp
-  renderDeclaration exps (P.PositionedDeclaration _ com d) = do
-    renderDeclaration exps d
+  renderDeclaration (P.PositionedDeclaration _ com d) = do
+    renderDeclaration d
     renderComments com
-  renderDeclaration _ _ = return ()
+  renderDeclaration _ = return ()
 
   renderComments :: [P.Comment] -> H.Html
   renderComments cs = do
@@ -229,9 +231,9 @@ intercalateA_ _   []     = pure ()
 intercalateA_ _   [x]    = void x
 intercalateA_ sep (x:xs) = (x <* sep) *> intercalateA_ sep xs
 
-dataConstructorDocs :: Maybe [P.DeclarationRef] -> (P.ProperName, P.ProperName, [P.Type]) -> Maybe TL.Text
-dataConstructorDocs exps (tyName, ctorName, args) = do
-  guard (P.isDctorExported tyName exps ctorName)
+dataConstructorDocs :: P.Module -> (P.ProperName, P.ProperName, [P.Type]) -> Maybe TL.Text
+dataConstructorDocs mod (tyName, ctorName, args) = do
+  guard (ctorName `elem` P.exportedDctors mod tyName)
   return $ H.renderHtml $ do
     para "decl" $ H.code $ do
       withClass "ident" . text . P.runProperName $ ctorName
@@ -247,6 +249,6 @@ dataConstructorDocs exps (tyName, ctorName, args) = do
   tyCtor :: P.Type
   tyCtor = P.TypeConstructor (P.Qualified Nothing tyName)
 
-itemDocs :: Maybe [P.DeclarationRef] -> Item -> Maybe TL.Text
-itemDocs exps (ItemDecl d)     = declarationDocs exps d
-itemDocs exps (ItemDataCtor c) = dataConstructorDocs exps c
+itemDocs :: P.Module -> Item -> Maybe TL.Text
+itemDocs mod (ItemDecl d)     = Just (declarationDocs mod d)
+itemDocs mod (ItemDataCtor c) = dataConstructorDocs mod c

@@ -325,10 +325,9 @@ buildPreludeDb = do
   let (mods, decls) = getModulesAndDecls (packageName preludePkg) modules
   return (createDatabase [preludePkg] mods decls)
   where
-  -- TODO: Use the actual version of PureScript
   preludePkg = Package { packageName    = PackageName "prelude"
                        , packageLocator = BundledWithCompiler
-                       , packageVersion = Version [0,6,8] []
+                       , packageVersion = P.version
                        }
 
 getModulesAndDecls :: PackageName -> [P.Module] -> ([Module], [Decl])
@@ -353,18 +352,18 @@ parseText input text =
   return (P.lex input (T.unpack text) >>= P.runTokenParser input P.parseModules)
 
 declsForModule :: P.Module -> (Module', [Decl'])
-declsForModule mod@(P.Module _ ds exps) =
-  (toModule' mod, concatMap (toDecls' exps) ds)
+declsForModule m =
+  (toModule' m, concatMap (toDecls' m) (P.exportedDeclarations m))
 
 toModule' :: P.Module -> Module'
-toModule' (P.Module mn _ _) = ModuleName (T.pack (show mn))
+toModule' = ModuleName . T.pack . show . P.getModuleName
 
-toDecls' :: Maybe [P.DeclarationRef] -> P.Declaration -> [Decl']
-toDecls' exps = go . ItemDecl
+toDecls' :: P.Module -> P.Declaration -> [Decl']
+toDecls' mod = go . ItemDecl
   where
   go d =
     case getName d of
-      Just name -> let mDecl = makeDecl name (itemDocs exps d)
+      Just name -> let mDecl = makeDecl name (itemDocs mod d)
                        rest = concatMap go (relatedItems d)
                    in maybe id (:) mDecl rest
       _ -> []
