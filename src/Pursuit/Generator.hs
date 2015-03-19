@@ -16,7 +16,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE LambdaCase                 #-}
 {-# LANGUAGE RecordWildCards            #-}
-{-# LANGUAGE TemplateHaskell            #-}
 
 module Pursuit.Generator (
   Error(..),
@@ -46,6 +45,7 @@ import Control.Exception (try, IOException)
 import Pursuit.Data
 import Pursuit.Docs (itemDocs)
 import Pursuit.Database
+import Pursuit.Prim (primModule)
 
 import System.Exit (ExitCode(..))
 import System.Directory (getCurrentDirectory, setCurrentDirectory,
@@ -57,13 +57,10 @@ import System.FilePath.Glob (glob)
 import qualified Data.ByteString as B
 
 import qualified Data.Text as T
-import qualified Data.Text.Encoding as TE
 import qualified Data.Text.IO as T
 import qualified Data.Text.Lazy as TL
 
 import qualified Data.Aeson as A
-
-import Data.FileEmbed (embedFile)
 
 import qualified Text.Parsec as Parsec
 
@@ -323,7 +320,7 @@ declsFromDir dir = do
 buildPreludeDb :: Generate PursuitDatabase
 buildPreludeDb = do
   preludeModules <- parseModules "<<Prelude>>" (T.pack P.prelude)
-  primModules    <- parseModules "<<Prim>>" primMod
+  primModules    <- parseModules "<<Prim>>" primModule
 
   let (mods, decls) = getModulesAndDecls (packageName basePkg)
                                          (preludeModules <> primModules)
@@ -339,9 +336,6 @@ buildPreludeDb = do
                     , packageLocator = BundledWithCompiler
                     , packageVersion = P.version
                     }
-
-primMod :: T.Text
-primMod = TE.decodeUtf8 $(embedFile "prim/Prim.purs")
 
 getModulesAndDecls :: PackageName -> [P.Module] -> ([Module], [Decl])
 getModulesAndDecls pkgName =

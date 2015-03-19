@@ -35,7 +35,12 @@ library
                    cheapskate -any,
                    data-default -any,
                    github -any
-    exposed-modules: Pursuit, Pursuit.Generator, Pursuit.Database, Pursuit.Data, Pursuit.Docs
+    exposed-modules:  Pursuit
+                    , Pursuit.Generator
+                    , Pursuit.Database
+                    , Pursuit.Data
+                    , Pursuit.Docs
+                    , Pursuit.Prim
     other-modules: Paths_pursuit
     buildable: True
     hs-source-dirs: src
