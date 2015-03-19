@@ -192,8 +192,8 @@
     "github": { "user": "joneshf", "repo": "purescript-path" }
   },
   {
-    "bowerName": "purescript-profunctors",
-    "github": { "user": "purescript", "repo": "purescript-profunctors" }
+    "bowerName": "purescript-profunctor",
+    "github": { "user": "purescript", "repo": "purescript-profunctor" }
   },
   {
     "bowerName": "purescript-quickcheck",

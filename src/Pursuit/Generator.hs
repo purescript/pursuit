@@ -45,6 +45,7 @@ import Control.Exception (try, IOException)
 import Pursuit.Data
 import Pursuit.Docs (itemDocs)
 import Pursuit.Database
+import Pursuit.Prim (primModule)
 
 import System.Exit (ExitCode(..))
 import System.Directory (getCurrentDirectory, setCurrentDirectory,
@@ -318,18 +319,23 @@ declsFromDir dir = do
 
 buildPreludeDb :: Generate PursuitDatabase
 buildPreludeDb = do
-  modules <- parseText "<<Prelude>>" (T.pack P.prelude) >>= \case
-    Left err -> throwError (PreludeFailed (ParseFailed err))
-    Right ms -> return ms
+  preludeModules <- parseModules "<<Prelude>>" (T.pack P.prelude)
+  primModules    <- parseModules "<<Prim>>" primModule
 
-  let (mods, decls) = getModulesAndDecls (packageName preludePkg) modules
-  return (createDatabase [preludePkg] mods decls)
+  let (mods, decls) = getModulesAndDecls (packageName basePkg)
+                                         (preludeModules <> primModules)
+
+  return (createDatabase [basePkg] mods decls)
   where
-  -- TODO: Use the actual version of PureScript
-  preludePkg = Package { packageName    = PackageName "prelude"
-                       , packageLocator = BundledWithCompiler
-                       , packageVersion = Version [0,6,8] []
-                       }
+  parseModules name sourceText =
+      parseText name sourceText >>= \case
+        Left err -> throwError (PreludeFailed (ParseFailed err))
+        Right ms -> return ms
+
+  basePkg = Package { packageName    = PackageName "purescript"
+                    , packageLocator = BundledWithCompiler
+                    , packageVersion = P.version
+                    }
 
 getModulesAndDecls :: PackageName -> [P.Module] -> ([Module], [Decl])
 getModulesAndDecls pkgName =
@@ -353,18 +359,18 @@ parseText input text =
   return (P.lex input (T.unpack text) >>= P.runTokenParser input P.parseModules)
 
 declsForModule :: P.Module -> (Module', [Decl'])
-declsForModule mod@(P.Module _ ds exps) =
-  (toModule' mod, concatMap (toDecls' exps) ds)
+declsForModule m =
+  (toModule' m, concatMap (toDecls' m) (P.exportedDeclarations m))
 
 toModule' :: P.Module -> Module'
-toModule' (P.Module mn _ _) = ModuleName (T.pack (show mn))
+toModule' = ModuleName . T.pack . show . P.getModuleName
 
-toDecls' :: Maybe [P.DeclarationRef] -> P.Declaration -> [Decl']
-toDecls' exps = go . ItemDecl
+toDecls' :: P.Module -> P.Declaration -> [Decl']
+toDecls' mod = go . ItemDecl
   where
   go d =
     case getName d of
-      Just name -> let mDecl = makeDecl name (itemDocs exps d)
+      Just name -> let mDecl = makeDecl name (itemDocs mod d)
                        rest = concatMap go (relatedItems d)
                    in maybe id (:) mDecl rest
       _ -> []
@@ -397,7 +403,7 @@ toDecls' exps = go . ItemDecl
   relatedItems' (P.DataDeclaration _ ty _ cs)     = (\(c, as) -> ItemDataCtor (ty, c, as)) <$> cs
   relatedItems' _                                 = []
 
-  makeDecl :: String -> Maybe TL.Text -> Maybe Decl'
-  makeDecl name mDetail = go' <$> mDetail
-    where
-    go' detail = (DeclName (T.pack name), DeclDetail detail)
+makeDecl :: String -> Maybe TL.Text -> Maybe Decl'
+makeDecl name mDetail = go' <$> mDetail
+  where
+  go' detail = (DeclName (T.pack name), DeclDetail detail)
