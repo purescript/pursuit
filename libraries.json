@@ -260,6 +260,10 @@
     "github": { "user": "purescript", "repo": "purescript-validation" }
   },
   {
+    "bowerName": "purescript-vector-space",
+    "github": { "user": "mkaemmerer", "repo": "purescript-vector-space" }
+  },
+  {
     "bowerName": "purescript-virtual-dom",
     "github": { "user": "purescript-contrib", "repo": "purescript-virtual-dom" }
   },
