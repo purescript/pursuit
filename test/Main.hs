@@ -18,7 +18,7 @@ testLibrariesFile = "./test/libraries-minimal.json"
 
 getDatabase :: IO PursuitDatabase
 getDatabase = do
-  (warns, _, eitherDb) <- generateDatabase testLibrariesFile
+  (warns, _, eitherDb) <- generateDatabase testLibrariesFile Nothing
 
   if (null warns)
     then putStrLn "Generated database. No warnings."

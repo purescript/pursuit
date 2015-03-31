@@ -12,6 +12,7 @@ import Data.Time.Format (formatTime)
 import System.Locale (defaultTimeLocale)
 
 import Control.Monad (void, forever)
+import Control.Applicative ((<$>))
 
 import Control.Concurrent (threadDelay, forkIO)
 import Control.Concurrent.STM
@@ -19,6 +20,8 @@ import Control.Monad.IO.Class
 
 import Web.Scotty
 import Network.Wai.Middleware.Static
+
+import Github.Auth (GithubAuth(GithubOAuth))
 
 import System.Exit (exitFailure)
 
@@ -29,7 +32,7 @@ import PursuitServer.HtmlTemplates
 
 runServer :: ServerOptions -> IO ()
 runServer (ServerOptions {..}) = do
-  dbvar <- startGenerateThread serverLibrariesFile
+  dbvar <- startGenerateThread serverLibrariesFile (GithubOAuth <$> serverGithubAuthToken)
 
   scotty serverPort $ do
     serveStaticFiles "static"
@@ -55,8 +58,8 @@ serveStaticFiles = middleware . staticPolicy . addBase
 -- kick off a thread to rebuild it periodically.
 --
 -- If the first attempt to rebuild the database fails, exit the program.
-startGenerateThread :: FilePath -> IO (TVar PursuitDatabase)
-startGenerateThread librariesFile = do
+startGenerateThread :: FilePath -> Maybe GithubAuth -> IO (TVar PursuitDatabase)
+startGenerateThread librariesFile githubAuth = do
   tvar <- newTVarIO mempty
   putStrLn "Building database..."
   buildDb tvar (\err -> do putStrLn err
@@ -73,7 +76,7 @@ startGenerateThread librariesFile = do
   -- Build the database, put it in the supplied tvar, and also allow the user
   -- to pass a callback in case an error occurs.
   buildDb tvar onError =
-    generateDatabase librariesFile >>= \case
+    generateDatabase librariesFile githubAuth >>= \case
       (warnings, logs, eitherDb) -> do
         if (null warnings)
           then putStrLn "Done. No warnings."

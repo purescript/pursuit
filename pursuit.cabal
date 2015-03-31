@@ -58,7 +58,8 @@ executable pursuit-server
                    lucid -any,
                    stm -any,
                    time -any,
-                   old-locale -any
+                   old-locale -any,
+                   github -any
     main-is: Main.hs
     buildable: True
     hs-source-dirs: server
