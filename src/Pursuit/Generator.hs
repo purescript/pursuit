@@ -16,6 +16,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE LambdaCase                 #-}
 {-# LANGUAGE RecordWildCards            #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
 
 module Pursuit.Generator (
   Error(..),
@@ -38,7 +39,9 @@ import Control.Applicative
 import Control.Monad
 import Control.Monad.Trans.Class (lift)
 import Control.Monad.Writer.Class (tell, MonadWriter)
+import Control.Monad.Reader.Class (asks, MonadReader)
 import Control.Monad.Writer (runWriterT, WriterT)
+import Control.Monad.Reader (runReaderT, ReaderT)
 import Control.Monad.Except (ExceptT, runExceptT, MonadError, throwError)
 import Control.Exception (try, IOException)
 
@@ -64,7 +67,8 @@ import qualified Data.Aeson as A
 
 import qualified Text.Parsec as Parsec
 
-import Github.Repos (tagsFor, tagName)
+import Github.Repos (tagsFor', tagName)
+import Github.Auth (GithubAuth)
 import qualified Github.Data.Definitions as Github
 
 import qualified Language.PureScript as P
@@ -104,14 +108,20 @@ instance Monoid GenerateWriter where
   mappend (GenerateWriter a b) (GenerateWriter c d) =
     GenerateWriter (mappend a c) (mappend b d)
 
+data GenerateReader =
+  GenerateReader { readerAuth :: Maybe GithubAuth
+                 }
+
 unpackGenerateWriter :: GenerateWriter -> ([Warning], [LogMessage])
 unpackGenerateWriter (GenerateWriter warns msgs) =
   (DL.toList warns, DL.toList msgs)
 
+type Result a = ([Warning], [LogMessage], Either Error a)
+
 newtype Generate a =
-  G { unG :: ExceptT Error (WriterT GenerateWriter IO) a }
+  G { unG :: ExceptT Error (WriterT GenerateWriter (ReaderT GenerateReader IO)) a }
   deriving (Functor, Applicative, Monad, MonadWriter GenerateWriter,
-            MonadError Error)
+            MonadReader GenerateReader, MonadError Error)
 
 -- | Lift an IO action into the Generate monad. If an IOException occurs, it is
 -- handled by the ExceptT part of the Generate stack.
@@ -122,7 +132,7 @@ io act =
     Right x  -> return x
   where
   liftIO :: IO a -> Generate a
-  liftIO = G . lift . lift
+  liftIO = G . lift . lift . lift
 
 -- | Lift a GitHub action into the Generate monad.
 github :: IO (Either Github.Error a) -> Generate a
@@ -131,9 +141,9 @@ github act =
     Left err -> throwError (GithubError err)
     Right x  -> return x
 
-runGenerate :: Generate a -> IO ([Warning], [LogMessage], Either Error a)
-runGenerate action =
-  fmap shuffle (runWriterT (runExceptT (unG action)))
+runGenerate :: Generate a -> GenerateReader -> IO (Result a)
+runGenerate action rdr =
+  fmap shuffle (runReaderT (runWriterT (runExceptT (unG action))) rdr)
   where
   shuffle (result, generateWriter) =
     let (warns, logs) = unpackGenerateWriter generateWriter
@@ -175,10 +185,9 @@ getBaseDir = do
   currentDir <- getCurrentDirectory
   return $ currentDir </> workingDir
 
-generateDatabase ::
-  FilePath -> IO ([Warning], [LogMessage], Either Error PursuitDatabase)
-generateDatabase =
-  runGenerate . generateDatabase'
+generateDatabase :: FilePath -> Maybe GithubAuth -> IO (Result PursuitDatabase)
+generateDatabase path auth =
+  runGenerate (generateDatabase' path) (GenerateReader auth)
 
 generateDatabase' :: FilePath -> Generate PursuitDatabase
 generateDatabase' packagesFile = do
@@ -249,7 +258,8 @@ gitCheckoutTag tag gitDir = do
 
 getMostRecentTaggedVersion :: PackageDesc -> Generate (Maybe (Version, String))
 getMostRecentTaggedVersion pkgDesc = do
-  tags <- map tagName <$> github (tagsFor owner repo)
+  auth <- asks readerAuth
+  tags <- map tagName <$> github (tagsFor' auth owner repo)
   let versions = mapMaybe parseVersion' tags
   return (listToMaybe (reversedSort versions))
   where

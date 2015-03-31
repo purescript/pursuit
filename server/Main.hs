@@ -1,10 +1,14 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Main where
 
 import Data.Version (showVersion)
 
 import Options.Applicative
+
+import System.Environment
+import Control.Exception (catch, IOException)
 
 import PursuitServer.Server
 import PursuitServer.Types
@@ -29,12 +33,18 @@ librariesFile = strOption
         <> metavar "PATH"
          )
 
-serverOptions :: Parser ServerOptions
-serverOptions = ServerOptions <$> port
-                              <*> librariesFile
+serverOptions :: Parser (Int, FilePath)
+serverOptions = (,) <$> port
+                    <*> librariesFile
+
+getEnvVar :: String -> IO (Maybe String)
+getEnvVar x = (Just <$> getEnv x) `catch` (\(_ :: IOException) -> (return Nothing))
 
 main :: IO ()
-main = execParser opts >>= runServer
+main = do
+  (p, lf) <- execParser opts
+  authToken <- getEnvVar "GITHUB_AUTH_TOKEN"
+  runServer (ServerOptions p lf authToken)
   where
   opts = info (version <*> helper <*> serverOptions) infoModList
   infoModList = fullDesc <> headerInfo <> footerInfo

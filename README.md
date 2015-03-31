@@ -18,3 +18,18 @@ getting your library included
 The Pursuit data is rebuilt daily by an automated job, so your library should
 appear within 24 hours. Any subsequent releases will automatically be shown on
 Pursuit, as long as you remember to `git tag` them.
+
+running pursuit
+---------------
+
+Pursuit uses the GitHub API for some of the information it needs, which means
+that it may come up against GitHub API rate limiting if no authentication is
+used.
+
+Pursuit supports GitHub API authentication via OAuth tokens; pass the token in
+via the environment variable `GITHUB_AUTH_TOKEN`. For example, if your auth
+token is stored in a file `.oauth_token`:
+
+```
+GITHUB_AUTH_TOKEN=`cat .oauth_token` cabal run
+```
