@@ -10,14 +10,17 @@ module Pursuit.Database (
   runQuery,
 
   queryDecls,
+  queryDeclsJ,
   getModuleByPK,
   getPackageByPK,
-  queryDeclsJ
+  getModulesByPackage,
+  getDeclsByModule,
 ) where
 
 import Prelude hiding (mod)
 
 import Data.Monoid
+import Data.Typeable
 import Data.Maybe
 import Data.IxSet hiding ((&&&))
 import qualified Data.Text as T
@@ -53,6 +56,18 @@ newtype Query a = Query { unQuery :: Reader PursuitDatabase a }
 runQuery :: Query a -> PursuitDatabase -> a
 runQuery = runReader . unQuery
 
+queryOne :: (Indexable a, Typeable k, Typeable a, Ord a) =>
+  (PursuitDatabase -> IxSet a) -> k -> Query (Maybe a)
+queryOne dbPart key = go <$> asks dbPart
+  where
+  go xs = getOne (xs @= key)
+
+queryAll :: (Indexable a, Typeable k, Typeable a, Ord a) =>
+  (PursuitDatabase -> IxSet a) -> k -> Query [a]
+queryAll dbPart key = go <$> asks dbPart
+  where
+  go xs = toList (xs @= key)
+
 -- Search for declarations with names matching the query.
 queryDecls :: T.Text -> Query [Decl]
 queryDecls q' = go <$> asks dbDecls
@@ -64,14 +79,10 @@ queryDecls q' = go <$> asks dbDecls
   stripParens t = fromMaybe t (stripParens' t)
 
 getModuleByPK :: (ModuleName, PackageName) -> Query (Maybe Module)
-getModuleByPK key = go <$> asks dbModules
-  where
-  go modules = getOne (modules @= key)
+getModuleByPK = queryOne dbModules
 
 getPackageByPK :: PackageName -> Query (Maybe Package)
-getPackageByPK key = go <$> asks dbPackages
-  where
-  go packages = getOne (packages @= key)
+getPackageByPK = queryOne dbPackages
 
 queryDeclsJ :: T.Text -> Query [DeclJ]
 queryDeclsJ q = catMaybes <$> (queryDecls q >>= mapM joinDecl)
@@ -81,3 +92,9 @@ joinDecl d = runMaybeT $ do
   mod     <- MaybeT (getModuleByPK (declModule d))
   package <- MaybeT (getPackageByPK (modulePackageName mod))
   return (d,mod,package)
+
+getModulesByPackage :: PackageName -> Query [Module]
+getModulesByPackage = queryAll dbModules
+
+getDeclsByModule :: (ModuleName, PackageName) -> Query [Decl]
+getDeclsByModule = queryAll dbDecls
