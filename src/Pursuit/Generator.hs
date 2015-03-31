@@ -57,7 +57,7 @@ import System.FilePath.Glob (glob)
 import qualified Data.ByteString as B
 
 import qualified Data.Text as T
-import qualified Data.Text.IO as T
+import Data.Text.Encoding (decodeUtf8)
 import qualified Data.Text.Lazy as TL
 
 import qualified Data.Aeson as A
@@ -348,9 +348,12 @@ getModulesAndDecls pkgName =
 modulesToDecls :: [P.Module] -> [(Module', [Decl'])]
 modulesToDecls = map declsForModule
 
+readFileText :: FilePath -> IO T.Text
+readFileText = fmap decodeUtf8 . B.readFile
+
 parseFile :: FilePath -> Generate (Either Parsec.ParseError [P.Module])
 parseFile input = do
-  text <- io $ T.readFile input
+  text <- io $ readFileText input
   parseText input text
 
 parseText ::
