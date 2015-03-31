@@ -49,6 +49,7 @@ foreign import data Number :: *
 -- | Multi-line string literals are also supported with triple quotes (`"""`).
 foreign import data String :: *
 
--- | A JavaScript Boolean value. The Prelude exports the two values of this
--- | type: `true` and `false`.
+-- | A JavaScript Boolean value.
+-- |
+-- | Construct values of this type with the literals `true` and `false`.
 foreign import data Boolean :: *
