@@ -77,7 +77,7 @@ library
                  , vector
                  , time
                  , purescript >= 0.6.9.5
-                 , bower-json >= 0.3
+                 , bower-json >= 0.4
 
 executable         pursuit
     if flag(library-only)
