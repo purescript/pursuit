@@ -76,8 +76,6 @@ library
                  , containers
                  , vector
                  , time
-                 , alex
-                 , happy
 
 executable         pursuit
     if flag(library-only)
