@@ -76,6 +76,7 @@ library
                  , containers
                  , vector
                  , time
+                 , purescript >= 0.6.9.3
 
 executable         pursuit
     if flag(library-only)
