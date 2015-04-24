@@ -1,5 +1,13 @@
 [
   {
+    "bowerName": "purescript-aff",
+    "github": { "user": "slamdata", "repo": "purescript-aff" }
+  },
+  {
+    "bowerName": "purescript-affjax",
+    "github": { "user": "slamdata", "repo": "purescript-affjax" }
+  },
+  {
     "bowerName": "purescript-ajax",
     "github": { "user": "joneshf", "repo": "purescript-ajax" }
   },
@@ -110,6 +118,18 @@
   {
     "bowerName": "purescript-graphs",
     "github": { "user": "purescript", "repo": "purescript-graphs" }
+  },
+  {
+    "bowerName": "purescript-halogen",
+    "github": { "user": "slamdata", "repo": "purescript-halogen" }
+  },
+  {
+    "bowerName": "purescript-halogen-foundation",
+    "github": { "user": "slamdata", "repo": "purescript-halogen-foundation" }
+  },
+  {
+    "bowerName" : "purescript-halogen-bootstrap",
+    "github": { "user": "slamdata", "repo": "purescript-halogen-bootstrap" }
   },
   {
     "bowerName": "purescript-http",
