@@ -120,15 +120,15 @@
     "github": { "user": "purescript", "repo": "purescript-graphs" }
   },
   {
-    "bowerName": "purescript-halogen"
+    "bowerName": "purescript-halogen",
     "github": { "user": "slamdata", "repo": "purescript-halogen" }
   },
   {
-    "bowerName": "purescript-halogen-foundation"
+    "bowerName": "purescript-halogen-foundation",
     "github": { "user": "slamdata", "repo": "purescript-halogen-foundation" }
   },
   {
-    "bowerName" : "purescript-halogen-bootstrap"
+    "bowerName" : "purescript-halogen-bootstrap",
     "github": { "user": "slamdata", "repo": "purescript-halogen-bootstrap" }
   },
   {
