@@ -24,6 +24,10 @@
     "github": { "user": "purescript", "repo": "purescript-arrays" }
   },
   {
+    "bowerName": "purescript-arrows",
+    "github": { "user": "purescript-contrib", "repo": "purescript-arrows" }
+  },
+  {
     "bowerName": "purescript-automata",
     "github": { "user": "joneshf", "repo": "purescript-automata" }
   },
@@ -58,6 +62,10 @@
   {
     "bowerName": "purescript-control",
     "github": { "user": "purescript", "repo": "purescript-control" }
+  },
+  {
+    "bowerName": "purescript-datetime",
+    "github": { "user": "purescript-contrib", "repo": "purescript-datetime" }
   },
   {
     "bowerName": "purescript-distributive",
