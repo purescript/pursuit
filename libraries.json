@@ -196,6 +196,10 @@
     "github": { "user": "joneshf", "repo": "purescript-node-events" }
   },
   {
+    "bowerName": "purescript-node-postgres",
+    "github": { "user": "epost", "repo": "purescript-node-postgres" }
+  },
+  {
     "bowerName": "purescript-node-url",
     "github": { "user": "joneshf", "repo": "purescript-node-url" }
   },
