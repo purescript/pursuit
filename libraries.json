@@ -224,6 +224,10 @@
     "github": { "user": "joneshf", "repo": "purescript-path" }
   },
   {
+    "bowerName": "purescript-pathy",
+    "github": { "user": "slamdata", "repo": "purescript-pathy" }
+  },
+  {
     "bowerName": "purescript-profunctor",
     "github": { "user": "purescript", "repo": "purescript-profunctor" }
   },
