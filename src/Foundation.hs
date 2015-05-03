@@ -10,7 +10,9 @@ import Yesod.Default.Util          (addStaticContentExternal)
 import qualified Yesod.Core.Unsafe as Unsafe
 
 import Web.Bower.PackageMeta (PackageName, parsePackageName, runPackageName)
+import Data.Version
 import Pursuit.Database
+import qualified Language.PureScript.Docs as D
 
 newtype PathPackageName =
   PathPackageName { runPathPackageName :: PackageName }
@@ -23,11 +25,18 @@ instance Read PathPackageName where
       Left _ -> []
 
 instance PathPiece PathPackageName where
-  toPathPiece (PathPackageName pkgName) =
-    T.pack (runPackageName pkgName)
+  toPathPiece =
+    T.pack . runPackageName . runPathPackageName
   fromPathPiece =
     fmap PathPackageName . either (const Nothing) Just . parsePackageName . T.unpack
 
+newtype PathVersion =
+  PathVersion { runPathVersion :: Version }
+  deriving (Show, Eq, Ord, Read)
+
+instance PathPiece PathVersion where
+  toPathPiece = toPathPiece . showVersion . runPathVersion
+  fromPathPiece = fmap PathVersion . D.parseVersion' . T.unpack
 
 -- | The foundation datatype for your application. This can be a good place to
 -- keep settings and values requiring initialization before your application
@@ -127,10 +136,13 @@ instance RenderMessage App FormMessage where
 unsafeHandler :: App -> Handler a -> IO a
 unsafeHandler = Unsafe.fakeHandlerGetLogger appLogger
 
--- Note: Some functionality previously present in the scaffolding has been
--- moved to documentation in the Wiki. Following are some hopefully helpful
--- links:
---
--- https://github.com/yesodweb/yesod/wiki/Sending-email
--- https://github.com/yesodweb/yesod/wiki/Serve-static-files-from-a-separate-domain
--- https://github.com/yesodweb/yesod/wiki/i18n-messages-in-the-scaffolding
+queryDb :: (PursuitDatabase -> a) -> HandlerT App IO a
+queryDb f = do
+  tvar <- appDatabase <$> getYesod
+  db <- liftIO (readTVarIO tvar)
+  return (f db)
+
+updateDb :: (PursuitDatabase -> PursuitDatabase) -> HandlerT App IO ()
+updateDb f = do
+  tvar <- appDatabase <$> getYesod
+  liftIO (atomically (modifyTVar tvar f))
