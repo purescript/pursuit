@@ -59,7 +59,8 @@ executable pursuit-server
                    stm -any,
                    time -any,
                    old-locale -any,
-                   github -any
+                   github -any,
+                   unix -any
     main-is: Main.hs
     buildable: True
     hs-source-dirs: server

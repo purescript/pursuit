@@ -24,6 +24,7 @@ import Network.Wai.Middleware.Static
 import Github.Auth (GithubAuth(GithubOAuth))
 
 import System.Exit (exitFailure)
+import qualified System.Posix.Signals as Signal
 
 import Pursuit
 
@@ -64,6 +65,11 @@ startGenerateThread librariesFile githubAuth = do
   putStrLn "Building database..."
   buildDb tvar (\err -> do putStrLn err
                            exitFailure)
+
+  _ <- Signal.installHandler Signal.sigHUP (Signal.Catch $ do
+         putStrLnWithTime "Received SIGHUP. Regenerating database..."
+         buildDb tvar (\err -> do putStrLn "failed to rebuild database:"
+                                  putStrLn err)) Nothing
 
   void $ forkIO $ hourly $ do
     putStrLnWithTime "Regenerating database..."
