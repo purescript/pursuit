@@ -12,7 +12,7 @@ Flag library-only
     Default:       False
 
 library
-    hs-source-dirs: ., app
+    hs-source-dirs: src, app
     exposed-modules: Application
                      Foundation
                      Import
