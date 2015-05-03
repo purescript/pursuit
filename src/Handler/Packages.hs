@@ -33,7 +33,7 @@ getPackageVersionR (PathPackageName pkgName') (PathVersion version) = do
     Just D.UploadedPackage{..} ->
       defaultLayout $ do
         let pkgName = runPackageName pkgName'
-        setTitle (toHtml (pkgName ++ " &middot; Pursuit"))
+        setTitle (toHtml (pkgName ++ " · Pursuit"))
         $(widgetFile "packageVersion")
 
 getPackageIndexR :: Handler Html
