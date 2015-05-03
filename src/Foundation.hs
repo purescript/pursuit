@@ -1,13 +1,33 @@
 module Foundation where
 
 import Import.NoFoundation
+import Text.Read (readsPrec)
+import qualified Data.Text as T
 import Text.Hamlet                 (hamletFile)
 import Text.Jasmine                (minifym)
 import Yesod.Core.Types            (Logger)
 import Yesod.Default.Util          (addStaticContentExternal)
 import qualified Yesod.Core.Unsafe as Unsafe
 
+import Web.Bower.PackageMeta (PackageName, parsePackageName, runPackageName)
 import Pursuit.Database
+
+newtype PathPackageName =
+  PathPackageName { runPathPackageName :: PackageName }
+  deriving (Show, Eq, Ord)
+
+instance Read PathPackageName where
+  readsPrec _ str =
+    case parsePackageName str of
+      Right n -> [(PathPackageName n, "")]
+      Left _ -> []
+
+instance PathPiece PathPackageName where
+  toPathPiece (PathPackageName pkgName) =
+    T.pack (runPackageName pkgName)
+  fromPathPiece =
+    fmap PathPackageName . either (const Nothing) Just . parsePackageName . T.unpack
+
 
 -- | The foundation datatype for your application. This can be a good place to
 -- keep settings and values requiring initialization before your application
