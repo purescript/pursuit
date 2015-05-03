@@ -1,0 +1,147 @@
+/* Utils */
+
+/* scrollbars */
+html {
+  overflow-y: scroll;
+}
+
+/* border-box all the things */
+html {
+  box-sizing: border-box;
+}
+*, *:before, *:after {
+  box-sizing: inherit;
+}
+
+.clearfix:before,
+.clearfix:after {
+  content: " ";
+  display: table;
+}
+
+.clearfix:after {
+  clear: both;
+}
+
+.sr-only {
+  position: absolute;
+  left: -10000px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.container {
+  max-width: 1060px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.col-main {
+  float: left;
+  width: 70%;
+}
+
+.col-aside {
+  float: right;
+  width: 30%;
+}
+
+a {
+  text-decoration: none;
+  font-weight: bold;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Top banner */
+.top-banner,
+.top-banner a,
+.top-banner a:visited {
+  background-color: #333;
+  color: #eee;
+  text-decoration: none;
+}
+
+.top-banner a:hover {
+  background-color: #555;
+}
+
+.top-banner {
+  line-height: 5em;
+  vertical-align: middle;
+  margin-bottom: 2em;
+}
+
+.top-banner .pursuit {
+  font-size: 150%;
+  margin-right: 3em;
+}
+
+.top-banner .banner-item {
+  float: left;
+}
+
+.top-banner form {
+  color: #333;
+  width: 60%;
+}
+
+.top-banner input {
+  width: 100%;
+  line-height: 1.5;
+  padding: 0.2em;
+  border-radius: 3px;
+}
+
+h1 {
+  font-weight: normal;
+}
+
+a h2 {
+  margin-top: 0.83em;
+}
+
+.col-aside > *:first-child,
+.col-main > *:first-child {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+.col-main {
+  padding-right: 2em;
+}
+
+.col-aside ul {
+  margin: 1em 0 1.5em 0;
+  padding-left: 1.5em;
+}
+
+/* Version selector */
+.version-selector {
+  background-color: #203079;
+  color: #eee;
+  padding: 0.2em 0.8em;
+  margin-top: 0.4em;
+  float: left;
+  width: auto;
+}
+
+.version-selector a,
+.version-selector a:visited {
+  color: #eee;
+  text-decoration: none;
+}
+
+/* Rendered code */
+.keyword, .syntax {
+    color: #a0a0a0;
+}
+
+code {
+    color: #194a5b;
+    background-color: #f2f5f9;
+}
