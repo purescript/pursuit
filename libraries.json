@@ -252,6 +252,10 @@
     "github": { "user": "anttih", "repo": "purescript-rx" }
   },
   {
+    "bowerName": "purescript-sequences",
+    "github": { "user": "hdgarrood", "repo": "purescript-sequences" }
+  },
+  {
     "bowerName": "purescript-sets",
     "github": { "user": "purescript", "repo": "purescript-sets" }
   },
