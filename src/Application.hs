@@ -49,6 +49,8 @@ makeFoundation appSettings = do
         (if appMutableStatic appSettings then staticDevel else static)
         (appStaticDir appSettings)
 
+    appDatabase <- newTVarIO mempty
+
     -- Return the foundation
     return App {..}
 

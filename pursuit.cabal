@@ -21,6 +21,7 @@ library
                      Settings.StaticFiles
                      Handler.Common
                      Handler.Home
+                     Pursuit.Database
 
     if flag(dev) || flag(library-only)
         cpp-options:   -DDEVELOPMENT
@@ -76,7 +77,7 @@ library
                  , containers
                  , vector
                  , time
-                 , purescript >= 0.6.9.5
+                 , purescript >= 0.7
                  , bower-json >= 0.4
 
 executable         pursuit
