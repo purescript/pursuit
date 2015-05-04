@@ -23,6 +23,7 @@ library
                      Handler.Home
                      Handler.Packages
                      Model.Database
+                     Model.DocsAsHtml
                      Templates
                      YesodExtras.Lucid
 
@@ -85,6 +86,10 @@ library
                  , lucid
                  , blaze-builder
                  , blaze-html
+                 , filepath
+                 , dlist
+                 , cheapskate
+                 , split
 
 executable         pursuit
     if flag(library-only)
