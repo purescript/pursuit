@@ -5,12 +5,12 @@ module Handler.Packages where
 import Import
 import Pursuit.Database
 import Data.Version
-import Language.PureScript.Docs as D
+import qualified Language.PureScript.Docs as D
 import qualified Templates
 
 type One = Succ Zero
 
-packageRoute :: D.UploadedPackage -> Route App
+packageRoute :: D.VerifiedPackage -> Route App
 packageRoute pkg =
   PackageVersionR (PathPackageName (D.packageName pkg))
                   (PathVersion (D.pkgVersion pkg))
@@ -41,5 +41,6 @@ getPackageIndexR = redirect HomeR
 postPackageIndexR :: Handler RenderedHtml
 postPackageIndexR = do
   pkg <- requireJsonBody
-  updateDb (insertPackage pkg)
-  sendResponseCreated (packageRoute pkg)
+  let verifiedPkg = D.verifyPackage (D.GithubUser "hdgarrood") pkg
+  updateDb (insertPackage verifiedPkg)
+  sendResponseCreated (packageRoute verifiedPkg)

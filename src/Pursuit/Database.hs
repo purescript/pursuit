@@ -13,7 +13,7 @@ import Data.Version (Version)
 import qualified Web.Bower.PackageMeta as Bower
 import qualified Language.PureScript.Docs as D
 
-type PursuitDatabase_ = Map Bower.PackageName (Map Version D.UploadedPackage)
+type PursuitDatabase_ = Map Bower.PackageName (Map Version D.VerifiedPackage)
 
 newtype PursuitDatabase = PursuitDatabase PursuitDatabase_
 
@@ -33,15 +33,15 @@ availableVersionsFor pkgName = go . runPursuitDatabase
   where
   go db = M.keys <$> M.lookup pkgName db
 
-lookupPackage :: Bower.PackageName -> Version -> PursuitDatabase -> Maybe D.UploadedPackage
+lookupPackage :: Bower.PackageName -> Version -> PursuitDatabase -> Maybe D.VerifiedPackage
 lookupPackage pkgName pkgVersion = go . runPursuitDatabase
   where
   go = M.lookup pkgName >=> M.lookup pkgVersion
 
 -- | Insert a particular version of a package into a database. If a version of
 -- that package at that version already exists, it is replaced.
-insertPackage :: D.UploadedPackage -> PursuitDatabase -> PursuitDatabase
-insertPackage pkg@D.UploadedPackage{..} =
+insertPackage :: D.VerifiedPackage -> PursuitDatabase -> PursuitDatabase
+insertPackage pkg@D.Package{..} =
   overDb (M.alter go (D.packageName pkg))
   where
   go = Just . M.insert pkgVersion pkg . fromMaybe M.empty

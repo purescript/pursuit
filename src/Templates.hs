@@ -51,8 +51,8 @@ home =
     h2_ "Packages:"
     ul_ (li_ (a_ [href_ "/packages/purescript-sequences"] "purescript-sequences"))
 
-packageVersion :: D.UploadedPackage -> FromLucid App
-packageVersion pkg@D.UploadedPackage{..} =
+packageVersion :: D.VerifiedPackage -> FromLucid App
+packageVersion pkg@D.Package{..} =
   let name = Bower.runPackageName (D.packageName pkg)
       title = toHtml (name <> " · Pursuit")
   in layout title $ do
