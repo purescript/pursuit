@@ -4,7 +4,6 @@ import Import.NoFoundation
 import Text.Read (readsPrec)
 import qualified Data.Text as T
 import qualified Text.Blaze.Html as B
-import Text.Hamlet                 (hamletFile)
 import Text.Jasmine                (minifym)
 import Yesod.Core.Types            (Logger)
 import Yesod.Default.Util          (addStaticContentExternal)
@@ -80,20 +79,8 @@ instance Yesod App where
         "config/client_session_key.aes"
 
     defaultLayout widget = do
-        master <- getYesod
-        mmsg <- getMessage
-
-        -- We break up the default layout into two components:
-        -- default-layout is the contents of the body tag, and
-        -- default-layout-wrapper is the entire page. Since the final
-        -- value passed to hamletToRepHtml cannot be a widget, this allows
-        -- you to use normal widget features in default-layout.
-
-        pc <- widgetToPageContent $ do
-            addStylesheet $ StaticR css_normalize_css
-            addStylesheet $ StaticR css_style_css
-            $(widgetFile "default-layout")
-        withUrlRenderer $(hamletFile "templates/default-layout-wrapper.hamlet")
+        pc <- widgetToPageContent widget
+        withUrlRenderer [hamlet|^{pageBody pc}|]
 
     -- Routes not requiring authenitcation.
     isAuthorized FaviconR _ = return Authorized
