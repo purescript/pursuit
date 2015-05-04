@@ -11,7 +11,7 @@ import qualified Yesod.Core.Unsafe as Unsafe
 
 import Web.Bower.PackageMeta (PackageName, parsePackageName, runPackageName)
 import Data.Version
-import Pursuit.Database
+import Model.Database
 import qualified Language.PureScript.Docs as D
 
 newtype PathPackageName =

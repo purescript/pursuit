@@ -1,5 +1,5 @@
 
-module Pursuit.Database
+module Model.Database
   ( PursuitDatabase
   , lookupPackage
   , availableVersionsFor

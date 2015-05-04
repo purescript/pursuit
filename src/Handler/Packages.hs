@@ -3,7 +3,7 @@
 module Handler.Packages where
 
 import Import
-import Pursuit.Database
+import Model.Database
 import Data.Version
 import qualified Language.PureScript.Docs as D
 import qualified Templates

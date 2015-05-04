@@ -22,7 +22,7 @@ library
                      Handler.Common
                      Handler.Home
                      Handler.Packages
-                     Pursuit.Database
+                     Model.Database
                      Templates
                      YesodExtras.Lucid
 
