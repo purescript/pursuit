@@ -23,6 +23,8 @@ library
                      Handler.Home
                      Handler.Packages
                      Pursuit.Database
+                     Templates
+                     YesodExtras.Lucid
 
     if flag(dev) || flag(library-only)
         cpp-options:   -DDEVELOPMENT
@@ -80,6 +82,9 @@ library
                  , time
                  , purescript >= 0.7
                  , bower-json >= 0.4
+                 , lucid
+                 , blaze-builder
+                 , blaze-html
 
 executable         pursuit
     if flag(library-only)

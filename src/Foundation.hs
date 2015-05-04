@@ -3,6 +3,7 @@ module Foundation where
 import Import.NoFoundation
 import Text.Read (readsPrec)
 import qualified Data.Text as T
+import qualified Text.Blaze.Html as B
 import Text.Hamlet                 (hamletFile)
 import Text.Jasmine                (minifym)
 import Yesod.Core.Types            (Logger)
@@ -63,7 +64,7 @@ instance HasHttpManager App where
 mkYesodData "App" $(parseRoutesFile "config/routes")
 
 -- | A convenient synonym for creating forms.
-type Form x = Html -> MForm (HandlerT App IO) (FormResult x, Widget)
+type Form x = B.Html -> MForm (HandlerT App IO) (FormResult x, Widget)
 
 -- Please see the documentation for the Yesod typeclass. There are a number
 -- of settings which can be configured by overriding methods here.

@@ -1,9 +1,8 @@
 module Handler.Home where
 
 import Import
+import qualified Templates
 
-getHomeR :: Handler Html
-getHomeR = do
-  defaultLayout $ do
-    setTitle "Welcome To Yesod!"
-    $(widgetFile "homepage")
+getHomeR :: Handler RenderedHtml
+getHomeR =
+  lucid Templates.home
