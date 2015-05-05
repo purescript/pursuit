@@ -6,6 +6,7 @@ $doctype 5
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>#{pageTitle'}
 
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,700" type="text/css" rel="stylesheet">
     ^{pageHead pc}
     
     \<!--[if lt IE 9]>

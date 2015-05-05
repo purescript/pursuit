@@ -13,6 +13,10 @@ html {
   box-sizing: inherit;
 }
 
+body {
+  font-family: "Roboto", sans-serif;
+}
+
 .clearfix:before,
 .clearfix:after {
   content: " ";
@@ -72,12 +76,12 @@ main {
 .top-banner a,
 .top-banner a:visited {
   background-color: #{Css.bannerBackground};
-  color: #eee;
+  color: #{Css.darkForeground};
   text-decoration: none;
 }
 
 .top-banner a:hover {
-  background-color: #555;
+  background-color: #{Css.lighten10 Css.bannerBackground};
 }
 
 .top-banner {
@@ -95,7 +99,7 @@ main {
 }
 
 .top-banner form {
-  color: #333;
+  color: #{Css.bannerBackground};
   width: 60%;
 }
 
@@ -108,7 +112,10 @@ main {
 
 /* Lower banner (for a package) */
 .package-banner {
-  background-color: #c0c0d8;
+  background-color: #{Css.packageBannerBackground};
+  color: #{Css.darkForeground};
+  vertical-align: middle;
+  line-height: 2.2em;
 }
 
 h1 {
@@ -136,17 +143,17 @@ a h2 {
 
 /* Version selector */
 .version-selector {
-  background-color: #203079;
-  color: #eee;
-  padding: 0.2em 0.8em;
+  background-color: #{Css.darken5 Css.packageBannerBackground};
+  color: #{Css.darkForeground};
   margin-top: 0.4em;
   float: left;
+  padding: 0.2em 0.8em;
   width: auto;
 }
 
 .version-selector a,
 .version-selector a:visited {
-  color: #eee;
+  color: #{Css.darkForeground};
   text-decoration: none;
 }
 

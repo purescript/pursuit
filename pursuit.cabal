@@ -94,6 +94,7 @@ library
                  , mtl
                  , blaze-markup
                  , shakespeare
+                 , colour
 
     if flag(dev)
       build-depends: foreign-store

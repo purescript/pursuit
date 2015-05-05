@@ -1,6 +1,3 @@
 <a .weight-normal href="#">
   <div .col-aside .version-selector>
-    latest (#
-    <strong>#{showVersion version}#
-    \)
-    ▼
+    latest (<strong>#{showVersion version}</strong>) ▼

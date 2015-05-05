@@ -1,26 +1,25 @@
-<main role="main">
-  <div .clearfix>
-    <div .col-main>
-      <h1>
-        package #
-        <strong>#{pkgName}
+<div .clearfix>
+  <div .col-main>
+    <h1>
+      package #
+      <strong>#{Bower.runPackageName pkgName}
 
-    ^{versionSelector pkgVersion}
+  ^{versionSelector pkgVersion}
 
-  <div .col-aside>
-    <p>published by #{linkToGithubUser pkgUploader}
+<div .col-aside>
+  <p>published by #{linkToGithubUser pkgUploader}
+  <hr>
+  <p>#{linkToGithub pkgGithub} on github
+  <hr>
+  $maybe licenses <- joinLicenses (Bower.bowerLicence pkgMeta)
+    <p>#{licenses} licensed
     <hr>
-    <p>#{linkToGithub pkgGithub} on github
-    <hr>
-    $maybe licenses <- joinLicenses (Bower.bowerLicence pkgMeta)
-      <p>#{licenses} licensed
-      <hr>
-    <p>
-      <a href=@{packageDocsRoute pkg}>Documentation
-    <hr>
-    <p>
-      <strong>Dependencies
-      $forall (depPkg, versionRange) <- Bower.bowerDependencies pkgMeta
-        <li>
-          <a href=@{packageNameRoute depPkg}>#{Bower.runPackageName depPkg}
-          #{renderVersionRange versionRange}
+  <p>
+    <a href=@{packageDocsRoute pkg}>Documentation
+  <hr>
+  <p>
+    <strong>Dependencies
+    $forall (depPkg, versionRange) <- Bower.bowerDependencies pkgMeta
+      <li>
+        <a href=@{packageNameRoute depPkg}>#{Bower.runPackageName depPkg}
+        #{renderVersionRange versionRange}

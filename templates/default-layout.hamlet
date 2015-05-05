@@ -4,10 +4,10 @@
       <a .pursuit href=@{HomeR}>Pursuit
 
     <form .banner-item role="search" action="search" method="get">
-      <label for="q" class="sr-only">Search for packages, types, and functions
-      <input type="text" class="form-control" name="q" placeholder="Search for packages, types, functions...">
+      <label .sr-only for="q">Search for packages, types, and functions
+      <input .form-control type="text" name="q" placeholder="Search for packages, types, functions...">
 
-<div .container #content>
+<main .container role="main">
   $maybe msg <- mmsg
     <div #message>#{msg}
 

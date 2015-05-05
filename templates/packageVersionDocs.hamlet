@@ -1,3 +1,7 @@
-^{packageBanner pkgName version}
+<div .clearfix>
+  <div .col-main>
+    <h1>
+      <a href=@{packageNameRoute pkgName}>#{Bower.runPackageName pkgName}
+      / documentation
 
-<h1>Docs coming soon.
+  ^{versionSelector pkgVersion}

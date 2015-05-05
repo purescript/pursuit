@@ -1,12 +1,13 @@
-<h1 style="text-align: center">
-  <strong>Pursuit #
-  is the home of PureScript documentation.
+<main .container role="main">
+  <h1 style="text-align: center">
+    <strong>Pursuit #
+    is the home of PureScript documentation.
 
-<h2>Packages:
-<ul>
-  <li>
-    <a href="/packages/purescript-sequences">purescript-sequences
-  <li>
-    <a href="/packages/purescript-prelude">purescript-prelude
-  <li>
-    <a href="/packages/purescript-integers">purescript-integers
+  <h2>Packages:
+  <ul>
+    <li>
+      <a href="/packages/purescript-sequences">purescript-sequences
+    <li>
+      <a href="/packages/purescript-prelude">purescript-prelude
+    <li>
+      <a href="/packages/purescript-integers">purescript-integers
