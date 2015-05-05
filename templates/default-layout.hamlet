@@ -1,0 +1,14 @@
+<div .top-banner .clearfix>
+  <div .container .clearfix>
+    <div .banner-item .pursuit>
+      <a .pursuit href=@{HomeR}>Pursuit
+
+    <form .banner-item role="search" action="search" method="get">
+      <label for="q" class="sr-only">Search for packages, types, and functions
+      <input type="text" class="form-control" name="q" placeholder="Search for packages, types, functions...">
+
+<div .container #content>
+  $maybe msg <- mmsg
+    <div #message>#{msg}
+
+  ^{widget}

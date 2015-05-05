@@ -1,21 +1,14 @@
-{-# LANGUAGE RecordWildCards #-}
-
 module Handler.Packages where
 
 import Import
-import Model.Database
 import Data.Version
 import qualified Language.PureScript.Docs as D
-import qualified Templates
+import qualified Web.Bower.PackageMeta as Bower
 
-type One = Succ Zero
+import Model.Database
+import TemplateHelpers
 
-packageRoute :: D.VerifiedPackage -> Route App
-packageRoute pkg =
-  PackageVersionR (PathPackageName (D.packageName pkg))
-                  (PathVersion (D.pkgVersion pkg))
-
-getPackageR :: PathPackageName -> Handler RenderedHtml
+getPackageR :: PathPackageName -> Handler Html
 getPackageR ppkgName@(PathPackageName pkgName) = do
   versions <- queryDb (availableVersionsFor pkgName)
   case versions of
@@ -27,20 +20,28 @@ getPackageR ppkgName@(PathPackageName pkgName) = do
           let latestVersion = maximum ((map . map) PathVersion vs')
           in redirect (PackageVersionR ppkgName latestVersion)
 
-getPackageVersionR :: PathPackageName -> PathVersion -> Handler RenderedHtml
-getPackageVersionR (PathPackageName pkgName') (PathVersion version) = do
-  pkg' <- queryDb (lookupPackage pkgName' version)
+getPackageVersionR :: PathPackageName -> PathVersion -> Handler Html
+getPackageVersionR (PathPackageName pkgName'') (PathVersion version) = do
+  pkg' <- queryDb (lookupPackage pkgName'' version)
   case pkg' of
-    Nothing -> notFound
-    Just pkg ->
-      lucid (Templates.packageVersion pkg)
+    Nothing  -> notFound
+    Just pkg@D.Package{..} -> defaultLayout $ do
+      let pkgName' = toHtml (Bower.runPackageName (D.packageName pkg))
+      setTitle pkgName'
+      $(widgetFile "packageVersion")
 
-getPackageIndexR :: Handler RenderedHtml
+getPackageIndexR :: Handler Html
 getPackageIndexR = redirect HomeR
 
-postPackageIndexR :: Handler RenderedHtml
+postPackageIndexR :: Handler Html
 postPackageIndexR = do
   pkg <- requireJsonBody
+  -- TODO: Actual verification
   let verifiedPkg = D.verifyPackage (D.GithubUser "hdgarrood") pkg
   updateDb (insertPackage verifiedPkg)
   sendResponseCreated (packageRoute verifiedPkg)
+
+getPackageVersionDocsR :: PathPackageName -> PathVersion -> Handler Html
+getPackageVersionDocsR _ _ =
+  defaultLayout
+    [whamlet|<h2>lol no docs here, soz|]

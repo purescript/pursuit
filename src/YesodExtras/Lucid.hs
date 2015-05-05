@@ -1,7 +1,4 @@
-{-# LANGUAGE TypeSynonymInstances #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# OPTIONS_GHC -fno-warn-orphans #-}
+{-# LANGUAGE DeriveFunctor #-}
 
 -- | Useful utilities for using Lucid with Yesod.
 -- Taken almost verbatim from https://github.com/haskell-infra/hl; the licence
@@ -38,6 +35,7 @@ module YesodExtras.Lucid
   )
   where
 
+import Control.Monad.Reader.Class
 import Lucid
 import ClassyPrelude.Yesod hiding (Html)
 import qualified Blaze.ByteString.Builder as Blaze
@@ -48,25 +46,36 @@ data LucidReader a
                 }
 
 -- | A lucid generator.
-type FromLucid a = HtmlT (Reader (LucidReader a)) ()
+newtype FromLucid' app a =
+  FromLucid' { unFromLucid' :: HtmlT (Reader (LucidReader app)) a }
+  deriving (Functor, Applicative, Monad)
+
+runFromLucid' :: LucidReader app -> FromLucid' app a -> RenderedHtml
+runFromLucid' rdr =
+  RenderedHtml . runIdentity . flip runReaderT rdr . execHtmlT . unFromLucid'
+
+instance MonadReader (LucidReader app) (FromLucid' app) where
+  ask = FromLucid' (lift ask)
+  local f a = FromLucid' _
+
+type FromLucid app = FromLucid' app ()
 
 newtype RenderedHtml = RenderedHtml Blaze.Builder
 
--- | Output some lucid, passes a URL renderer to the continuation.
 lucid :: MonadHandler m => FromLucid (HandlerSite m) -> m RenderedHtml
 lucid act =
   do render <- getUrlRender
      route <- getCurrentRoute
-     return (RenderedHtml (runReader (execHtmlT act) (LucidReader route render)))
-
-  where
-  runReader r a = runIdentity (runReaderT r a)
+     return (runFromLucid' (LucidReader route render) act)
 
 getCurrentRoute' :: (Functor m, MonadReader (LucidReader a) m) => m (Maybe (Route a))
 getCurrentRoute' = rdrCurrentRoute <$> ask
 
 getUrlRender' :: (Functor m, MonadReader (LucidReader a) m) => m (Route a -> Text)
 getUrlRender' = rdrUrlRender <$> ask
+
+renderUrl :: (Applicative m, MonadReader (LucidReader a) m) => Route a -> m Text
+renderUrl route = getUrlRender' <*> pure route
 
 instance ToTypedContent RenderedHtml where
   toTypedContent html =

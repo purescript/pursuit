@@ -1,8 +1,8 @@
 module Handler.Home where
 
 import Import
-import qualified Templates
+-- import TemplateHelpers
 
-getHomeR :: Handler RenderedHtml
+getHomeR :: Handler Html
 getHomeR =
-  lucid Templates.home
+  defaultLayout $(widgetFile "homepage")

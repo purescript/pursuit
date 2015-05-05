@@ -1,0 +1,21 @@
+<div .clearfix>
+  <div .col-main>
+    <h1>
+      package #
+      <strong>#{pkgName'}
+
+  <div .col-aside .version-selector>
+    latest (#
+    <strong>#{showVersion pkgVersion}
+    \)
+    <a href="#">▼
+
+<div .col-aside>
+  <p>published by #{linkToGithubUser pkgUploader}
+  <hr>
+  <p>#{linkToGithub pkgGithub} on github
+  <hr>
+  $maybe licenses <- joinLicenses (Bower.bowerLicence pkgMeta)
+    <p>#{licenses} licensed
+    <hr>
+  <p><a href=@{packageDocsRoute pkg}>Documentation

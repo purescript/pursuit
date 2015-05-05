@@ -1,9 +1,12 @@
-
 module Templates where
 
 import Import
+import Data.Version (showVersion)
+import qualified Data.Text as T
 import qualified Language.PureScript.Docs as D
 import qualified Web.Bower.PackageMeta as Bower
+
+import TemplateHelpers
 
 role_ :: Term arg result => arg -> result
 role_ = term "role"
@@ -36,8 +39,7 @@ layout title content = do
             input_ [type_ "text", class_ "form-control", name_ "q", placeholder_ "Search for packages, types, functions..."]
 
       div_ [class_ "container", id_ "content"] $ do
-        div_ [class_ "clearfix"] $ do
-          content
+        content
 
 styles :: (a -> Text) -> [a] -> FromLucid App
 styles url =
@@ -61,7 +63,44 @@ home =
 
 packageVersion :: D.VerifiedPackage -> FromLucid App
 packageVersion pkg@D.Package{..} =
-  let name = Bower.runPackageName (D.packageName pkg)
+  let name = T.pack (Bower.runPackageName (D.packageName pkg))
       title = toHtml (name <> " · Pursuit")
   in layout title $ do
-    h1_ (toHtml name)
+    div_ [class_ "clearfix"] (packageTitle name)
+    div_ [class_ "col-aside"] sidebar
+
+  where
+  packageTitle :: Text -> FromLucid App
+  packageTitle name = do
+    div_ [class_ "col-main"] $ do
+      h1_ $ do
+        "package "
+        strong_ (toHtml name)
+    div_ [class_ "col-aside version-selector"] $ do
+      "latest ("
+      strong_ (toHtml (showVersion pkgVersion))
+      ") "
+      a_ [href_ "#"] "▼"
+
+  sidebar :: FromLucid App
+  sidebar =
+    intercalate (hr_ []) $ catMaybes $
+      [ Just publisher
+      , Just github
+      , licenses (Bower.bowerLicence pkgMeta)
+      , Just documentation
+      ]
+
+  publisher = p_ ("published by " >> linkToGithubUser pkgUploader)
+  github    = p_ (linkToGithub pkgGithub >> " on github")
+
+  licenses :: [String] -> Maybe (FromLucid App)
+  licenses ls
+    | null ls   = Nothing
+    | otherwise = Just (strong_ (toHtml (intercalate "/" ls)) >> " licensed")
+
+  documentation :: FromLucid App
+  documentation = do
+    url <- renderUrl (packageDocsRoute pkg)
+    a_ [href_ url] "docs"
+

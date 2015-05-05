@@ -3,7 +3,9 @@ module Foundation where
 import Import.NoFoundation
 import Text.Read (readsPrec)
 import qualified Data.Text as T
-import qualified Text.Blaze.Html as B
+import qualified Data.Text.Lazy as LT
+import qualified Text.Blaze.Html.Renderer.Text as Blaze
+import Text.Hamlet                 (hamletFile)
 import Text.Jasmine                (minifym)
 import Yesod.Core.Types            (Logger)
 import Yesod.Default.Util          (addStaticContentExternal)
@@ -63,7 +65,7 @@ instance HasHttpManager App where
 mkYesodData "App" $(parseRoutesFile "config/routes")
 
 -- | A convenient synonym for creating forms.
-type Form x = B.Html -> MForm (HandlerT App IO) (FormResult x, Widget)
+type Form x = Html -> MForm (HandlerT App IO) (FormResult x, Widget)
 
 -- Please see the documentation for the Yesod typeclass. There are a number
 -- of settings which can be configured by overriding methods here.
@@ -79,8 +81,27 @@ instance Yesod App where
         "config/client_session_key.aes"
 
     defaultLayout widget = do
-        pc <- widgetToPageContent widget
-        withUrlRenderer [hamlet|^{pageBody pc}|]
+        master <- getYesod
+        mmsg <- getMessage
+
+        -- We break up the default layout into two components:
+        -- default-layout is the contents of the body tag, and
+        -- default-layout-wrapper is the entire page. Since the final
+        -- value passed to hamletToRepHtml cannot be a widget, this allows
+        -- you to use normal widget features in default-layout.
+
+        pc <- widgetToPageContent $ do
+            addStylesheet $ StaticR css_normalize_css
+            addStylesheet $ StaticR css_style_css
+            $(widgetFile "default-layout")
+
+        let pageTitle' =
+              let renderedTitle = Blaze.renderHtml (pageTitle pc)
+              in toHtml (if LT.null renderedTitle
+                           then "Pursuit"
+                           else renderedTitle <> " - Pursuit")
+
+        withUrlRenderer $(hamletFile "templates/default-layout-wrapper.hamlet")
 
     -- Routes not requiring authenitcation.
     isAuthorized FaviconR _ = return Authorized
@@ -134,3 +155,14 @@ updateDb :: (PursuitDatabase -> PursuitDatabase) -> HandlerT App IO ()
 updateDb f = do
   tvar <- appDatabase <$> getYesod
   liftIO (atomically (modifyTVar tvar f))
+
+
+packageRoute :: D.VerifiedPackage -> Route App
+packageRoute pkg =
+  PackageVersionR (PathPackageName (D.packageName pkg))
+                  (PathVersion (D.pkgVersion pkg))
+
+packageDocsRoute :: D.VerifiedPackage -> Route App
+packageDocsRoute pkg =
+  PackageVersionDocsR (PathPackageName (D.packageName pkg))
+                      (PathVersion (D.pkgVersion pkg))

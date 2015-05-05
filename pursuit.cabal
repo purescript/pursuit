@@ -24,8 +24,7 @@ library
                      Handler.Packages
                      Model.Database
                      Model.DocsAsHtml
-                     Templates
-                     YesodExtras.Lucid
+                     TemplateHelpers
 
     if flag(dev) || flag(library-only)
         cpp-options:   -DDEVELOPMENT
@@ -49,6 +48,7 @@ library
                 ViewPatterns
                 TupleSections
                 RecordWildCards
+                ScopedTypeVariables
 
     build-depends: base                          >= 4          && < 5
                  , yesod                         >= 1.4.1      && < 1.5
@@ -90,6 +90,7 @@ library
                  , dlist
                  , cheapskate
                  , split
+                 , mtl
 
 executable         pursuit
     if flag(library-only)
