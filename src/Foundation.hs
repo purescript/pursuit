@@ -14,6 +14,7 @@ import qualified Yesod.Core.Unsafe as Unsafe
 import Web.Bower.PackageMeta (PackageName, parsePackageName, runPackageName)
 import Data.Version
 import Model.Database
+import qualified Css
 import qualified Language.PureScript.Docs as D
 
 newtype PathPackageName =
@@ -92,7 +93,6 @@ instance Yesod App where
 
         pc <- widgetToPageContent $ do
             addStylesheet $ StaticR css_normalize_css
-            addStylesheet $ StaticR css_style_css
             $(widgetFile "default-layout")
 
         let pageTitle' =

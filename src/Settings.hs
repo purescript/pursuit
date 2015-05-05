@@ -66,7 +66,7 @@ instance FromJSON AppSettings where
         appDetailedRequestLogging <- o .:? "detailed-logging" .!= defaultDev
         appShouldLogAll           <- o .:? "should-log-all"   .!= defaultDev
         appReloadTemplates        <- o .:? "reload-templates" .!= defaultDev
-        appMutableStatic          <- o .:? "mutable-static"   .!= defaultDev
+        appMutableStatic          <- o .:? "mutable-static"   .!= True
         appSkipCombining          <- o .:? "skip-combining"   .!= defaultDev
 
         appAnalytics              <- o .:? "analytics"

@@ -21,13 +21,10 @@ getPackageR ppkgName@(PathPackageName pkgName) = do
           in redirect (PackageVersionR ppkgName latestVersion)
 
 getPackageVersionR :: PathPackageName -> PathVersion -> Handler Html
-getPackageVersionR (PathPackageName pkgName'') (PathVersion version) = do
-  pkg' <- queryDb (lookupPackage pkgName'' version)
-  case pkg' of
-    Nothing  -> notFound
-    Just pkg@D.Package{..} -> defaultLayout $ do
-      let pkgName' = toHtml (Bower.runPackageName (D.packageName pkg))
-      setTitle pkgName'
+getPackageVersionR (PathPackageName pkgName') (PathVersion version) =
+  findPackage pkgName' version $ \pkgName pkg@D.Package{..} ->
+    defaultLayout $ do
+      setTitle (toHtml pkgName)
       $(widgetFile "packageVersion")
 
 getPackageIndexR :: Handler Html
@@ -42,6 +39,27 @@ postPackageIndexR = do
   sendResponseCreated (packageRoute verifiedPkg)
 
 getPackageVersionDocsR :: PathPackageName -> PathVersion -> Handler Html
-getPackageVersionDocsR _ _ =
-  defaultLayout
-    [whamlet|<h2>lol no docs here, soz|]
+getPackageVersionDocsR (PathPackageName pkgName') (PathVersion version) =
+  findPackage pkgName' version $ \pkgName pkg@D.Package{..} ->
+    defaultLayout $ do
+      setTitle (toHtml pkgName)
+      $(widgetFile "packageVersionDocs")
+
+findPackage ::
+  Bower.PackageName ->
+  Version ->
+  (String -> D.VerifiedPackage -> Handler Html) ->
+  Handler Html
+findPackage pkgName' version cont = do
+  pkg' <- queryDb (lookupPackage pkgName' version)
+  case pkg' of
+    Nothing -> notFound
+    Just pkg@D.Package{..} ->
+      let pkgName = Bower.runPackageName (D.packageName pkg)
+      in cont pkgName pkg
+
+packageBanner :: String -> Version -> WidgetT App IO ()
+packageBanner pkgName pkgVersion = $(widgetFile "packageBanner")
+
+versionSelector :: Version -> WidgetT App IO ()
+versionSelector version = $(widgetFile "versionSelector")

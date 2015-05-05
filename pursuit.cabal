@@ -25,6 +25,7 @@ library
                      Model.Database
                      Model.DocsAsHtml
                      TemplateHelpers
+                     Css
 
     if flag(dev) || flag(library-only)
         cpp-options:   -DDEVELOPMENT
@@ -91,6 +92,11 @@ library
                  , cheapskate
                  , split
                  , mtl
+                 , blaze-markup
+                 , shakespeare
+
+    if flag(dev)
+      build-depends: foreign-store
 
 executable         pursuit
     if flag(library-only)

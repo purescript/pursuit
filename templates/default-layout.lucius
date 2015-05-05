@@ -53,15 +53,25 @@ a {
   font-weight: bold;
 }
 
+a.weight-normal,
+a.weight-normal:hover {
+  font-weight: normal;
+}
+
 a:hover {
   text-decoration: underline;
+}
+
+/* <main> */
+main {
+  margin-top: 2em;
 }
 
 /* Top banner */
 .top-banner,
 .top-banner a,
 .top-banner a:visited {
-  background-color: #333;
+  background-color: #{Css.bannerBackground};
   color: #eee;
   text-decoration: none;
 }
@@ -73,7 +83,6 @@ a:hover {
 .top-banner {
   line-height: 5em;
   vertical-align: middle;
-  margin-bottom: 2em;
 }
 
 .top-banner .pursuit {
@@ -95,6 +104,11 @@ a:hover {
   line-height: 1.5;
   padding: 0.2em;
   border-radius: 3px;
+}
+
+/* Lower banner (for a package) */
+.package-banner {
+  background-color: #c0c0d8;
 }
 
 h1 {
