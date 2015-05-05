@@ -156,6 +156,9 @@ updateDb f = do
   tvar <- appDatabase <$> getYesod
   liftIO (atomically (modifyTVar tvar f))
 
+packageNameRoute :: PackageName -> Route App
+packageNameRoute pkgName =
+  PackageR (PathPackageName pkgName)
 
 packageRoute :: D.VerifiedPackage -> Route App
 packageRoute pkg =

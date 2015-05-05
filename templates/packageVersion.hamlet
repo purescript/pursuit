@@ -18,4 +18,12 @@
   $maybe licenses <- joinLicenses (Bower.bowerLicence pkgMeta)
     <p>#{licenses} licensed
     <hr>
-  <p><a href=@{packageDocsRoute pkg}>Documentation
+  <p>
+    <a href=@{packageDocsRoute pkg}>Documentation
+  <hr>
+  <p>
+    <strong>Dependencies
+    $forall (depPkg, versionRange) <- Bower.bowerDependencies pkgMeta
+      <li>
+        <a href=@{packageNameRoute depPkg}>#{Bower.runPackageName depPkg}
+        #{renderVersionRange versionRange}

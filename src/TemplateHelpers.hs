@@ -23,3 +23,6 @@ joinLicenses :: [String] -> Maybe Html
 joinLicenses ls
   | null ls   = Nothing
   | otherwise = Just (strong (toHtml (intercalate "/" ls)) >> " licensed")
+
+renderVersionRange :: Bower.VersionRange -> Html
+renderVersionRange = toHtml . Bower.runVersionRange
