@@ -5,6 +5,9 @@ import Import
 import qualified Language.PureScript.Docs as D
 import qualified Web.Bower.PackageMeta as Bower
 
+role_ :: Term arg result => arg -> result
+role_ = term "role"
+
 layout :: FromLucid App -> FromLucid App -> FromLucid App
 layout title content = do
   url <- lift getUrlRender'
@@ -27,7 +30,7 @@ layout title content = do
             a_ [class_ "pursuit", href_ (url HomeR)] "Pursuit"
 
           -- TODO: Real route
-          form_ [class_ "banner-item", term "role" "search", action_ "search", method_ "get"] $ do
+          form_ [class_ "banner-item", role_ "search", action_ "search", method_ "get"] $ do
             label_ [for_ "q", class_ "sr-only"] $
               "Search for packages, types, and functions"
             input_ [type_ "text", class_ "form-control", name_ "q", placeholder_ "Search for packages, types, functions..."]
@@ -49,7 +52,12 @@ home =
       " is the home of PureScript documentation."
 
     h2_ "Packages:"
-    ul_ (li_ (a_ [href_ "/packages/purescript-sequences"] "purescript-sequences"))
+    ul_ $ do
+      pkg "purescript-sequences"
+      pkg "purescript-prelude"
+  where
+  pkg :: Text -> FromLucid App
+  pkg x = li_ (a_ [href_ ("/packages/" <> x)] (toHtml x))
 
 packageVersion :: D.VerifiedPackage -> FromLucid App
 packageVersion pkg@D.Package{..} =
