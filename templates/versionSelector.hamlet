@@ -1,3 +1,17 @@
-<a .weight-normal href="#">
-  <div .col-aside .version-selector>
-    latest (<strong>#{showVersion version}</strong>) ▼
+<a .weight-normal id=#{toggle} data-state="closed" href="#">
+  <div .col-aside .version-selector class=#{toggleClosed}>
+    ^{displayVersion version}
+    <span .arrow>
+      ▼
+
+  <div .col-aside .version-selector class=#{toggleOpen} style="display: none">
+    ^{displayVersion version}
+    <span .arrow>
+      ▲
+
+<div .col-aside style="position: relative">
+  <div .version-selector-open class=#{toggleOpen} style="display: none">
+    $forall v <- availableVersions
+      <p>
+        <a href=@{versionRoute v}>
+          ^{displayVersion v}

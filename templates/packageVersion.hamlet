@@ -4,7 +4,7 @@
       package #
       <strong>#{Bower.runPackageName pkgName}
 
-  ^{versionSelector pkgVersion}
+  ^{versionSelector pkgName pkgVersion availableVersions}
 
 <div .col-aside>
   <p>published by #{linkToGithubUser pkgUploader}

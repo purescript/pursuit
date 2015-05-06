@@ -1,0 +1,35 @@
+function forEach(xs, f) {
+  var len = xs.length
+  for (var i = 0; i < len; i++) {
+    f(xs[i])
+  }
+}
+
+function hide(els) {
+  forEach(els, function(el) {
+    el.style.display = 'none'
+  })
+}
+
+function show(els) {
+  forEach(els, function(el) {
+    el.style.display = 'block'
+  })
+}
+
+var elToggle = document.getElementById("#{rawJS toggle}")
+var elsOpen = document.querySelectorAll(".#{rawJS toggleOpen}")
+var elsClosed = document.querySelectorAll(".#{rawJS toggleClosed}")
+
+elToggle.addEventListener('click', function() {
+  var attr = elToggle.getAttribute("data-state")
+  if (attr === "open") {
+    elToggle.setAttribute("data-state", "closed")
+    hide(elsOpen)
+    show(elsClosed)
+  } else {
+    elToggle.setAttribute("data-state", "open")
+    hide(elsClosed)
+    show(elsOpen)
+  }
+})

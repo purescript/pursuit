@@ -175,3 +175,17 @@ moduleDocsRoute pkg moduleName =
   PackageVersionModuleDocsR (PathPackageName (D.packageName pkg))
                             (PathVersion (D.pkgVersion pkg))
                             moduleName
+
+substituteVersion :: Route App -> Version -> Route App
+substituteVersion route version' =
+  let version = PathVersion version'
+  in case route of
+    PackageVersionR pkgName _ ->
+      PackageVersionR pkgName version
+    PackageVersionDocsR pkgName _ ->
+      PackageVersionDocsR pkgName version
+    PackageVersionModuleDocsR pkgName _ modName ->
+      PackageVersionModuleDocsR pkgName version modName
+    other ->
+      other
+  

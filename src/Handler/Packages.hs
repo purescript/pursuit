@@ -2,6 +2,7 @@ module Handler.Packages where
 
 import Import
 import Text.Blaze.Html (preEscapedToHtml)
+import Text.Julius (rawJS)
 import Data.Version
 import qualified Language.PureScript as P
 import qualified Language.PureScript.Docs as D
@@ -25,7 +26,7 @@ getPackageR ppkgName@(PathPackageName pkgName) = do
 
 getPackageVersionR :: PathPackageName -> PathVersion -> Handler Html
 getPackageVersionR (PathPackageName pkgName) (PathVersion version) =
-  findPackage pkgName version $ \pkg@D.Package{..} ->
+  findPackage pkgName version $ \availableVersions pkg@D.Package{..} ->
     defaultLayout $ do
       setTitle (toHtml (Bower.runPackageName pkgName))
       $(widgetFile "packageVersion")
@@ -43,42 +44,63 @@ postPackageIndexR = do
 
 getPackageVersionDocsR :: PathPackageName -> PathVersion -> Handler Html
 getPackageVersionDocsR (PathPackageName pkgName) (PathVersion version) =
-  findPackage pkgName version $ \pkg@D.Package{..} -> do
+  findPackage pkgName version $ \availableVersions pkg@D.Package{..} -> do
     let docsOutput = packageAsHtml pkg
     let moduleNames = sort $ map (P.runModuleName . fst) $ htmlModules docsOutput
     defaultLayout $ do
       setTitle (toHtml (Bower.runPackageName pkgName))
-      documentationPage pkg $
+      documentationPage availableVersions pkg $
         $(widgetFile "packageVersionDocs")
 
 getPackageVersionModuleDocsR :: PathPackageName -> PathVersion -> String -> Handler Html
 getPackageVersionModuleDocsR (PathPackageName pkgName) (PathVersion version) mnString =
-  findPackage pkgName version $ \pkg@D.Package{..} -> do
+  findPackage pkgName version $ \availableVersions pkg@D.Package{..} -> do
     let docsOutput = packageAsHtml pkg
     case lookup (P.moduleNameFromString mnString) (htmlModules docsOutput) of
       Nothing -> notFound
       Just htmlDocs ->
         defaultLayout $ do
           setTitle (toHtml (mnString <> " - " <> Bower.runPackageName pkgName))
-          documentationPage pkg $
+          documentationPage availableVersions pkg $
             $(widgetFile "packageVersionModuleDocs")
 
 findPackage ::
   Bower.PackageName ->
   Version ->
-  (D.VerifiedPackage -> Handler Html) ->
+  ([Version] -> D.VerifiedPackage -> Handler Html) ->
   Handler Html
-findPackage pkgName' version cont = do
-  pkg' <- queryDb (lookupPackage pkgName' version)
+findPackage pkgName version cont = do
+  pkg' <- queryDb (lookupPackage pkgName version)
   case pkg' of
     Nothing -> notFound
-    Just pkg -> cont pkg
+    Just pkg -> do
+      versions' <- queryDb (availableVersionsFor pkgName)
+      case versions' of
+        Nothing -> notFound
+        Just versions -> cont versions pkg
 
-versionSelector :: Version -> WidgetT App IO ()
-versionSelector version = $(widgetFile "versionSelector")
+versionSelector :: Bower.PackageName -> Version -> [Version] -> WidgetT App IO ()
+versionSelector pkgName version availableVersions' = do
+  let availableVersions = sortBy (comparing Down) availableVersions'
+  let isLatest v = maybe False (== v) (headMay availableVersions)
+  mroute <- getCurrentRoute
+  let versionRoute v =
+        case mroute of
+          Just route -> substituteVersion route v
+          Nothing ->    HomeR -- should never happen
 
-documentationPage :: D.VerifiedPackage -> WidgetT App IO () -> WidgetT App IO ()
-documentationPage pkg@D.Package{..} widget =
+  let displayVersion v
+        | isLatest v = [whamlet|latest (<strong>#{showVersion v}</strong>)|]
+        | otherwise = [whamlet|<strong>#{showVersion v}|]
+
+  toggle       <- newIdent
+  toggleOpen   <- newIdent
+  toggleClosed <- newIdent
+  $(widgetFile "versionSelector")
+
+documentationPage ::
+  [Version] -> D.VerifiedPackage -> WidgetT App IO () -> WidgetT App IO ()
+documentationPage availableVersions pkg@D.Package{..} widget =
   let pkgName = D.packageName pkg
   in [whamlet|
     <div .clearfix>
@@ -88,7 +110,7 @@ documentationPage pkg@D.Package{..} widget =
           /
           <a href=@{packageDocsRoute pkg}>documentation
 
-      ^{versionSelector pkgVersion}
+      ^{versionSelector pkgName pkgVersion availableVersions}
 
     <div .col-main>
       ^{widget}
