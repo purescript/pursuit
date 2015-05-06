@@ -118,7 +118,7 @@ main {
   line-height: 2.2em;
 }
 
-h1 {
+h1, h2 {
   font-weight: normal;
 }
 
@@ -157,7 +157,15 @@ a h2 {
   text-decoration: none;
 }
 
-/* Rendered code */
+/* Rendered docs / code */
+.decl {
+    margin-top: 2em;
+}
+
+.decl-inner {
+    padding: 0 4em 0 1em;
+}
+
 .keyword, .syntax {
     color: #a0a0a0;
 }
@@ -165,4 +173,8 @@ a h2 {
 code {
     color: #194a5b;
     background-color: #f2f5f9;
+}
+
+ul.documentation-contents li {
+    font-size: 1.3em;
 }

@@ -9,3 +9,4 @@
 /packages/#PathPackageName PackageR GET
 /packages/#PathPackageName/#PathVersion PackageVersionR GET
 /packages/#PathPackageName/#PathVersion/docs PackageVersionDocsR GET
+/packages/#PathPackageName/#PathVersion/docs/#String PackageVersionModuleDocsR GET

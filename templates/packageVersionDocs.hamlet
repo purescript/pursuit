@@ -1,7 +1,7 @@
-<div .clearfix>
-  <div .col-main>
-    <h1>
-      <a href=@{packageNameRoute pkgName}>#{Bower.runPackageName pkgName}
-      / documentation
-
-  ^{versionSelector pkgVersion}
+<div .col-main>
+  <h2>
+    <strong>Modules
+  <ul .documentation-contents>
+    $forall name <- moduleNames
+      <li>
+        <a href=@{moduleDocsRoute pkg name}>#{name}

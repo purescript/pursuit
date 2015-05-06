@@ -1,11 +1,14 @@
 module Handler.Packages where
 
 import Import
+import Text.Blaze.Html (preEscapedToHtml)
 import Data.Version
+import qualified Language.PureScript as P
 import qualified Language.PureScript.Docs as D
 import qualified Web.Bower.PackageMeta as Bower
 
 import Model.Database
+import Model.DocsAsHtml
 import TemplateHelpers
 
 getPackageR :: PathPackageName -> Handler Html
@@ -40,10 +43,25 @@ postPackageIndexR = do
 
 getPackageVersionDocsR :: PathPackageName -> PathVersion -> Handler Html
 getPackageVersionDocsR (PathPackageName pkgName) (PathVersion version) =
-  findPackage pkgName version $ \pkg@D.Package{..} ->
+  findPackage pkgName version $ \pkg@D.Package{..} -> do
+    let docsOutput = packageAsHtml pkg
+    let moduleNames = sort $ map (P.runModuleName . fst) $ htmlModules docsOutput
     defaultLayout $ do
       setTitle (toHtml (Bower.runPackageName pkgName))
-      $(widgetFile "packageVersionDocs")
+      documentationPage pkg $
+        $(widgetFile "packageVersionDocs")
+
+getPackageVersionModuleDocsR :: PathPackageName -> PathVersion -> String -> Handler Html
+getPackageVersionModuleDocsR (PathPackageName pkgName) (PathVersion version) mnString =
+  findPackage pkgName version $ \pkg@D.Package{..} -> do
+    let docsOutput = packageAsHtml pkg
+    case lookup (P.moduleNameFromString mnString) (htmlModules docsOutput) of
+      Nothing -> notFound
+      Just htmlDocs ->
+        defaultLayout $ do
+          setTitle (toHtml (mnString <> " - " <> Bower.runPackageName pkgName))
+          documentationPage pkg $
+            $(widgetFile "packageVersionModuleDocs")
 
 findPackage ::
   Bower.PackageName ->
@@ -58,3 +76,18 @@ findPackage pkgName' version cont = do
 
 versionSelector :: Version -> WidgetT App IO ()
 versionSelector version = $(widgetFile "versionSelector")
+
+documentationPage :: D.VerifiedPackage -> WidgetT App IO () -> WidgetT App IO ()
+documentationPage pkg@D.Package{..} widget =
+  let pkgName = D.packageName pkg
+  in [whamlet|
+    <div .clearfix>
+      <div .col-main>
+        <h1>
+          <a href=@{packageNameRoute pkgName}>#{Bower.runPackageName pkgName}
+          / documentation
+
+      ^{versionSelector pkgVersion}
+
+    ^{widget}
+    |]

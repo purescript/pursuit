@@ -26,6 +26,7 @@ import Data.String (fromString)
 import Data.Version
 import qualified Data.Map as M
 
+import qualified Data.Text.Lazy as LT
 import qualified Data.Text as T
 
 import Lucid hiding (for_)
@@ -69,18 +70,20 @@ data DocLink
   | DepsModule P.ModuleName PackageName Version P.ModuleName String
   deriving (Show, Eq, Ord)
 
-data HtmlOutput = HtmlOutput
-  { htmlIndex     :: [(Maybe Char, Html ())]
-  , htmlModules   :: [(P.ModuleName, Html ())]
+data HtmlOutput a = HtmlOutput
+  { htmlIndex     :: [(Maybe Char, a)]
+  , htmlModules   :: [(P.ModuleName, a)]
   }
   deriving (Show)
 
-packageAsHtml :: UploadedPackage -> HtmlOutput
-packageAsHtml Package{..} = HtmlOutput indexFile modules
+packageAsHtml :: Package a -> HtmlOutput LT.Text
+packageAsHtml Package{..} =
+  HtmlOutput (htmlAsText indexFile) (htmlAsText modules)
   where
   indexFile = renderIndex ctx
   modules = map (moduleAsHtml ctx) pkgModules
   ctx = LinksContext pkgGithub pkgBookmarks pkgResolvedDependencies
+  htmlAsText = map (second renderText)
 
 moduleAsHtml :: LinksContext -> RenderedModule -> (P.ModuleName, Html ())
 moduleAsHtml ctx RenderedModule{..} = (mn, html)
@@ -88,9 +91,6 @@ moduleAsHtml ctx RenderedModule{..} = (mn, html)
   mn = P.moduleNameFromString rmName
   ctx' = (ctx, mn)
   html = do
-    h1_ $ do
-      text "module "
-      strong_ (text rmName)
     for_ rmComments renderComments
     for_ rmDeclarations (declAsHtml ctx')
 
@@ -124,15 +124,16 @@ renderIndex LinksContext{..} = go ctxBookmarks
       in  M.insert idx new m
 
 declAsHtml :: LinksContext' -> RenderedDeclaration -> Html ()
-declAsHtml ctx RenderedDeclaration{..} = do
-  a_ [name_ (T.pack rdTitle), href_ (T.pack ('#' : rdTitle))] $
-    h2_ (code_ (text rdTitle))
-  para "decl" (code_ (codeAsHtml ctx rdCode))
-  renderChildren ctx rdChildren
-  case rdComments of
-    Just cs -> renderComments cs
-    Nothing -> return ()
-  for_ rdSourceSpan (linkToSource ctx)
+declAsHtml ctx RenderedDeclaration{..} =
+  div_ [class_ "decl"] $ do
+    a_ [name_ (T.pack rdTitle), href_ (T.pack ('#' : rdTitle))] $
+      h3_ (code_ (codeAsHtml ctx rdCode))
+    div_ [class_ "decl-inner"] $ do
+      renderChildren ctx rdChildren
+      case rdComments of
+        Just cs -> renderComments cs
+        Nothing -> return ()
+      for_ rdSourceSpan (linkToSource ctx)
 
 renderChildren :: LinksContext' -> [RenderedChildDeclaration] -> Html ()
 renderChildren _   [] = return ()
@@ -194,7 +195,7 @@ linkToSource (LinksContext{..}, _) (P.SourceSpan name start end) =
 
 -- TODO: use GitHub API instead?
 renderComments :: String -> Html ()
-renderComments = toHtml . H.renderHtml . H.toHtml . Cheapskate.markdown def . T.pack
+renderComments = toHtmlRaw . H.renderHtml . H.toHtml . Cheapskate.markdown def . T.pack
 
 -- | if `to` and `from` are both files in the current package, generate a
 -- FilePath for `to` relative to `from`.
@@ -224,9 +225,6 @@ text = toHtml
 
 sp :: Html ()
 sp = text " "
-
-para :: String -> Html () -> Html ()
-para className content = p_ [class_ (fromString className)] content
 
 withClass :: String -> Html () -> Html ()
 withClass className content = span_ [class_ (fromString className)] content

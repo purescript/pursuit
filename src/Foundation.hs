@@ -169,3 +169,9 @@ packageDocsRoute :: D.VerifiedPackage -> Route App
 packageDocsRoute pkg =
   PackageVersionDocsR (PathPackageName (D.packageName pkg))
                       (PathVersion (D.pkgVersion pkg))
+
+moduleDocsRoute :: D.VerifiedPackage -> String -> Route App
+moduleDocsRoute pkg moduleName =
+  PackageVersionModuleDocsR (PathPackageName (D.packageName pkg))
+                            (PathVersion (D.pkgVersion pkg))
+                            moduleName
