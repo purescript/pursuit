@@ -14,6 +14,7 @@ module Model.DocsAsHtml (
 import Prelude
 import Control.Arrow (second)
 import Control.Category ((>>>))
+import Control.Monad (when)
 import Data.Char (toUpper)
 import Data.Ord (comparing)
 import Data.Monoid (mconcat, (<>))
@@ -129,11 +130,27 @@ declAsHtml ctx RenderedDeclaration{..} =
     a_ [href_ (T.pack (fragmentFor rdTitle))] $
       h3_ (text rdTitle)
     div_ [class_ "decl-inner"] $ do
-      code_ (codeAsHtml ctx rdCode)
-      renderChildren ctx rdChildren
+      code_ [class_ "code-block"] $
+        codeAsHtml ctx rdCode
+
       case rdComments of
         Just cs -> renderComments cs
         Nothing -> return ()
+
+      let (instances, dctors, members) = partitionChildren rdChildren
+
+      when (not (null dctors)) $ do
+        h4_ "Constructors"
+        renderChildren ctx dctors
+
+      when (not (null members)) $ do
+        h4_ "Members"
+        renderChildren ctx members
+
+      when (not (null instances)) $ do
+        h4_ "Instances"
+        renderChildren ctx instances
+
       for_ rdSourceSpan (linkToSource ctx)
 
 renderChildren :: LinksContext' -> [RenderedChildDeclaration] -> Html ()
@@ -240,3 +257,14 @@ withClass className content = span_ [class_ (fromString className)] content
 
 linkTo :: String -> Html () -> Html ()
 linkTo href inner = a_ [href_ (fromString href)] inner
+
+partitionChildren ::
+  [RenderedChildDeclaration] ->
+  ([RenderedChildDeclaration], [RenderedChildDeclaration], [RenderedChildDeclaration])
+partitionChildren = foldl go ([], [], [])
+  where
+  go (instances, dctors, members) rcd =
+    case rcdType rcd of
+      ChildInstance        -> (rcd : instances, dctors, members)
+      ChildDataConstructor -> (instances, rcd : dctors, members)
+      ChildTypeClassMember -> (instances, dctors, rcd : members)

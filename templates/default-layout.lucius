@@ -190,6 +190,11 @@ code {
     background-color: #f2f5f9;
 }
 
+.code-block {
+    display: block;
+    padding: 0.5em 1em;
+}
+
 ul.documentation-contents li {
     font-size: 1.3em;
 }
