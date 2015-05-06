@@ -52,7 +52,8 @@ body {
   width: 30%;
 }
 
-a {
+a, a:visited {
+  color: #{Css.linkColor};
   text-decoration: none;
   font-weight: bold;
 }

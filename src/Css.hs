@@ -62,3 +62,6 @@ packageBannerBackground = lighten 0.3 bannerBackground
 
 darkForeground :: HSV
 darkForeground = fromRGB 240 240 240
+
+linkColor :: HSV
+linkColor = fromRGB 196 149 58
