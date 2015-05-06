@@ -89,5 +89,6 @@ documentationPage pkg@D.Package{..} widget =
 
       ^{versionSelector pkgVersion}
 
-    ^{widget}
+    <div .col-main>
+      ^{widget}
     |]

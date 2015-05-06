@@ -163,7 +163,7 @@ a h2 {
 }
 
 .decl-inner {
-    padding: 0 4em 0 1em;
+    padding: 0 1em;
 }
 
 .keyword, .syntax {

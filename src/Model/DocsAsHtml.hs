@@ -16,7 +16,7 @@ import Control.Arrow (second)
 import Control.Category ((>>>))
 import Data.Char (toUpper)
 import Data.Ord (comparing)
-import Data.Monoid (mconcat)
+import Data.Monoid (mconcat, (<>))
 import Data.Foldable (for_)
 import Data.List (intercalate, find, sortBy)
 import qualified Data.DList as DList
@@ -125,8 +125,8 @@ renderIndex LinksContext{..} = go ctxBookmarks
 
 declAsHtml :: LinksContext' -> RenderedDeclaration -> Html ()
 declAsHtml ctx RenderedDeclaration{..} =
-  div_ [class_ "decl"] $ do
-    a_ [name_ (T.pack rdTitle), href_ (T.pack ('#' : rdTitle))] $
+  div_ [class_ "decl", id_ ("d:" <> T.pack rdTitle)] $ do
+    a_ [href_ ("#d:" <> T.pack rdTitle)] $
       h3_ (code_ (codeAsHtml ctx rdCode))
     div_ [class_ "decl-inner"] $ do
       renderChildren ctx rdChildren
