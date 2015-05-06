@@ -84,8 +84,9 @@ documentationPage pkg@D.Package{..} widget =
     <div .clearfix>
       <div .col-main>
         <h1>
-          <a href=@{packageNameRoute pkgName}>#{Bower.runPackageName pkgName}
-          / documentation
+          <a href=@{packageRoute pkg}>#{Bower.runPackageName pkgName}
+          /
+          <a href=@{packageDocsRoute pkg}>documentation
 
       ^{versionSelector pkgVersion}
 

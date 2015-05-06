@@ -15,6 +15,7 @@ html {
 
 body {
   font-family: "Roboto", sans-serif;
+  background-color: #{Css.backgroundColor};
 }
 
 .clearfix:before,
@@ -123,6 +124,10 @@ h1, h2 {
   font-weight: normal;
 }
 
+h3 {
+  font-size: 1.4em;
+}
+
 a h2 {
   margin-top: 0.83em;
 }
@@ -161,10 +166,19 @@ a h2 {
 /* Rendered docs / code */
 .decl {
     margin-top: 2em;
+    padding: 1em;
+}
+
+.decl h3 {
+    margin-top: 0;
+}
+
+:target {
+    background-color: #{Css.darken5 Css.backgroundColor};
 }
 
 .decl-inner {
-    padding: 0 1em;
+    padding: 0 1.4em;
 }
 
 .keyword, .syntax {

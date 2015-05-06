@@ -54,6 +54,9 @@ darken10 = darken 0.1
 --------------------------------------
 -- Variables for the CSS for Pursuit
 
+backgroundColor :: HSV
+backgroundColor = fromRGB 255 255 255
+
 bannerBackground :: HSV
 bannerBackground = fromRGB 29 34 45
 

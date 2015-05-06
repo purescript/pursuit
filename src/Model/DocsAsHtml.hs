@@ -126,9 +126,10 @@ renderIndex LinksContext{..} = go ctxBookmarks
 declAsHtml :: LinksContext' -> RenderedDeclaration -> Html ()
 declAsHtml ctx RenderedDeclaration{..} =
   div_ [class_ "decl", id_ ("d:" <> T.pack rdTitle)] $ do
-    a_ [href_ ("#d:" <> T.pack rdTitle)] $
-      h3_ (code_ (codeAsHtml ctx rdCode))
+    a_ [href_ (T.pack (fragmentFor rdTitle))] $
+      h3_ (text rdTitle)
     div_ [class_ "decl-inner"] $ do
+      code_ (codeAsHtml ctx rdCode)
       renderChildren ctx rdChildren
       case rdComments of
         Just cs -> renderComments cs
@@ -166,14 +167,18 @@ getLink (LinksContext{..}, curMn) ctor' containingMod = do
           return (DepsModule curMn pkgName pkgVersion destMn ctor')
 
 renderLink :: DocLink -> Html () -> Html ()
-renderLink (SameModule x) = linkTo ('#' : x)
+renderLink (SameModule x) = linkTo (fragmentFor x)
 renderLink (LocalModule srcMn destMn x) =
   let uri = filePathFor destMn `relativeTo` filePathFor srcMn
-  in  linkTo (uri ++ "#" ++ x)
+  in  linkTo (uri ++ fragmentFor x)
 renderLink (DepsModule srcMn pkgName pkgVersion destMn x) =
   let relativeTo' = relativeToOtherPackage pkgName pkgVersion
       uri = filePathFor destMn `relativeTo'` filePathFor srcMn
-  in  linkTo (uri ++ "#" ++ x)
+  in  linkTo (uri ++ fragmentFor x)
+
+-- TODO: escaping?
+fragmentFor :: String -> String
+fragmentFor = ("#d:" ++)
 
 linkToConstructor :: LinksContext' -> String -> ContainingModule -> Html () -> Html ()
 linkToConstructor ctx ctor' containMn =
@@ -181,9 +186,13 @@ linkToConstructor ctx ctor' containMn =
 
 linkToSource :: LinksContext' -> P.SourceSpan -> Html ()
 linkToSource (LinksContext{..}, _) (P.SourceSpan name start end) =
-  linkTo (concat
-            [githubBaseUrl, "/tree/master/", relativeToBase name, "#", fragment])
-         (text "Source")
+  p_ (linkTo (concat
+               [ githubBaseUrl
+               , "/tree/master/"
+               , relativeToBase name
+               , "#", fragment
+               ])
+             (text "Source"))
   where
   (P.SourcePos startLine _) = start
   (P.SourcePos endLine _) = end
