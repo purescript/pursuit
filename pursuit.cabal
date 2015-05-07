@@ -25,6 +25,7 @@ library
                      Model.Database
                      Model.DocsAsHtml
                      TemplateHelpers
+                     GithubAPI
                      Css
 
     if flag(dev) || flag(library-only)
