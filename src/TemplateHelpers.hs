@@ -2,7 +2,6 @@
 module TemplateHelpers where
 
 import Import
-import qualified Data.Text as T
 import Text.Blaze.Html5 as H
 import Text.Blaze.Html5.Attributes as A
 import qualified Web.Bower.PackageMeta as Bower
