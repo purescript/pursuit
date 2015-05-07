@@ -118,11 +118,11 @@ documentationPage availableVersions pkg@D.Package{..} widget =
     |]
 
 tryGetReadme :: D.VerifiedPackage -> Handler (Maybe Html)
-tryGetReadme pkg@D.Package{..} = do
+tryGetReadme D.Package{..} = do
   mtoken <- appGithubAuthToken . appSettings <$> getYesod
   let (ghUser, ghRepo) = pkgGithub
   let ghTag = pkgVersionTag
-  ereadme <- liftIO (GithubAPI.getRenderedReadme mtoken ghUser ghRepo ghTag)
+  ereadme <- liftIO (GithubAPI.getReadme mtoken ghUser ghRepo ghTag)
   case ereadme of
     Right readme ->
       return (Just readme)
