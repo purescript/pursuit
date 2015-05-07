@@ -17,6 +17,10 @@ import Yesod.Default.Config2       (applyEnvValue, configSettingsYml)
 import Yesod.Default.Util          (WidgetFileSettings, widgetFileNoReload,
                                     widgetFileReload)
 
+newtype GithubAuthToken =
+  GithubAuthToken { runGithubAuthToken :: ByteString }
+  deriving (Show, Eq, Ord)
+
 -- | Runtime settings to configure this application. These settings can be
 -- loaded from various sources: defaults, environment variables, config files,
 -- theoretically even a database.
@@ -47,6 +51,7 @@ data AppSettings = AppSettings
     -- Example app-specific configuration values.
     , appAnalytics              :: Maybe Text
     -- ^ Google Analytics code
+    , appGithubAuthToken        :: Maybe GithubAuthToken
     }
 
 instance FromJSON AppSettings where
@@ -70,6 +75,13 @@ instance FromJSON AppSettings where
         appSkipCombining          <- o .:? "skip-combining"   .!= defaultDev
 
         appAnalytics              <- o .:? "analytics"
+
+        token <- (map (map encodeUtf8)) $ o .:? "github-auth-token"
+        let appGithubAuthToken =
+              case token of
+                Nothing -> Nothing
+                Just "token-missing" -> Nothing
+                Just other -> Just (GithubAuthToken other)
 
         return AppSettings {..}
 

@@ -18,3 +18,5 @@ ip-from-header: "_env:IP_FROM_HEADER:false"
 # skip-combining: false
 
 #analytics: UA-YOURCODE
+
+github-auth-token: "_env:GITHUB_AUTH_TOKEN:token-missing"
