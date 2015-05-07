@@ -83,6 +83,7 @@ a:hover {
   background-color: #{Css.bannerBackground};
   color: #{Css.darkForeground};
   text-decoration: none;
+  font-weight: lighter;
 }
 
 .top-banner a:hover {
