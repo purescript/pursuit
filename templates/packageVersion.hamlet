@@ -26,3 +26,9 @@
         <li>
           <a href=@{packageNameRoute depPkg}>#{Bower.runPackageName depPkg}
           #{renderVersionRange versionRange}
+
+<div .col-main>
+  $maybe readme <- mreadme
+    #{readme}
+  $nothing
+    <div .not-available>No README available.

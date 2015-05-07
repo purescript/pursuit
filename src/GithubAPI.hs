@@ -2,6 +2,7 @@
 module GithubAPI where
 
 import Import
+import Text.Blaze.Html (preEscapedToHtml)
 import qualified Control.Exception as E
 import qualified Data.ByteString.Lazy as BL
 import qualified Language.PureScript.Docs as D
@@ -17,29 +18,26 @@ parseGithubUrlWithQuery parts query =
                     , query
                     ]
 
+tryHttp :: IO a -> IO (Either HttpException a)
+tryHttp = E.try
+
 getRenderedReadme ::
-  GithubAuthToken ->
+  Maybe GithubAuthToken ->
   D.GithubUser ->
   D.GithubRepo ->
   String -> -- ^ ref: commit, branch, etc.
-  IO (Maybe BL.ByteString)
-getRenderedReadme auth (D.GithubUser user) (D.GithubRepo repo) ref =
-  trySome performRequest <#> either (const Nothing) Just
-  where
-  trySome :: IO a -> IO (Either E.SomeException a)
-  trySome = E.try 
-
-  (<#>) = flip (<$>)
-
-  performRequest = do
+  IO (Either HttpException Html)
+getRenderedReadme mauth (D.GithubUser user) (D.GithubRepo repo) ref =
+  tryHttp $ do
     initReq <- parseGithubUrlWithQuery ["repos", user, repo, "readme"]
                                        ("ref=" ++ ref)
-    let headers =  [ ("User-Agent", "Pursuit")
-                   , ("Authorization", "bearer " <> runGithubAuthToken auth)
-                   , ("Accept", mediaTypeHtml)
-                   ]
+    let headers =
+          [ ("User-Agent", "Pursuit")
+          , ("Accept", mediaTypeHtml)
+          ] ++ maybe []
+                     (\t -> [("Authorization", "bearer " <> runGithubAuthToken t)])
+                     mauth
     let req = initReq { requestHeaders = headers }
 
-    withManager $ do
-      resp <- httpLbs req
-      return (responseBody resp)
+    withManager $
+      preEscapedToHtml . decodeUtf8 . responseBody <$> httpLbs req

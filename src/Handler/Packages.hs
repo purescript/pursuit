@@ -11,6 +11,7 @@ import qualified Web.Bower.PackageMeta as Bower
 import Model.Database
 import Model.DocsAsHtml
 import TemplateHelpers
+import qualified GithubAPI
 
 getPackageR :: PathPackageName -> Handler Html
 getPackageR ppkgName@(PathPackageName pkgName) = do
@@ -26,7 +27,8 @@ getPackageR ppkgName@(PathPackageName pkgName) = do
 
 getPackageVersionR :: PathPackageName -> PathVersion -> Handler Html
 getPackageVersionR (PathPackageName pkgName) (PathVersion version) =
-  findPackage pkgName version $ \availableVersions pkg@D.Package{..} ->
+  findPackage pkgName version $ \availableVersions pkg@D.Package{..} -> do
+    mreadme <- tryGetReadme pkg
     defaultLayout $ do
       setTitle (toHtml (Bower.runPackageName pkgName))
       let dependencies = Bower.bowerDependencies pkgMeta
@@ -114,3 +116,16 @@ documentationPage availableVersions pkg@D.Package{..} widget =
     <div .col-main>
       ^{widget}
     |]
+
+tryGetReadme :: D.VerifiedPackage -> Handler (Maybe Html)
+tryGetReadme pkg@D.Package{..} = do
+  mtoken <- appGithubAuthToken . appSettings <$> getYesod
+  let (ghUser, ghRepo) = pkgGithub
+  let ghTag = pkgVersionTag
+  ereadme <- liftIO (GithubAPI.getRenderedReadme mtoken ghUser ghRepo ghTag)
+  case ereadme of
+    Right readme ->
+      return (Just readme)
+    Left err -> do
+      $logError (tshow err)
+      return Nothing
