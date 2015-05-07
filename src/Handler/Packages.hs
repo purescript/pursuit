@@ -29,6 +29,7 @@ getPackageVersionR (PathPackageName pkgName) (PathVersion version) =
   findPackage pkgName version $ \availableVersions pkg@D.Package{..} ->
     defaultLayout $ do
       setTitle (toHtml (Bower.runPackageName pkgName))
+      let dependencies = Bower.bowerDependencies pkgMeta
       $(widgetFile "packageVersion")
 
 getPackageIndexR :: Handler Html

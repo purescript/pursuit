@@ -18,8 +18,11 @@
     <a href=@{packageDocsRoute pkg}>Documentation
   <hr>
   <p>
-    <strong>Dependencies
-    $forall (depPkg, versionRange) <- Bower.bowerDependencies pkgMeta
-      <li>
-        <a href=@{packageNameRoute depPkg}>#{Bower.runPackageName depPkg}
-        #{renderVersionRange versionRange}
+    $if null dependencies
+      <strong>No dependencies
+    $else
+      <strong>Dependencies
+      $forall (depPkg, versionRange) <- dependencies
+        <li>
+          <a href=@{packageNameRoute depPkg}>#{Bower.runPackageName depPkg}
+          #{renderVersionRange versionRange}
