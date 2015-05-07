@@ -148,35 +148,13 @@ a h2 {
 }
 
 /* Version selector */
-.version-selector {
-  background-color: #{Css.darken5 Css.packageBannerBackground};
-  color: #{Css.darkForeground};
-  margin-top: 0.4em;
+select.version-selector {
+  background-color: #{Css.darken5 Css.backgroundColor};
+  margin-top: 0.4em !important;
+  padding: 0.2em 0.8em !important;
   float: left;
-  padding: 0.2em 0.8em;
   width: auto;
   min-width: 20%;
-}
-
-.version-selector .arrow {
-  float: right;
-}
-
-.version-selector-open {
-  background-color: #{Css.darken5 Css.packageBannerBackground};
-  color: #{Css.darkForeground};
-  position: fixed;
-  width: 28%;
-  padding: 0 1em;
-}
-
-.version-selector a,
-.version-selector a:visited,
-.version-selector-open a,
-.version-selector-open a:visited {
-  color: #{Css.darkForeground};
-  text-decoration: none;
-  font-weight: normal;
 }
 
 /* Rendered docs / code */

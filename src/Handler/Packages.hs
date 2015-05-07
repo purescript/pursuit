@@ -79,8 +79,8 @@ findPackage pkgName version cont = do
         Nothing -> notFound
         Just versions -> cont versions pkg
 
-versionSelector :: Bower.PackageName -> Version -> [Version] -> WidgetT App IO ()
-versionSelector pkgName version availableVersions' = do
+versionSelector :: Version -> [Version] -> WidgetT App IO ()
+versionSelector version availableVersions' = do
   let availableVersions = sortBy (comparing Down) availableVersions'
   let isLatest v = maybe False (== v) (headMay availableVersions)
   mroute <- getCurrentRoute
@@ -90,12 +90,10 @@ versionSelector pkgName version availableVersions' = do
           Nothing ->    HomeR -- should never happen
 
   let displayVersion v
-        | isLatest v = [whamlet|latest (<strong>#{showVersion v}</strong>)|]
-        | otherwise = [whamlet|<strong>#{showVersion v}|]
+        | isLatest v = [whamlet|latest (#{showVersion v})|]
+        | otherwise = [whamlet|#{showVersion v}|]
 
-  toggle       <- newIdent
-  toggleOpen   <- newIdent
-  toggleClosed <- newIdent
+  versionSelectorIdent <- newIdent
   $(widgetFile "versionSelector")
 
 documentationPage ::
@@ -110,7 +108,7 @@ documentationPage availableVersions pkg@D.Package{..} widget =
           /
           <a href=@{packageDocsRoute pkg}>documentation
 
-      ^{versionSelector pkgName pkgVersion availableVersions}
+      ^{versionSelector pkgVersion availableVersions}
 
     <div .col-main>
       ^{widget}

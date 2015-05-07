@@ -1,17 +1,9 @@
-<a .weight-normal id=#{toggle} data-state="closed" href="#">
-  <div .col-aside .version-selector class=#{toggleClosed}>
-    ^{displayVersion version}
-    <span .arrow>
-      ▼
-
-  <div .col-aside .version-selector class=#{toggleOpen} style="display: none">
-    ^{displayVersion version}
-    <span .arrow>
-      ▲
-
-<div .col-aside style="position: relative">
-  <div .version-selector-open class=#{toggleOpen} style="display: none">
+<div .col-aside>
+  <select id=#{versionSelectorIdent} .version-selector>
     $forall v <- availableVersions
-      <p>
-        <a href=@{versionRoute v}>
+      $if v == version
+        <option value=@{versionRoute v} selected>
+          ^{displayVersion v}
+      $else
+        <option value=@{versionRoute v}>
           ^{displayVersion v}
