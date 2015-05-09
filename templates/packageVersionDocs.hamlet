@@ -1,7 +1,0 @@
-<div .col-main>
-  <h2>
-    <strong>Modules
-  <ul .documentation-contents>
-    $forall name <- moduleNames
-      <li>
-        <a href=@{moduleDocsRoute pkg name}>#{name}

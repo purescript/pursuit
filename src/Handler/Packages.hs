@@ -28,6 +28,8 @@ getPackageR ppkgName@(PathPackageName pkgName) = do
 getPackageVersionR :: PathPackageName -> PathVersion -> Handler Html
 getPackageVersionR (PathPackageName pkgName) (PathVersion version) =
   findPackage pkgName version $ \availableVersions pkg@D.Package{..} -> do
+    let docsOutput = packageAsHtml pkg
+    let moduleNames = sort $ map (P.runModuleName . fst) $ htmlModules docsOutput
     mreadme <- tryGetReadme pkg
     defaultLayout $ do
       setTitle (toHtml (Bower.runPackageName pkgName))
@@ -47,13 +49,8 @@ postPackageIndexR = do
 
 getPackageVersionDocsR :: PathPackageName -> PathVersion -> Handler Html
 getPackageVersionDocsR (PathPackageName pkgName) (PathVersion version) =
-  findPackage pkgName version $ \availableVersions pkg@D.Package{..} -> do
-    let docsOutput = packageAsHtml pkg
-    let moduleNames = sort $ map (P.runModuleName . fst) $ htmlModules docsOutput
-    defaultLayout $ do
-      setTitle (toHtml (Bower.runPackageName pkgName))
-      documentationPage availableVersions pkg $
-        $(widgetFile "packageVersionDocs")
+  findPackage pkgName version $ \_ pkg@D.Package{..} ->
+    redirect (packageRoute pkg)
 
 getPackageVersionModuleDocsR :: PathPackageName -> PathVersion -> String -> Handler Html
 getPackageVersionModuleDocsR (PathPackageName pkgName) (PathVersion version) mnString =
@@ -107,9 +104,8 @@ documentationPage availableVersions pkg@D.Package{..} widget =
     <div .clearfix>
       <div .col-main>
         <h1>
+          package
           <a href=@{packageRoute pkg}>#{Bower.runPackageName pkgName}
-          /
-          <a href=@{packageDocsRoute pkg}>documentation
 
       ^{versionSelector pkgVersion availableVersions}
 

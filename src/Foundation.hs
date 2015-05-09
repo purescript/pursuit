@@ -186,4 +186,3 @@ substituteVersion route version' =
       PackageVersionModuleDocsR pkgName version modName
     other ->
       other
-
