@@ -87,7 +87,7 @@ versionSelector version availableVersions' = do
   let versionRoute v =
         case mroute of
           Just route -> substituteVersion route v
-          Nothing ->    HomeR -- should never happen
+          Nothing    -> HomeR -- should never happen
 
   let displayVersion v
         | isLatest v = [whamlet|latest (#{showVersion v})|]

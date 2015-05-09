@@ -51,6 +51,9 @@ darken5 = darken 0.05
 darken10 :: HSV -> HSV
 darken10 = darken 0.1
 
+darken20 :: HSV -> HSV
+darken20 = darken 0.2
+
 --------------------------------------
 -- Variables for the CSS for Pursuit
 

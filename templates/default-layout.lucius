@@ -182,5 +182,5 @@ ul.documentation-contents li {
 }
 
 hr {
-  border: 1px solid #{Css.darken10 Css.backgroundColor};
+  border: 1px solid #{Css.darken20 Css.backgroundColor};
 }
