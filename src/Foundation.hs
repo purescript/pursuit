@@ -10,6 +10,7 @@ import Text.Jasmine                (minifym)
 import Yesod.Core.Types            (Logger)
 import Yesod.Default.Util          (addStaticContentExternal)
 import qualified Yesod.Core.Unsafe as Unsafe
+import Crypto.Random
 
 import Web.Bower.PackageMeta (PackageName, parsePackageName, runPackageName)
 import Data.Version
@@ -40,6 +41,15 @@ instance PathPiece PathVersion where
   toPathPiece = toPathPiece . showVersion . runPathVersion
   fromPathPiece = fmap PathVersion . D.parseVersion' . T.unpack
 
+-- | A base64 encoded string.
+newtype VerificationKey =
+  VerificationKey { runVerificationKey :: ByteString }
+  deriving (Show, Eq, Ord, Read)
+
+instance PathPiece VerificationKey where
+  toPathPiece = decodeUtf8 . runVerificationKey
+  fromPathPiece = Just . VerificationKey . encodeUtf8
+
 -- | The foundation datatype for your application. This can be a good place to
 -- keep settings and values requiring initialization before your application
 -- starts running, such as database connections. Every handler will have
@@ -49,6 +59,7 @@ data App = App
     , appStatic      :: Static -- ^ Settings for static file serving.
     , appHttpManager :: Manager
     , appLogger      :: Logger
+    , appCPRNG       :: TVar SystemRNG
     }
 
 instance HasHttpManager App where

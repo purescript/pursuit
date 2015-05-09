@@ -86,7 +86,7 @@ instance FromJSON AppSettings where
                 Just "token-missing" -> Nothing
                 Just other -> Just (GithubAuthToken other)
 
-        appDataDir <- o .:? "data-dir" .!= "./data"
+        appDataDir <- o .: "data-dir"
 
         return AppSettings {..}
 

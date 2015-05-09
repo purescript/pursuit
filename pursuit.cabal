@@ -22,7 +22,8 @@ library
                      Handler.Common
                      Handler.Home
                      Handler.Packages
-                     Model.Database
+                     Handler.Verification
+                     Handler.Database
                      Model.DocsAsHtml
                      TemplateHelpers
                      GithubAPI
@@ -97,6 +98,8 @@ library
                  , shakespeare
                  , colour
                  , hxt
+                 , crypto-random
+                 , base64-bytestring
 
     if flag(dev)
       build-depends: foreign-store

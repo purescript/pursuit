@@ -20,3 +20,4 @@ ip-from-header: "_env:IP_FROM_HEADER:false"
 #analytics: UA-YOURCODE
 
 github-auth-token: "_env:GITHUB_AUTH_TOKEN:token-missing"
+data-dir: "_env:DATA_DIR:./data"

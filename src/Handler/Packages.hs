@@ -8,7 +8,8 @@ import qualified Language.PureScript as P
 import qualified Language.PureScript.Docs as D
 import qualified Web.Bower.PackageMeta as Bower
 
-import Model.Database
+import Handler.Database
+import Handler.Verification
 import Model.DocsAsHtml
 import TemplateHelpers
 import qualified GithubAPI
@@ -39,13 +40,19 @@ getPackageVersionR (PathPackageName pkgName) (PathVersion version) =
 getPackageIndexR :: Handler Html
 getPackageIndexR = redirect HomeR
 
-postPackageIndexR :: Handler Html
+postPackageIndexR :: Handler Value
 postPackageIndexR = do
   pkg <- requireJsonBody
-  -- TODO: Actual verification
-  let verifiedPkg = D.verifyPackage (D.GithubUser "hdgarrood") pkg
-  insertPackage verifiedPkg
-  sendResponseCreated (packageRoute verifiedPkg)
+  key <- generateKey
+  insertPendingVerification pkg key
+
+  renderUrl <- getUrlRender
+  let responseContent =
+          object [ "status" .= ("pending verification" :: Text)
+                 , "verifyUrl" .= renderUrl (VerifyR key)
+                 ]
+
+  sendResponseStatus accepted202 responseContent
 
 getPackageVersionDocsR :: PathPackageName -> PathVersion -> Handler Html
 getPackageVersionDocsR (PathPackageName pkgName) (PathVersion version) =
