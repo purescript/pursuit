@@ -15,7 +15,7 @@ import qualified GithubAPI
 
 getPackageR :: PathPackageName -> Handler Html
 getPackageR ppkgName@(PathPackageName pkgName) = do
-  versions <- queryDb (availableVersionsFor pkgName)
+  versions <- availableVersionsFor pkgName
   case versions of
     Nothing -> notFound
     Just vs ->
@@ -42,7 +42,7 @@ postPackageIndexR = do
   pkg <- requireJsonBody
   -- TODO: Actual verification
   let verifiedPkg = D.verifyPackage (D.GithubUser "hdgarrood") pkg
-  updateDb (insertPackage verifiedPkg)
+  insertPackage verifiedPkg
   sendResponseCreated (packageRoute verifiedPkg)
 
 getPackageVersionDocsR :: PathPackageName -> PathVersion -> Handler Html
@@ -73,11 +73,11 @@ findPackage ::
   ([Version] -> D.VerifiedPackage -> Handler Html) ->
   Handler Html
 findPackage pkgName version cont = do
-  pkg' <- queryDb (lookupPackage pkgName version)
+  pkg' <- lookupPackage pkgName version
   case pkg' of
     Nothing -> notFound
     Just pkg -> do
-      versions' <- queryDb (availableVersionsFor pkgName)
+      versions' <- availableVersionsFor pkgName
       case versions' of
         Nothing -> notFound
         Just versions -> cont versions pkg

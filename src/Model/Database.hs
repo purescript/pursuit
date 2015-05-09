@@ -1,47 +1,75 @@
 
 module Model.Database
-  ( PursuitDatabase
-  , lookupPackage
+  ( lookupPackage
   , availableVersionsFor
   , insertPackage
   ) where
 
-import Import.NoFoundation
-import qualified Data.Map as M
-import Data.Version (Version)
+import Import
+import qualified Data.Aeson as A
+import qualified Data.ByteString.Lazy as BL
+import qualified Data.Text as T
+import Data.Version (Version, showVersion)
+import System.Directory (doesDirectoryExist, getDirectoryContents,
+                         createDirectoryIfMissing)
+import System.FilePath (takeDirectory)
 
-import qualified Web.Bower.PackageMeta as Bower
+import Web.Bower.PackageMeta (PackageName, runPackageName)
 import qualified Language.PureScript.Docs as D
 
-type PursuitDatabase_ = Map Bower.PackageName (Map Version D.VerifiedPackage)
+lookupPackage :: PackageName -> Version -> Handler (Maybe D.VerifiedPackage)
+lookupPackage pkgName version = do
+  file <- packageVersionFileFor pkgName version
+  mcontents <- liftIO $ catchJust selectDoesNotExist
+                                  (Just <$> BL.readFile file)
+                                  (const (return Nothing))
+  case mcontents of
+    Nothing       -> return Nothing
+    Just contents -> Just <$> decodePackageFile file contents
 
-newtype PursuitDatabase = PursuitDatabase PursuitDatabase_
-
-runPursuitDatabase :: PursuitDatabase -> PursuitDatabase_
-runPursuitDatabase (PursuitDatabase x) = x
-
-overDb :: (PursuitDatabase_ -> PursuitDatabase_) -> PursuitDatabase -> PursuitDatabase
-overDb f = PursuitDatabase . f . runPursuitDatabase
-
-instance Monoid PursuitDatabase where
-  mempty = PursuitDatabase mempty
-  mappend (PursuitDatabase a) (PursuitDatabase b) =
-    PursuitDatabase (M.unionWith M.union a b)
-
-availableVersionsFor :: Bower.PackageName -> PursuitDatabase -> Maybe [Version]
-availableVersionsFor pkgName = go . runPursuitDatabase
   where
-  go db = M.keys <$> M.lookup pkgName db
+  selectDoesNotExist e
+    | isDoesNotExistErrorType (ioeGetErrorType e) = Just ()
+    | otherwise = Nothing
 
-lookupPackage :: Bower.PackageName -> Version -> PursuitDatabase -> Maybe D.VerifiedPackage
-lookupPackage pkgName pkgVersion = go . runPursuitDatabase
-  where
-  go = M.lookup pkgName >=> M.lookup pkgVersion
+availableVersionsFor :: PackageName -> Handler (Maybe [Version])
+availableVersionsFor pkgName = do
+  dir <- packageDirFor pkgName
+  exists <- liftIO (doesDirectoryExist dir)
+  if (not exists)
+    then return Nothing
+    else do
+      files <- liftIO (getDirectoryContents dir)
+      return $ Just $ mapMaybe (stripSuffix ".json" >=> D.parseVersion') files
 
--- | Insert a particular version of a package into a database. If a version of
--- that package at that version already exists, it is replaced.
-insertPackage :: D.VerifiedPackage -> PursuitDatabase -> PursuitDatabase
-insertPackage pkg@D.Package{..} =
-  overDb (M.alter go (D.packageName pkg))
-  where
-  go = Just . M.insert pkgVersion pkg . fromMaybe M.empty
+-- | Insert a package at a specific version
+insertPackage :: D.VerifiedPackage -> Handler ()
+insertPackage pkg@D.Package{..} = do
+  let pkgName = D.packageName pkg
+  file <- packageVersionFileFor pkgName pkgVersion
+  liftIO $ do
+    createDirectoryIfMissing True (takeDirectory file)
+    BL.writeFile file (A.encode pkg)
+
+getDataDir :: Handler String
+getDataDir = appDataDir . appSettings <$> getYesod
+
+packageDirFor :: PackageName -> Handler String
+packageDirFor pkgName = do
+  dir <- getDataDir
+  return (dir ++ "/" ++ runPackageName pkgName)
+
+packageVersionFileFor :: PackageName -> Version -> Handler String
+packageVersionFileFor pkgName version = do
+  dir <- packageDirFor pkgName
+  return (dir ++ "/" ++ showVersion version ++ ".json")
+
+decodePackageFile :: String -> BL.ByteString -> Handler D.VerifiedPackage
+decodePackageFile filepath contents = do
+  case A.eitherDecode contents of
+    Left err -> do
+      $logError (T.pack ("Invalid JSON in: " ++ show filepath ++
+                         ", error: " ++ show err))
+      sendResponseStatus internalServerError500 ("" :: String)
+    Right pkg ->
+      return pkg

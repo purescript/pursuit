@@ -13,7 +13,6 @@ import qualified Yesod.Core.Unsafe as Unsafe
 
 import Web.Bower.PackageMeta (PackageName, parsePackageName, runPackageName)
 import Data.Version
-import Model.Database
 import qualified Css
 import qualified Language.PureScript.Docs as D
 
@@ -50,7 +49,6 @@ data App = App
     , appStatic      :: Static -- ^ Settings for static file serving.
     , appHttpManager :: Manager
     , appLogger      :: Logger
-    , appDatabase    :: TVar PursuitDatabase
     }
 
 instance HasHttpManager App where
@@ -145,16 +143,16 @@ instance RenderMessage App FormMessage where
 unsafeHandler :: App -> Handler a -> IO a
 unsafeHandler = Unsafe.fakeHandlerGetLogger appLogger
 
-queryDb :: (PursuitDatabase -> a) -> HandlerT App IO a
-queryDb f = do
-  tvar <- appDatabase <$> getYesod
-  db <- liftIO (readTVarIO tvar)
-  return (f db)
+-- queryDb :: (PursuitDatabase -> a) -> HandlerT App IO a
+-- queryDb f = do
+--   tvar <- appDatabase <$> getYesod
+--   db <- liftIO (readTVarIO tvar)
+--   return (f db)
 
-updateDb :: (PursuitDatabase -> PursuitDatabase) -> HandlerT App IO ()
-updateDb f = do
-  tvar <- appDatabase <$> getYesod
-  liftIO (atomically (modifyTVar tvar f))
+-- updateDb :: (PursuitDatabase -> PursuitDatabase) -> HandlerT App IO ()
+-- updateDb f = do
+--   tvar <- appDatabase <$> getYesod
+--   liftIO (atomically (modifyTVar tvar f))
 
 packageNameRoute :: PackageName -> Route App
 packageNameRoute pkgName =

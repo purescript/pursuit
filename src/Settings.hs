@@ -52,6 +52,9 @@ data AppSettings = AppSettings
     , appAnalytics              :: Maybe Text
     -- ^ Google Analytics code
     , appGithubAuthToken        :: Maybe GithubAuthToken
+    -- ^ Github OAuth token (for fetching READMEs).
+    , appDataDir                :: String
+    -- ^ Directory where package data is kept.
     }
 
 instance FromJSON AppSettings where
@@ -82,6 +85,8 @@ instance FromJSON AppSettings where
                 Nothing -> Nothing
                 Just "token-missing" -> Nothing
                 Just other -> Just (GithubAuthToken other)
+
+        appDataDir <- o .:? "data-dir" .!= "./data"
 
         return AppSettings {..}
 
