@@ -145,7 +145,7 @@ select.version-selector {
   min-width: 20%;
 }
 
-/* Rendered docs / code */
+/* Everything else */
 .decl {
     margin-top: 2em;
     padding: 1em;
@@ -179,4 +179,8 @@ code {
 
 ul.documentation-contents li {
     font-size: 1.3em;
+}
+
+hr {
+  border: 1px solid #{Css.darken10 Css.backgroundColor};
 }
