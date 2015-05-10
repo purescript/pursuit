@@ -25,6 +25,7 @@ library
                      Handler.Verification
                      Handler.Database
                      Handler.GithubOAuth
+                     Handler.Utils
                      Model.DocsAsHtml
                      TemplateHelpers
                      GithubAPI

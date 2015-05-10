@@ -2,7 +2,7 @@
 module Handler.GithubOAuth
   ( startFlow
   , getOAuthCallbackR
-  -- , requireAuthentication
+  , requireAuthentication
   ) where
 
 import Import
@@ -11,12 +11,19 @@ import qualified Data.ByteString.Base64.URL as Base64
 import qualified Data.HashMap.Strict as HashMap
 import qualified Language.PureScript.Docs as D
 
--- requireAuthentication :: (D.GithubUser -> Handler a) -> Handler a
--- requireAuthentication f = do
---   u <- lookupSession keyGithubUser
---   case u of
+import Handler.Utils
+import qualified GithubAPI
 
-startFlow :: Handler Html
+requireAuthentication :: (D.GithubUser -> Handler a) -> Handler a
+requireAuthentication cont = do
+  muser <- getSessionUser
+  case muser of
+    Just user -> cont user
+    Nothing -> do
+      setUltDestCurrent
+      startFlow
+
+startFlow :: Handler a
 startFlow = do
   state <- Base64.encode <$> generateBytes stateLength
 
@@ -29,13 +36,27 @@ getOAuthCallbackR = do
   stateParam   <- requireParam "state"
   stateSession <- lookupSession keyGithubOAuthState
   when (stateSession /= Just stateParam) $
-    badRequest "State mismatch" 
+    badRequest "State mismatch"
+
+  deleteSession keyGithubOAuthState
 
   code <- requireParam "code"
   mtoken <- tryExchangeToken (encodeUtf8 code)
   case mtoken of
     Nothing -> badRequest "Invalid code"
-    Just token -> defaultLayout [whamlet|<h1>callback! yaaay|]
+    Just token -> do
+      eResult <- liftIO $ GithubAPI.getUser token
+      case eResult of
+        Left err -> do
+          $logError (tshow err)
+          internalServerError
+        Right Nothing -> do
+          $logError "Unable to obtain user login from Github API response"
+          internalServerError
+        Right (Just user) -> do
+          setSessionUser user
+          setSession keyGithubAuthToken $ decodeUtf8 $ runGithubAuthToken token
+          redirectUltDest HomeR
 
 tryExchangeToken :: ByteString -> Handler (Maybe GithubAuthToken)
 tryExchangeToken code = do
@@ -103,9 +124,14 @@ keyGithubOAuthState = "github_oauth_state"
 keyGithubUser :: Text
 keyGithubUser = "github_user"
 
+getSessionUser :: Handler (Maybe D.GithubUser)
+getSessionUser =
+  (map . map) (D.GithubUser . unpack) (lookupSession keyGithubUser)
+
+setSessionUser :: D.GithubUser -> Handler ()
+setSessionUser =
+  setSession keyGithubUser . pack . D.runGithubUser
+
 -- | Session key for the access token for an authenticated github user.
 keyGithubAuthToken :: Text
 keyGithubAuthToken = "github_auth_token"
-
-badRequest :: Text -> Handler a
-badRequest = sendResponseStatus badRequest400
