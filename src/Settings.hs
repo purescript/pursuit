@@ -57,7 +57,7 @@ data AppSettings = AppSettings
     -- ^ Directory where package data is kept.
     , appGithubClientID         :: ByteString
     -- ^ GitHub OAuth client ID
-    , appGithubClientSecret         :: ByteString
+    , appGithubClientSecret     :: ByteString
     -- ^ GitHub OAuth client secret
     }
 
@@ -82,8 +82,7 @@ instance FromJSON AppSettings where
         appSkipCombining          <- o .:? "skip-combining"   .!= defaultDev
 
         appAnalytics              <- o .:? "analytics"
-
-        appDataDir <- o .: "data-dir"
+        appDataDir                <- o .: "data-dir"
 
 #if DEVELOPMENT
         let appGithubAuthToken    = Nothing
