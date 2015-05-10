@@ -16,7 +16,6 @@ import qualified Data.ByteString.Char8 as BC8
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Text as T
 import Data.Version (Version, showVersion)
-import Crypto.Random
 import qualified Data.ByteString.Base64.URL as Base64
 import System.Directory (doesDirectoryExist, doesFileExist,
                          getDirectoryContents, createDirectoryIfMissing,
@@ -142,12 +141,5 @@ keyLength :: Int
 keyLength = 60
 
 generateKey :: Handler VerificationKey
-generateKey = do
-  genVar <- appCPRNG <$> getYesod
-  bytes <- liftIO $ atomically $ do
-    gen <- readTVar genVar
-    let (bytes, gen') = cprgGenerate keyLength gen
-    writeTVar genVar gen'
-    return bytes
-
-  return (VerificationKey (Base64.encode bytes))
+generateKey =
+  VerificationKey . Base64.encode <$> generateBytes keyLength

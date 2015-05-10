@@ -9,7 +9,6 @@ import qualified Language.PureScript.Docs as D
 import qualified Web.Bower.PackageMeta as Bower
 
 import Handler.Database
-import Handler.Verification
 import Model.DocsAsHtml
 import TemplateHelpers
 import qualified GithubAPI
@@ -132,3 +131,4 @@ tryGetReadme D.Package{..} = do
     Left err -> do
       $logError (tshow err)
       return Nothing
+

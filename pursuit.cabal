@@ -24,6 +24,7 @@ library
                      Handler.Packages
                      Handler.Verification
                      Handler.Database
+                     Handler.GithubOAuth
                      Model.DocsAsHtml
                      TemplateHelpers
                      GithubAPI
@@ -100,6 +101,8 @@ library
                  , hxt
                  , crypto-random
                  , base64-bytestring
+                 , http-types
+                 , case-insensitive
 
     if flag(dev)
       build-depends: foreign-store

@@ -11,3 +11,4 @@
 /packages/#PathPackageName/#PathVersion/docs           PackageVersionDocsR         GET
 /packages/#PathPackageName/#PathVersion/docs/#String   PackageVersionModuleDocsR   GET
 /verify/#VerificationKey                               VerifyR                     GET   POST
+/oauth/callback                                        OAuthCallbackR              GET

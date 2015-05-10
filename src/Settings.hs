@@ -55,6 +55,10 @@ data AppSettings = AppSettings
     -- ^ Github OAuth token (for fetching READMEs).
     , appDataDir                :: String
     -- ^ Directory where package data is kept.
+    , appGithubClientID         :: ByteString
+    -- ^ GitHub OAuth client ID
+    , appGithubClientSecret         :: ByteString
+    -- ^ GitHub OAuth client secret
     }
 
 instance FromJSON AppSettings where
@@ -79,14 +83,18 @@ instance FromJSON AppSettings where
 
         appAnalytics              <- o .:? "analytics"
 
-        token <- (map (map encodeUtf8)) $ o .:? "github-auth-token"
-        let appGithubAuthToken =
-              case token of
-                Nothing -> Nothing
-                Just "token-missing" -> Nothing
-                Just other -> Just (GithubAuthToken other)
-
         appDataDir <- o .: "data-dir"
+
+#if DEVELOPMENT
+        let appGithubAuthToken    = Nothing
+        let appGithubClientID     = "618b30c313f09b9ca795"
+        let appGithubClientSecret = "053aaf80116894788ac38f7e2f8d8828fa007969"
+#else
+        let enc = encodeUtf8 :: Text -> ByteString
+        appGithubAuthToken    <- map (map (GithubAuthToken . enc)) $ o .: "github-auth-token"
+        appGithubClientID     <- map enc $ o .: "github-client-id"
+        appGithubClientSecret <- map enc $ o .: "github-client-secret"
+#endif
 
         return AppSettings {..}
 

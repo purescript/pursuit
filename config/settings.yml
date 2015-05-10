@@ -19,5 +19,7 @@ ip-from-header: "_env:IP_FROM_HEADER:false"
 
 #analytics: UA-YOURCODE
 
-github-auth-token: "_env:GITHUB_AUTH_TOKEN:token-missing"
 data-dir: "_env:DATA_DIR:./data"
+github-auth-token: "_env:GITHUB_AUTH_TOKEN"
+github-client-id: "_env:GITHUB_CLIENT_ID"
+github-client-secret: "_env:GITHUB_CLIENT_SECRET"

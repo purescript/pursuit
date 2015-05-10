@@ -5,9 +5,13 @@ import Import
 import Text.Blaze.Html (preEscapedToHtml)
 import qualified Control.Exception as E
 import qualified Data.ByteString.Lazy as BL
+import qualified Data.Aeson as A
+import qualified Data.HashMap.Strict as HashMap
 import Text.XML.HXT.Core
+import Data.CaseInsensitive (CI)
 import qualified Language.PureScript.Docs as D
 
+-- | Get a repository readme, rendered as HTML.
 getReadme ::
   Maybe GithubAuthToken ->
   D.GithubUser ->
@@ -25,22 +29,47 @@ getReadme' ::
   D.GithubRepo ->
   String -> -- ^ ref: commit, branch, etc.
   IO (Either HttpException BL.ByteString)
-getReadme' mauth (D.GithubUser user) (D.GithubRepo repo) ref =
-  tryHttp $ do
-    initReq <- parseGithubUrlWithQuery ["repos", user, repo, "readme"]
-                                       "" -- this will do for now.
-                                          -- should really be:
-                                          -- ("ref=" ++ ref)
-    let headers =
-          [ ("User-Agent", "Pursuit")
-          , ("Accept", mediaTypeHtml)
-          ] ++ maybe []
-                     (\t -> [("Authorization", "bearer " <> runGithubAuthToken t)])
-                     mauth
-    let req = initReq { requestHeaders = headers }
+getReadme' mauth (D.GithubUser user) (D.GithubRepo repo) _ =
+  let query = "" -- this will do for now. it should really be: ("ref=" ++ ref)
+      headers = [("Accept", mediaTypeHtml)] ++ authHeader mauth
+  in githubAPI ["repos", user, repo, "readme"] query headers
 
-    withManager $
-      responseBody <$> httpLbs req
+-- | Get the currently logged in user.
+getUser :: GithubAuthToken -> IO (Either HttpException (Maybe D.GithubUser))
+getUser token =
+  (map . map) go (getUser' token)
+  where
+  go = map D.GithubUser . (loginFromJSON <=< A.decode)
+  loginFromJSON val =
+    case val of
+      A.Object obj ->
+        case HashMap.lookup "login" obj of
+          Just (A.String t) -> Just $ unpack t
+          _                 -> Nothing
+      _            -> Nothing
+
+getUser' :: GithubAuthToken -> IO (Either HttpException BL.ByteString)
+getUser' auth =
+  let headers = [("Accept", "application/json")] ++ authHeader (Just auth)
+  in githubAPI ["user"] "" headers
+
+githubAPI ::
+  [String] -> -- ^ Path parts
+  String -> -- ^ Query string
+  [(CI ByteString, ByteString)] -> -- ^ Extra headers
+  IO (Either HttpException BL.ByteString)
+githubAPI path query extraHeaders = do
+  tryHttp $ do
+    initReq <- parseGithubUrlWithQuery path query
+    let headers = [("User-Agent", "Pursuit")] ++ extraHeaders
+    let req = initReq { requestHeaders = headers }
+    withManager (responseBody <$> httpLbs req)
+
+authHeader :: Maybe GithubAuthToken -> [(CI ByteString, ByteString)]
+authHeader mauth =
+   maybe []
+         (\t -> [("Authorization", "bearer " <> runGithubAuthToken t)])
+         mauth
 
 stripH1 :: String -> String
 stripH1 = unsafeHead . runLA stripH1Arrow
