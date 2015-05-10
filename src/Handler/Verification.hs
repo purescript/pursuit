@@ -26,9 +26,8 @@ postVerifyR key = do
         setMessage "Your package was verified successfully."
         redirect (packageRoute pkg)
       VerifyUnknownKey -> do
-        -- TODO: This should not be 200 OK.
-        defaultLayout
-          [whamlet|
-            <div .error>
-              No pending package was found; check the URL or try uploading again.
-            |]
+        html <- defaultLayout [whamlet|
+                  <div .error>
+                    No pending package was found; check the URL or try uploading again.
+                  |]
+        sendResponseStatus notFound404 html
