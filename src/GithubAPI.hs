@@ -30,7 +30,7 @@ getReadme' ::
   String -> -- ^ ref: commit, branch, etc.
   IO (Either HttpException BL.ByteString)
 getReadme' mauth (D.GithubUser user) (D.GithubRepo repo) _ =
-  let query = "" -- this will do for now. it should really be: ("ref=" ++ ref)
+  let query = "" -- TODO: this will do for now; should really be ("ref=" ++ ref)
       headers = [("Accept", mediaTypeHtml)] ++ authHeader mauth
   in githubAPI ["repos", user, repo, "readme"] query headers
 
