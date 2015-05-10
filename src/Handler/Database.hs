@@ -17,7 +17,7 @@ import qualified Data.ByteString.Lazy as BL
 import qualified Data.Text as T
 import Data.Version (Version, showVersion)
 import Crypto.Random
-import qualified Data.ByteString.Base64 as Base64
+import qualified Data.ByteString.Base64.URL as Base64
 import System.Directory (doesDirectoryExist, doesFileExist,
                          getDirectoryContents, createDirectoryIfMissing,
                          removeFile)
