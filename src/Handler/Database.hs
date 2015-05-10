@@ -18,7 +18,8 @@ import qualified Data.Text as T
 import Data.Version (Version, showVersion)
 import qualified Data.ByteString.Base64.URL as Base64
 import System.Directory (doesDirectoryExist, getDirectoryContents,
-                        createDirectoryIfMissing, removeFile)
+                        createDirectoryIfMissing, removeFile,
+                        getModificationTime)
 import System.FilePath (takeDirectory)
 
 import Web.Bower.PackageMeta (PackageName, runPackageName)
@@ -51,14 +52,21 @@ insertPackage pkg@D.Package{..} = do
     createDirectoryIfMissing True (takeDirectory file)
     BL.writeFile file (A.encode pkg)
 
+-- | In order to prevent denial of service by filling up the pending packages
+-- directory, we set a limit on the number of pending packages which are
+-- allowed to exist at one time.
+maxPendingPackages :: Int
+maxPendingPackages = 100
+
 -- | Insert an uploaded package, pending verification. The second argument
 -- is the verification key, which is also used as the file name.
 insertPendingVerification :: D.UploadedPackage -> VerificationKey -> Handler ()
 insertPendingVerification pkg key = do
   file <- pendingVerificationFileFor key
-  liftIO $ do
-    createDirectoryIfMissing True (takeDirectory file)
-    BL.writeFile file (A.encode pkg)
+  let dir = takeDirectory file
+  liftIO $ createDirectoryIfMissing True dir
+  removeLeastRecentlyWritten dir (maxPendingPackages - 1)
+  liftIO $ BL.writeFile file (A.encode pkg)
 
 lookupPendingPackage :: VerificationKey -> Handler (Maybe D.UploadedPackage)
 lookupPendingPackage key = do
@@ -130,6 +138,30 @@ readFileMay file =
   selectDoesNotExist e
     | isDoesNotExistErrorType (ioeGetErrorType e) = Just ()
     | otherwise = Nothing
+
+-- | Given a directory, delete the oldest files until there are no more than
+-- the supplied number of files remaining.
+removeLeastRecentlyWritten :: String -> Int -> Handler ()
+removeLeastRecentlyWritten dir maxCount = do
+  contents <- liftIO $ getDirectoryContents' dir
+  let len = length contents
+  when (len > maxCount) $ do
+    withMTimes <- liftIO $ mapM withModificationTime contents
+    let sorted = sort withMTimes
+    forM_ (take (len - maxCount) sorted) $ \(_, f) -> do
+      $logInfo ("Deleting least recently used pending package: " ++ pack f)
+      liftIO $ removeFile f
+  where
+  withModificationTime f = (,) <$> getModificationTime f <*> pure f
+
+  -- like getDirectoryContents, but including the directory, and without
+  -- "." or ".."
+  getDirectoryContents' d =
+    map (prefixedBy d) . filterDots <$> getDirectoryContents d
+  filterDots =
+    filter (\x -> x `onotElem` [".", ".."])
+  prefixedBy d f =
+    d ++ "/" ++ f
 
 ------------------------
 -- Verification
