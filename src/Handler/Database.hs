@@ -5,7 +5,7 @@ module Handler.Database
   , insertPackage
   , insertPendingVerification
   , verifyPackage
-  , verificationKeyExists
+  , lookupPendingPackage
   , VerifyResult(..)
   , generateKey
   ) where
@@ -17,9 +17,8 @@ import qualified Data.ByteString.Lazy as BL
 import qualified Data.Text as T
 import Data.Version (Version, showVersion)
 import qualified Data.ByteString.Base64.URL as Base64
-import System.Directory (doesDirectoryExist, doesFileExist,
-                         getDirectoryContents, createDirectoryIfMissing,
-                         removeFile)
+import System.Directory (doesDirectoryExist, getDirectoryContents,
+                        createDirectoryIfMissing, removeFile)
 import System.FilePath (takeDirectory)
 
 import Web.Bower.PackageMeta (PackageName, runPackageName)
@@ -61,10 +60,13 @@ insertPendingVerification pkg key = do
     createDirectoryIfMissing True (takeDirectory file)
     BL.writeFile file (A.encode pkg)
 
-verificationKeyExists :: VerificationKey -> Handler Bool
-verificationKeyExists key = do
+lookupPendingPackage :: VerificationKey -> Handler (Maybe D.UploadedPackage)
+lookupPendingPackage key = do
   file <- pendingVerificationFileFor key
-  liftIO (doesFileExist file)
+  mcontents <- liftIO (readFileMay file)
+  case mcontents of
+    Nothing       -> return Nothing
+    Just contents -> Just <$> decodeUploadedPackageFile file contents
 
 verifyPackage :: VerificationKey -> D.GithubUser -> Handler VerifyResult
 verifyPackage key user = do

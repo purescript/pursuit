@@ -71,3 +71,9 @@ darkForeground = fromRGB 240 240 240
 
 linkColor :: HSV
 linkColor = fromRGB 196 149 58
+
+errorBackgroundColor :: HSV
+errorBackgroundColor = fromRGB 240 80 80
+
+successBackgroundColor :: HSV
+successBackgroundColor = fromRGB 80 240 80

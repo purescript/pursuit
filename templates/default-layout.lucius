@@ -122,6 +122,23 @@ a:hover {
   padding-left: 1.5em;
 }
 
+/* Messages */
+.message {
+  border: 5px solid;
+  padding: 1em;
+  margin-bottom: 2em;
+}
+
+.error {
+  background-color: #{Css.errorBackgroundColor};
+  border-color: #{Css.darken20 Css.errorBackgroundColor};
+}
+
+.success {
+  background-color: #{Css.successBackgroundColor};
+  border-color: #{Css.darken20 Css.successBackgroundColor};
+}
+
 /* Typography */
 h1, h2 {
   font-weight: normal;
@@ -143,6 +160,11 @@ select.version-selector {
   float: left;
   width: auto;
   min-width: 20%;
+}
+
+/* GitHub rendered README */
+article.entry-content p:first-child {
+  margin-top: 0;
 }
 
 /* Everything else */

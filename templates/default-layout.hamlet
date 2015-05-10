@@ -9,6 +9,6 @@
 
 <main .container role="main">
   $maybe msg <- mmsg
-    <div #message>#{msg}
+    <div .message .success>#{msg}
 
   ^{widget}
