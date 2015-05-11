@@ -46,6 +46,7 @@ postVerifyR key = do
                       |]
             sendResponseStatus notFound404 html
       _ ->
+        -- note: if we get here, it probably means the CSRF token was invalid.
         renderVerifyFormWithMessage
           (Just "There was a problem with the form. Please try again.")
           key
