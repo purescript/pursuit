@@ -1,3 +1,6 @@
+$maybe msg <- errorMessage
+  <div .error .message>#{msg}
+
 <h1>Verify package upload
 
 <p>
@@ -8,5 +11,6 @@
   as
   <strong>#{D.runGithubUser user}
 
-<form method="post">
+<form method="post" action=@{VerifyR key} enctype=#{enctype}>
+  ^{formWidget}
   <input type="submit" value="Confirm">
