@@ -2,7 +2,6 @@
 module Handler.Utils where
 
 import Import
-import qualified Data.ByteString.Lazy as BL
 
 badRequest :: Text -> Handler a
 badRequest = sendResponseStatus badRequest400

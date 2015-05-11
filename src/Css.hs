@@ -77,3 +77,6 @@ errorBackgroundColor = fromRGB 240 80 80
 
 successBackgroundColor :: HSV
 successBackgroundColor = fromRGB 80 240 80
+
+notAvailableBackgroundColor :: HSV
+notAvailableBackgroundColor = fromRGB 240 240 80

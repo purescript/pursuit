@@ -28,13 +28,8 @@
   $maybe readme <- mreadme
     #{readme}
   $nothing
-    <div .not-available>No README available.
-
+    <div .message .not-available>No README available.
   <hr>
-
   <h2>
     <strong>Modules
-  <ul .documentation-contents>
-    $forall name <- moduleNames
-      <li>
-        <a href=@{moduleDocsRoute pkg name}>#{name}
+  #{moduleList}

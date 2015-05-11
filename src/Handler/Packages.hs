@@ -4,15 +4,12 @@ import Import
 import Text.Blaze.Html (preEscapedToHtml)
 import Text.Julius (rawJS)
 import Data.Version
-import qualified Language.PureScript as P
 import qualified Language.PureScript.Docs as D
 import qualified Web.Bower.PackageMeta as Bower
 
 import Handler.Database
 import Handler.Caching
-import Model.DocsAsHtml
 import TemplateHelpers
-import qualified GithubAPI
 
 getPackageR :: PathPackageName -> Handler Html
 getPackageR ppkgName@(PathPackageName pkgName) = do
@@ -29,9 +26,8 @@ getPackageR ppkgName@(PathPackageName pkgName) = do
 getPackageVersionR :: PathPackageName -> PathVersion -> Handler Html
 getPackageVersionR (PathPackageName pkgName) (PathVersion version) =
   findPackage pkgName version $ \availableVersions pkg@D.Package{..} -> do
-    let docsOutput = packageAsHtml pkg
-    let moduleNames = sort $ map (P.runModuleName . fst) $ htmlModules docsOutput
-    mreadme <- tryGetReadme pkg
+    moduleList <- cache    (pkgName, version, "module-list") (renderModuleList pkg)
+    mreadme    <- cacheMay (pkgName, version, "readme")      (tryGetReadme pkg)
     defaultLayout $ do
       setTitle (toHtml (Bower.runPackageName pkgName))
       let dependencies = Bower.bowerDependencies pkgMeta
@@ -59,18 +55,18 @@ getPackageVersionDocsR (PathPackageName pkgName) (PathVersion version) =
   findPackage pkgName version $ \_ pkg@D.Package{..} ->
     redirect (packageRoute pkg)
 
-getPackageVersionModuleDocsR :: PathPackageName -> PathVersion -> String -> Handler TypedContent
+getPackageVersionModuleDocsR :: PathPackageName -> PathVersion -> String -> Handler Html
 getPackageVersionModuleDocsR (PathPackageName pkgName) (PathVersion version) mnString =
-  cache $
-    findPackage pkgName version $ \availableVersions pkg@D.Package{..} -> do
-      let docsOutput = packageAsHtml pkg
-      case lookup (P.moduleNameFromString mnString) (htmlModules docsOutput) of
-        Nothing -> notFound
-        Just htmlDocs ->
-          defaultLayout $ do
-            setTitle (toHtml (mnString <> " - " <> Bower.runPackageName pkgName))
-            documentationPage availableVersions pkg $
-              $(widgetFile "packageVersionModuleDocs")
+  findPackage pkgName version $ \availableVersions pkg@D.Package{..} -> do
+    mhtmlDocs <- cacheMay (pkgName, version, "module_" ++ mnString) $
+                  renderHtmlDocs pkg mnString
+    case mhtmlDocs of
+      Nothing -> notFound
+      Just htmlDocs ->
+        defaultLayout $ do
+          setTitle (toHtml (mnString <> " - " <> Bower.runPackageName pkgName))
+          documentationPage availableVersions pkg $
+            $(widgetFile "packageVersionModuleDocs")
 
 findPackage ::
   Bower.PackageName ->
@@ -120,17 +116,4 @@ documentationPage availableVersions pkg@D.Package{..} widget =
     <div .col-main>
       ^{widget}
     |]
-
-tryGetReadme :: D.VerifiedPackage -> Handler (Maybe Html)
-tryGetReadme D.Package{..} = do
-  mtoken <- appGithubAuthToken . appSettings <$> getYesod
-  let (ghUser, ghRepo) = pkgGithub
-  let ghTag = pkgVersionTag
-  ereadme <- liftIO (GithubAPI.getReadme mtoken ghUser ghRepo ghTag)
-  case ereadme of
-    Right readme ->
-      return (Just readme)
-    Left err -> do
-      $logError (tshow err)
-      return Nothing
 

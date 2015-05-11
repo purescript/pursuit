@@ -51,7 +51,7 @@ insertPackage :: D.VerifiedPackage -> Handler ()
 insertPackage pkg@D.Package{..} = do
   let pkgName = D.packageName pkg
   file <- packageVersionFileFor pkgName pkgVersion
-  clearCache pkgName
+  clearCache pkgName pkgVersion
   liftIO $ do
     createDirectoryIfMissing True (takeDirectory file)
     BL.writeFile file (A.encode pkg)
