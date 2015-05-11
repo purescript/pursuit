@@ -2,6 +2,8 @@
 module Handler.Utils where
 
 import Import
+import System.Directory (createDirectoryIfMissing)
+import System.FilePath (takeDirectory)
 
 badRequest :: Text -> Handler a
 badRequest = sendResponseStatus badRequest400
@@ -27,3 +29,8 @@ catchDoesNotExist act =
   selectDoesNotExist e
     | isDoesNotExistErrorType (ioeGetErrorType e) = Just ()
     | otherwise = Nothing
+
+writeFileWithParents :: (IOData a) => String -> a -> IO ()
+writeFileWithParents file contents = do
+  createDirectoryIfMissing True (takeDirectory file)
+  writeFile (fpFromString file) contents

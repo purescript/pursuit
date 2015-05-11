@@ -7,12 +7,10 @@ module Handler.Caching
 
 import Import
 import Data.Version (Version, showVersion)
-import qualified Data.ByteString.Lazy as LB
 import qualified Data.Text.Lazy as LT
 import Text.Blaze.Html (preEscapedToHtml)
 import Text.Blaze.Html.Renderer.Utf8 (renderHtml)
-import System.Directory (removeDirectoryRecursive, createDirectoryIfMissing)
-import System.FilePath (takeDirectory)
+import System.Directory (removeDirectoryRecursive)
 import Web.Bower.PackageMeta (PackageName, runPackageName)
 
 import Handler.Utils
@@ -33,9 +31,7 @@ cache :: CacheKey -> Handler Html -> Handler Html
 cache = cache' onMiss fromLazyText
   where
   onMiss file html = do
-    liftIO $ do
-      createDirectoryIfMissing True (takeDirectory file)
-      LB.writeFile file (renderHtml html)
+    liftIO $ writeFileWithParents file (renderHtml html)
     return html
 
   fromLazyText = preEscapedToHtml
@@ -49,9 +45,7 @@ cacheMay = cache' onMiss fromLazyText
   onMiss _ Nothing =
     return Nothing
   onMiss file (Just html) = do
-    liftIO $ do
-      createDirectoryIfMissing True (takeDirectory file)
-      LB.writeFile file (renderHtml html)
+    liftIO $ writeFileWithParents file (renderHtml html)
     return (Just html)
 
   fromLazyText = Just . preEscapedToHtml

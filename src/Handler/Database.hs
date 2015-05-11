@@ -18,8 +18,7 @@ import qualified Data.Text as T
 import Data.Version (Version, showVersion)
 import qualified Data.ByteString.Base64.URL as Base64
 import System.Directory (doesDirectoryExist, getDirectoryContents,
-                        createDirectoryIfMissing, removeFile,
-                        getModificationTime)
+                        removeFile, getModificationTime)
 import System.FilePath (takeDirectory)
 
 import Web.Bower.PackageMeta (PackageName, runPackageName)
@@ -52,9 +51,7 @@ insertPackage pkg@D.Package{..} = do
   let pkgName = D.packageName pkg
   file <- packageVersionFileFor pkgName pkgVersion
   clearCache pkgName pkgVersion
-  liftIO $ do
-    createDirectoryIfMissing True (takeDirectory file)
-    BL.writeFile file (A.encode pkg)
+  liftIO $ writeFileWithParents file (A.encode pkg)
 
 -- | In order to prevent denial of service by filling up the pending packages
 -- directory, we set a limit on the number of pending packages which are
@@ -68,9 +65,8 @@ insertPendingVerification :: D.UploadedPackage -> VerificationKey -> Handler ()
 insertPendingVerification pkg key = do
   file <- pendingVerificationFileFor key
   let dir = takeDirectory file
-  liftIO $ createDirectoryIfMissing True dir
+  liftIO $ writeFileWithParents file (A.encode pkg)
   removeLeastRecentlyWritten dir (maxPendingPackages - 1)
-  liftIO $ BL.writeFile file (A.encode pkg)
 
 lookupPendingPackage :: VerificationKey -> Handler (Maybe D.UploadedPackage)
 lookupPendingPackage key = do
