@@ -112,15 +112,20 @@ versionSelector pkgName version = do
 
   toWidget html
   toWidgetBody [julius|
+      // Set an onchange handler so that selecting a version in the <select>
+      // will navigate to the new page
       var selectorId = "#{rawJS versionSelectorIdent}"
       var selector = document.getElementById(selectorId)
       selector.onchange = function() {
         window.location.href = this.value
       };
 
+      // Set the 'selected' attribute on the current version
       var selectedOption = document.getElementById("#{rawJS (htmlVersionId version)}")
       selectedOption.setAttribute('selected', null)
 
+      // Set the 'value' attribute on each <option> to the URL it should
+      // point to
       var options = document.querySelectorAll('select#' + selectorId + ' option')
       var len = options.length
       var placeholderUrl = "#{rawJS dummyRoute'}"
