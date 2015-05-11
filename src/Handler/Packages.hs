@@ -5,7 +5,7 @@ import Text.Blaze.Html (preEscapedToHtml)
 import Text.Julius (rawJS)
 import Data.Version
 import qualified Language.PureScript.Docs as D
-import qualified Web.Bower.PackageMeta as Bower
+import Web.Bower.PackageMeta (PackageName, runPackageName, bowerDependencies, bowerLicence)
 
 import Handler.Database
 import Handler.Caching
@@ -25,12 +25,12 @@ getPackageR ppkgName@(PathPackageName pkgName) = do
 
 getPackageVersionR :: PathPackageName -> PathVersion -> Handler Html
 getPackageVersionR (PathPackageName pkgName) (PathVersion version) =
-  findPackage pkgName version $ \availableVersions pkg@D.Package{..} -> do
-    moduleList <- cache    (pkgName, version, "module-list") (renderModuleList pkg)
-    mreadme    <- cacheMay (pkgName, version, "readme")      (tryGetReadme pkg)
+  findPackage pkgName version $ \pkg@D.Package{..} -> do
+    moduleList <- cache    (pkgName, Just version, "module-list") (renderModuleList pkg)
+    mreadme    <- cacheMay (pkgName, Just version, "readme")      (tryGetReadme pkg)
     defaultLayout $ do
-      setTitle (toHtml (Bower.runPackageName pkgName))
-      let dependencies = Bower.bowerDependencies pkgMeta
+      setTitle (toHtml (runPackageName pkgName))
+      let dependencies = bowerDependencies pkgMeta
       $(widgetFile "packageVersion")
 
 getPackageIndexR :: Handler Html
@@ -52,66 +52,103 @@ postPackageIndexR = do
 
 getPackageVersionDocsR :: PathPackageName -> PathVersion -> Handler Html
 getPackageVersionDocsR (PathPackageName pkgName) (PathVersion version) =
-  findPackage pkgName version $ \_ pkg@D.Package{..} ->
+  findPackage pkgName version $ \pkg@D.Package{..} ->
     redirect (packageRoute pkg)
 
 getPackageVersionModuleDocsR :: PathPackageName -> PathVersion -> String -> Handler Html
 getPackageVersionModuleDocsR (PathPackageName pkgName) (PathVersion version) mnString =
-  findPackage pkgName version $ \availableVersions pkg@D.Package{..} -> do
-    mhtmlDocs <- cacheMay (pkgName, version, "module_" ++ mnString) $
+  findPackage pkgName version $ \pkg@D.Package{..} -> do
+    mhtmlDocs <- cacheMay (pkgName, Just version, "module_" ++ mnString) $
                   renderHtmlDocs pkg mnString
     case mhtmlDocs of
       Nothing -> notFound
       Just htmlDocs ->
         defaultLayout $ do
-          setTitle (toHtml (mnString <> " - " <> Bower.runPackageName pkgName))
-          documentationPage availableVersions pkg $
+          setTitle (toHtml (mnString <> " - " <> runPackageName pkgName))
+          documentationPage pkg $
             $(widgetFile "packageVersionModuleDocs")
 
 findPackage ::
-  Bower.PackageName ->
+  PackageName ->
   Version ->
-  ([Version] -> D.VerifiedPackage -> Handler Html) ->
+  (D.VerifiedPackage -> Handler Html) ->
   Handler Html
 findPackage pkgName version cont = do
   pkg' <- lookupPackage pkgName version
   case pkg' of
     Nothing -> notFound
-    Just pkg -> do
-      versions' <- availableVersionsFor pkgName
-      case versions' of
-        Nothing -> notFound
-        Just versions -> cont versions pkg
+    Just pkg -> cont pkg
 
-versionSelector :: Version -> [Version] -> WidgetT App IO ()
-versionSelector version availableVersions' = do
-  let availableVersions = sortBy (comparing Down) availableVersions'
-  let isLatest v = maybe False (== v) (headMay availableVersions)
-  mroute <- getCurrentRoute
-  let versionRoute v =
-        case mroute of
-          Just route -> substituteVersion route v
-          Nothing    -> HomeR -- should never happen
-
-  let displayVersion v
-        | isLatest v = [whamlet|latest (#{showVersion v})|]
-        | otherwise = [whamlet|#{showVersion v}|]
-
+versionSelector :: PackageName -> Version -> WidgetT App IO ()
+versionSelector pkgName version = do
   versionSelectorIdent <- newIdent
-  $(widgetFile "versionSelector")
+
+  let dummyVersion = Version [999,999,999] []
+  let dummyVersionStr = showVersion dummyVersion
+  dummyRoute  <- maybe HomeR (flip substituteVersion dummyVersion) <$> getCurrentRoute
+  dummyRoute' <- getUrlRender <*> pure dummyRoute
+
+  html <- handlerToWidget $ cache (pkgName, Nothing, "version-selector") $ do
+    mversions <- availableVersionsFor pkgName
+    let versions' = fromMaybe [version] mversions
+    let versions = sortBy (comparing Down) versions'
+    let isLatest v = maybe False (== v) (headMay versions)
+
+    let displayVersion v
+          | isLatest v = [hamlet|latest (#{showVersion v})|]
+          | otherwise  = [hamlet|#{showVersion v}|]
+
+    -- At this stage, rather than putting a selected attribute on the relevant
+    -- <option> tag, we instead mark each <option> with an ID, and select the
+    -- appropriate one using JS *outside the `cache` block*. This is because
+    -- the cached HTML is reused across every version.
+    withUrlRenderer [hamlet|
+        <div .col-aside>
+          <select id=#{versionSelectorIdent} .version-selector>
+            $forall v <- versions
+              <option id=#{htmlVersionId v} data-version=#{showVersion v}>
+                ^{displayVersion v}
+      |]
+
+  toWidget html
+  toWidgetBody [julius|
+      var selectorId = "#{rawJS versionSelectorIdent}"
+      var selector = document.getElementById(selectorId)
+      selector.onchange = function() {
+        window.location.href = this.value
+      };
+
+      var selectedOption = document.getElementById("#{rawJS (htmlVersionId version)}")
+      selectedOption.setAttribute('selected', null)
+
+      var options = document.querySelectorAll('select#' + selectorId + ' option')
+      var len = options.length
+      var placeholderUrl = "#{rawJS dummyRoute'}"
+      for (var i = 0; i < len; i++) {
+        var option = options[i]
+        var version = option.getAttribute('data-version')
+        if (version != null) {
+          option.setAttribute('value',
+            placeholderUrl.replace("#{rawJS dummyVersionStr}", version))
+        }
+      }
+    |]
+  where
+  htmlVersionId :: Version -> Text
+  htmlVersionId v = "selector-version-" ++ pack (showVersion v)
 
 documentationPage ::
-  [Version] -> D.VerifiedPackage -> WidgetT App IO () -> WidgetT App IO ()
-documentationPage availableVersions pkg@D.Package{..} widget =
+  D.VerifiedPackage -> WidgetT App IO () -> WidgetT App IO ()
+documentationPage pkg@D.Package{..} widget =
   let pkgName = D.packageName pkg
   in [whamlet|
     <div .clearfix>
       <div .col-main>
         <h1>
           package
-          <a href=@{packageRoute pkg}>#{Bower.runPackageName pkgName}
+          <a href=@{packageRoute pkg}>#{runPackageName pkgName}
 
-      ^{versionSelector pkgVersion availableVersions}
+      ^{versionSelector pkgName pkgVersion}
 
     <div .col-main>
       ^{widget}

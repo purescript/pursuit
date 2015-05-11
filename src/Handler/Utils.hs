@@ -16,8 +16,12 @@ getDataDir = appDataDir . appSettings <$> getYesod
 -- if no such file exists.
 readFileMay :: (IOData a) => String -> IO (Maybe a)
 readFileMay file =
+  catchDoesNotExist (readFile (fpFromString file))
+
+catchDoesNotExist :: IO a -> IO (Maybe a)
+catchDoesNotExist act =
   catchJust selectDoesNotExist
-            (Just <$> readFile (fpFromString file))
+            (Just <$> act)
             (const (return Nothing))
   where
   selectDoesNotExist e

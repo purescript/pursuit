@@ -2,16 +2,16 @@
   <div .col-main>
     <h1>
       package #
-      <strong>#{Bower.runPackageName pkgName}
+      <strong>#{runPackageName pkgName}
 
-  ^{versionSelector pkgVersion availableVersions}
+  ^{versionSelector pkgName pkgVersion}
 
 <div .col-aside>
   <p>published by #{linkToGithubUser pkgUploader}
   <hr>
   <p>#{linkToGithub pkgGithub} on github
   <hr>
-  $maybe licenses <- joinLicenses (Bower.bowerLicence pkgMeta)
+  $maybe licenses <- joinLicenses (bowerLicence pkgMeta)
     <p>#{licenses} licensed
     <hr>
   <p>
@@ -21,7 +21,7 @@
       <strong>Dependencies
       $forall (depPkg, versionRange) <- dependencies
         <li>
-          <a href=@{packageNameRoute depPkg}>#{Bower.runPackageName depPkg}
+          <a href=@{packageNameRoute depPkg}>#{runPackageName depPkg}
           #{renderVersionRange versionRange}
 
 <div .col-main>
