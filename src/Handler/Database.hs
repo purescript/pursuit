@@ -25,6 +25,9 @@ import System.FilePath (takeDirectory)
 import Web.Bower.PackageMeta (PackageName, runPackageName)
 import qualified Language.PureScript.Docs as D
 
+import Handler.Utils
+import Handler.Caching (clearCache)
+
 lookupPackage :: PackageName -> Version -> Handler (Maybe D.VerifiedPackage)
 lookupPackage pkgName version = do
   file <- packageVersionFileFor pkgName version
@@ -48,6 +51,7 @@ insertPackage :: D.VerifiedPackage -> Handler ()
 insertPackage pkg@D.Package{..} = do
   let pkgName = D.packageName pkg
   file <- packageVersionFileFor pkgName pkgVersion
+  clearCache pkgName
   liftIO $ do
     createDirectoryIfMissing True (takeDirectory file)
     BL.writeFile file (A.encode pkg)
@@ -89,9 +93,6 @@ verifyPackage key user = do
       liftIO $ removeFile file
       return (VerifySuccess pkg')
 
-getDataDir :: Handler String
-getDataDir = appDataDir . appSettings <$> getYesod
-
 packageDirFor :: PackageName -> Handler String
 packageDirFor pkgName = do
   dir <- getDataDir
@@ -126,18 +127,6 @@ decodePackageFile filepath contents = do
       sendResponseStatus internalServerError500 ("" :: String)
     Right pkg ->
       return pkg
-
--- | Read the file at the given path as a lazy ByteString, or return Nothing
--- if no such file exists.
-readFileMay :: String -> IO (Maybe BL.ByteString)
-readFileMay file =
-  catchJust selectDoesNotExist
-            (Just <$> BL.readFile file)
-            (const (return Nothing))
-  where
-  selectDoesNotExist e
-    | isDoesNotExistErrorType (ioeGetErrorType e) = Just ()
-    | otherwise = Nothing
 
 -- | Given a directory, delete the oldest files until there are no more than
 -- the supplied number of files remaining.

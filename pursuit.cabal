@@ -25,6 +25,7 @@ library
                      Handler.Verification
                      Handler.Database
                      Handler.GithubOAuth
+                     Handler.Caching
                      Handler.Utils
                      Model.DocsAsHtml
                      TemplateHelpers
@@ -104,6 +105,7 @@ library
                  , base64-bytestring
                  , http-types
                  , case-insensitive
+                 , conduit-extra
 
     if flag(dev)
       build-depends: foreign-store

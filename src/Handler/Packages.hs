@@ -9,6 +9,7 @@ import qualified Language.PureScript.Docs as D
 import qualified Web.Bower.PackageMeta as Bower
 
 import Handler.Database
+import Handler.Caching
 import Model.DocsAsHtml
 import TemplateHelpers
 import qualified GithubAPI
@@ -58,17 +59,18 @@ getPackageVersionDocsR (PathPackageName pkgName) (PathVersion version) =
   findPackage pkgName version $ \_ pkg@D.Package{..} ->
     redirect (packageRoute pkg)
 
-getPackageVersionModuleDocsR :: PathPackageName -> PathVersion -> String -> Handler Html
+getPackageVersionModuleDocsR :: PathPackageName -> PathVersion -> String -> Handler TypedContent
 getPackageVersionModuleDocsR (PathPackageName pkgName) (PathVersion version) mnString =
-  findPackage pkgName version $ \availableVersions pkg@D.Package{..} -> do
-    let docsOutput = packageAsHtml pkg
-    case lookup (P.moduleNameFromString mnString) (htmlModules docsOutput) of
-      Nothing -> notFound
-      Just htmlDocs ->
-        defaultLayout $ do
-          setTitle (toHtml (mnString <> " - " <> Bower.runPackageName pkgName))
-          documentationPage availableVersions pkg $
-            $(widgetFile "packageVersionModuleDocs")
+  cache $
+    findPackage pkgName version $ \availableVersions pkg@D.Package{..} -> do
+      let docsOutput = packageAsHtml pkg
+      case lookup (P.moduleNameFromString mnString) (htmlModules docsOutput) of
+        Nothing -> notFound
+        Just htmlDocs ->
+          defaultLayout $ do
+            setTitle (toHtml (mnString <> " - " <> Bower.runPackageName pkgName))
+            documentationPage availableVersions pkg $
+              $(widgetFile "packageVersionModuleDocs")
 
 findPackage ::
   Bower.PackageName ->
