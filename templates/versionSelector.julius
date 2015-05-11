@@ -1,5 +1,0 @@
-var selector = document.getElementById("#{rawJS versionSelectorIdent}")
-
-selector.onchange = function() {
-  window.location.href = this.value;
-};

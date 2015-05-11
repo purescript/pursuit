@@ -1,9 +1,0 @@
-<div .col-aside>
-  <select id=#{versionSelectorIdent} .version-selector>
-    $forall v <- versions
-      $if v == version
-        <option value=@{versionRoute v} selected>
-          ^{displayVersion v}
-      $else
-        <option value=@{versionRoute v}>
-          ^{displayVersion v}
