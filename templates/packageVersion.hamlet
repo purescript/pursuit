@@ -1,7 +1,7 @@
 <div .clearfix>
   <div .col-main>
     <h1>
-      package #
+      package
       <strong>#{runPackageName pkgName}
 
   ^{versionSelector pkgName pkgVersion}
