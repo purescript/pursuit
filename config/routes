@@ -10,5 +10,6 @@
 /packages/#PathPackageName/#PathVersion                PackageVersionR             GET
 /packages/#PathPackageName/#PathVersion/docs           PackageVersionDocsR         GET
 /packages/#PathPackageName/#PathVersion/docs/#String   PackageVersionModuleDocsR   GET
+!/packages/#PathPackageName/badge                      PackageBadgeR               GET
 /verify/#VerificationKey                               VerifyR                     GET   POST
 /oauth/callback                                        OAuthCallbackR              GET

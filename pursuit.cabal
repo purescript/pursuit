@@ -22,6 +22,7 @@ library
                      Handler.Common
                      Handler.Home
                      Handler.Packages
+                     Handler.PackageBadges
                      Handler.Verification
                      Handler.Database
                      Handler.GithubOAuth
@@ -91,13 +92,14 @@ library
                  , bower-json >= 0.4
                  , lucid
                  , blaze-builder
+                 , blaze-markup
                  , blaze-html
+                 , blaze-svg
                  , filepath
                  , dlist
                  , cheapskate
                  , split
                  , mtl
-                 , blaze-markup
                  , shakespeare
                  , colour
                  , hxt
