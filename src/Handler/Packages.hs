@@ -13,15 +13,16 @@ import TemplateHelpers
 
 getPackageR :: PathPackageName -> Handler Html
 getPackageR ppkgName@(PathPackageName pkgName) = do
-  versions <- availableVersionsFor pkgName
-  case versions of
+  v <- getLatestVersion pkgName
+  case v of
     Nothing -> notFound
-    Just vs ->
-      case toMinLen vs :: Maybe (MinLen One [Version]) of
-        Nothing -> notFound
-        Just vs' ->
-          let latestVersion = maximum ((map . map) PathVersion vs')
-          in redirect (PackageVersionR ppkgName latestVersion)
+    Just v' -> redirect (PackageVersionR ppkgName (PathVersion v'))
+
+getLatestVersion :: PackageName -> Handler (Maybe Version)
+getLatestVersion pkgName = do
+  vs  <- availableVersionsFor pkgName
+  let vs' = toMinLen vs :: Maybe (MinLen One [Version])
+  return $ map maximum vs'
 
 getPackageVersionR :: PathPackageName -> PathVersion -> Handler Html
 getPackageVersionR (PathPackageName pkgName) (PathVersion version) =
@@ -89,8 +90,7 @@ versionSelector pkgName version = do
   dummyRoute' <- getUrlRender <*> pure dummyRoute
 
   html <- handlerToWidget $ cache (pkgName, Nothing, "version-selector") $ do
-    mversions <- availableVersionsFor pkgName
-    let versions' = fromMaybe [version] mversions
+    versions' <- availableVersionsFor pkgName
     let versions = sortBy (comparing Down) versions'
     let isLatest v = maybe False (== v) (headMay versions)
 
@@ -158,4 +158,3 @@ documentationPage pkg@D.Package{..} widget =
     <div .col-main>
       ^{widget}
     |]
-

@@ -17,8 +17,7 @@ import qualified Data.ByteString.Lazy as BL
 import qualified Data.Text as T
 import Data.Version (Version, showVersion)
 import qualified Data.ByteString.Base64.URL as Base64
-import System.Directory (doesDirectoryExist, getDirectoryContents,
-                        removeFile, getModificationTime)
+import System.Directory (getDirectoryContents, removeFile, getModificationTime)
 import System.FilePath (takeDirectory)
 
 import Web.Bower.PackageMeta (PackageName, runPackageName)
@@ -35,15 +34,13 @@ lookupPackage pkgName version = do
     Nothing       -> return Nothing
     Just contents -> Just <$> decodeVerifiedPackageFile file contents
 
-availableVersionsFor :: PackageName -> Handler (Maybe [Version])
+availableVersionsFor :: PackageName -> Handler [Version]
 availableVersionsFor pkgName = do
   dir <- packageDirFor pkgName
-  exists <- liftIO (doesDirectoryExist dir)
-  if (not exists)
-    then return Nothing
-    else do
-      files <- liftIO (getDirectoryContents dir)
-      return $ Just $ mapMaybe (stripSuffix ".json" >=> D.parseVersion') files
+  mresult <- liftIO $ catchDoesNotExist $ do
+    files <- getDirectoryContents dir
+    return $ mapMaybe (stripSuffix ".json" >=> D.parseVersion') files
+  return $ fromMaybe [] mresult
 
 -- | Insert a package at a specific version into the database.
 insertPackage :: D.VerifiedPackage -> Handler ()
