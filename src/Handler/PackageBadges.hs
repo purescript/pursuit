@@ -10,16 +10,16 @@ import qualified Text.Blaze.Svg11.Attributes as A
 import Text.Blaze.Svg.Renderer.Text (renderSvg)
 
 import Handler.Packages (getLatestVersion)
+import Handler.Caching (cacheMay)
 
 getPackageBadgeR :: PathPackageName -> Handler TypedContent
 getPackageBadgeR (PathPackageName pkgName) = do
-  v <- getLatestVersion pkgName
-  case v of
-    Nothing ->
-      notFound
-    Just v' ->
-      let content = toContent $ renderSvg $ renderBadge v'
-      in  return $ TypedContent typeSvg content
+  msvg <- cacheMay (pkgName, Nothing, "badge") $
+    (map . map) renderBadge (getLatestVersion pkgName)
+
+  case msvg of
+    Just svg -> return $ TypedContent typeSvg $ toContent $ renderSvg svg
+    Nothing  -> notFound
 
 renderBadge :: Version -> S.Svg
 renderBadge version =
