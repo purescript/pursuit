@@ -72,8 +72,8 @@ getPackageVersionModuleDocsR (PathPackageName pkgName) (PathVersion version) mnS
 findPackage ::
   PackageName ->
   Version ->
-  (D.VerifiedPackage -> Handler Html) ->
-  Handler Html
+  (D.VerifiedPackage -> Handler r) ->
+  Handler r
 findPackage pkgName version cont = do
   pkg' <- lookupPackage pkgName version
   case pkg' of

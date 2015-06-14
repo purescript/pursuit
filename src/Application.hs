@@ -31,6 +31,7 @@ import Crypto.Random
 import Handler.Common
 import Handler.Home
 import Handler.Packages
+import Handler.Hoogle
 import Handler.PackageBadges
 import Handler.Verification
 import Handler.GithubOAuth

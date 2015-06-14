@@ -22,6 +22,7 @@ library
                      Handler.Common
                      Handler.Home
                      Handler.Packages
+                     Handler.Hoogle
                      Handler.PackageBadges
                      Handler.Verification
                      Handler.Database
@@ -29,6 +30,7 @@ library
                      Handler.Caching
                      Handler.Utils
                      Model.DocsAsHtml
+                     Model.DocsAsHoogle
                      TemplateHelpers
                      GithubAPI
                      Css
