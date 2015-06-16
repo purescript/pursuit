@@ -19,8 +19,11 @@ import qualified Text.Blaze.Html as H
 import qualified Text.Blaze.Html.Renderer.Text as H
 import qualified Cheapskate
 
+import qualified Language.PureScript as P
 import qualified Language.PureScript.Docs as D
 import qualified Web.Bower.PackageMeta as Bower
+
+import Model.DocLinks
 
 packageAsHoogle :: D.Package a -> LT.Text
 packageAsHoogle pkg@D.Package{..} = preamble <> modules
@@ -30,40 +33,53 @@ packageAsHoogle pkg@D.Package{..} = preamble <> modules
                , "@version " <> (LT.pack $ showVersion $ pkgVersion)
                , ""
                ]
-  modules =
-    foldMap moduleAsHoogle pkgModules
+  ctx = getLinksContext pkg
+  modules = foldMap renderModule pkgModules
+  renderModule m = moduleAsHoogle (ctx, P.moduleNameFromString (D.rmName m)) m
 
-codeAsHoogle :: D.RenderedCode -> LT.Text
-codeAsHoogle = D.outputWith elemAsText
+codeAsHoogle :: LinksContext' -> D.RenderedCode -> LT.Text
+codeAsHoogle ctx = D.outputWith elemAsText
   where
   elemAsText (D.Syntax x)  = LT.pack x
   elemAsText (D.Ident x)   = LT.pack x
-  elemAsText (D.Ctor x _)  = LT.pack x
+  elemAsText (D.Ctor x mn) = qualifyConstructor ctx x mn
   elemAsText (D.Kind x)    = LT.pack x
   elemAsText (D.Keyword x) = LT.pack x
   elemAsText D.Space       = " "
 
-declAsHoogle :: D.RenderedDeclaration -> LT.Text
-declAsHoogle D.RenderedDeclaration{..} =
-     commentsAsHoogle rdComments
-  <> codeAsHoogle rdCode
-  <> "\n\n"
-  <> foldMap ((<> "\n\n") . childDeclAsHoogle) rdChildren
+qualifyConstructor :: LinksContext' -> String -> D.ContainingModule -> LT.Text
+qualifyConstructor ctx ctor' containMn =
+  maybe (LT.pack ctor') render (getLink ctx ctor' containMn)
+  where
+  render docLink = LT.pack $ case docLink of
+    SameModule ctor ->
+      show (snd ctx) ++ "." ++ ctor
+    LocalModule _ otherMn ctor ->
+      show otherMn ++ "." ++ ctor
+    DepsModule _ otherPkg _ otherMn ctor ->
+      Bower.runPackageName otherPkg ++ ":" ++ show otherMn ++ "." ++ ctor
 
-childDeclAsHoogle :: D.RenderedChildDeclaration -> LT.Text
-childDeclAsHoogle D.RenderedChildDeclaration{..} =
-  commentsAsHoogle rcdComments <> codeAsHoogle code
+declAsHoogle :: LinksContext' -> D.RenderedDeclaration -> LT.Text
+declAsHoogle ctx D.RenderedDeclaration{..} =
+     commentsAsHoogle rdComments
+  <> codeAsHoogle ctx rdCode
+  <> "\n\n"
+  <> foldMap ((<> "\n\n") . childDeclAsHoogle ctx) rdChildren
+
+childDeclAsHoogle :: LinksContext' -> D.RenderedChildDeclaration -> LT.Text
+childDeclAsHoogle ctx D.RenderedChildDeclaration{..} =
+  commentsAsHoogle rcdComments <> codeAsHoogle ctx code
   where
   code = case rcdInfo of
     D.ChildInstance c -> c
     D.ChildDataConstructor _ c -> c
     D.ChildTypeClassMember _ c -> c
 
-moduleAsHoogle :: D.RenderedModule -> LT.Text
-moduleAsHoogle D.RenderedModule{..} =
+moduleAsHoogle :: LinksContext' -> D.RenderedModule -> LT.Text
+moduleAsHoogle ctx D.RenderedModule{..} =
   commentsAsHoogle rmComments
     <> "module " <> LT.pack rmName <> " where\n\n"
-    <> foldMap ((<> "\n\n") . declAsHoogle) rmDeclarations
+    <> foldMap ((<> "\n\n") . declAsHoogle ctx) rmDeclarations
 
 commentsAsHoogle :: Maybe String -> LT.Text
 commentsAsHoogle =
