@@ -19,7 +19,7 @@ import Data.Char (toUpper)
 import Data.Ord (comparing)
 import Data.Monoid (mconcat, (<>))
 import Data.Foldable (for_)
-import Data.List (intercalate, find, sortBy)
+import Data.List (intercalate, sortBy)
 import qualified Data.DList as DList
 import Data.List.Split (splitOn)
 import Data.Default (def)
@@ -44,32 +44,7 @@ import qualified Language.PureScript as P
 import Language.PureScript.Docs.Types
 import Language.PureScript.Docs.RenderedCode hiding (sp)
 
-data LinksContext = LinksContext
-  { ctxGithub               :: (GithubUser, GithubRepo)
-  , ctxBookmarks            :: [Bookmark]
-  , ctxResolvedDependencies :: [(PackageName, Version)]
-  }
-  deriving (Show, Eq, Ord)
-
--- | A LinksContext with the current module name.
-type LinksContext' = (LinksContext, P.ModuleName)
-
-data DocLink
-  -- | A link to a declaration in the same module; in this case, only the title
-  -- is needed to generate the link.
-  = SameModule String
-
-  -- | A link to a declaration in a different module, but still in the current
-  -- package; we need to store the current module, the other declaration's
-  -- module, and the declaration title.
-  | LocalModule P.ModuleName P.ModuleName String
-
-  -- | A link to a declaration in a different package. We store: current module
-  -- name, name of the other package, version of the other package, name of
-  -- the module in the other package that the declaration is in, and
-  -- declaration title.
-  | DepsModule P.ModuleName PackageName Version P.ModuleName String
-  deriving (Show, Eq, Ord)
+import Model.DocLinks
 
 data HtmlOutput a = HtmlOutput
   { htmlIndex     :: [(Maybe Char, a)]
@@ -78,12 +53,12 @@ data HtmlOutput a = HtmlOutput
   deriving (Show)
 
 packageAsHtml :: Package a -> HtmlOutput LT.Text
-packageAsHtml Package{..} =
+packageAsHtml pkg@Package{..} =
   HtmlOutput (htmlAsText indexFile) (htmlAsText modules)
   where
+  ctx = getLinksContext pkg
   indexFile = renderIndex ctx
   modules = map (moduleAsHtml ctx) pkgModules
-  ctx = LinksContext pkgGithub pkgBookmarks pkgResolvedDependencies
   htmlAsText = map (second renderText)
 
 moduleAsHtml :: LinksContext -> RenderedModule -> (P.ModuleName, Html ())
@@ -157,7 +132,10 @@ renderChildren :: LinksContext' -> [RenderedChildDeclaration] -> Html ()
 renderChildren _   [] = return ()
 renderChildren ctx xs = go xs
   where
-  go = ul_ . mapM_ (li_ . code_ . codeAsHtml ctx . rcdCode)
+  go = ul_ . mapM_ (li_ . code_ . codeAsHtml ctx . code . rcdInfo)
+  code (ChildInstance c) = c
+  code (ChildDataConstructor c _) = c
+  code (ChildTypeClassMember c _) = c
 
 codeAsHtml :: LinksContext' -> RenderedCode -> Html ()
 codeAsHtml ctx = outputWith elemAsHtml
@@ -168,20 +146,6 @@ codeAsHtml ctx = outputWith elemAsHtml
   elemAsHtml (Kind x)    = text x
   elemAsHtml (Keyword x) = withClass "keyword" (text x)
   elemAsHtml Space       = text " "
-
-getLink :: LinksContext' -> String -> ContainingModule -> Maybe DocLink
-getLink (LinksContext{..}, curMn) ctor' containingMod = do
-  let bookmark' = (fromContainingModule curMn containingMod, ctor')
-  bookmark <- find ((bookmark' ==) . ignorePackage) ctxBookmarks
-
-  case containingMod of
-    ThisModule -> return (SameModule ctor')
-    OtherModule destMn ->
-      case bookmark of
-        Local _ -> return (LocalModule curMn destMn ctor')
-        FromDep pkgName _ -> do
-          pkgVersion <- lookup pkgName ctxResolvedDependencies
-          return (DepsModule curMn pkgName pkgVersion destMn ctor')
 
 renderLink :: DocLink -> Html () -> Html ()
 renderLink (SameModule x) = linkTo (fragmentFor x)
@@ -264,7 +228,7 @@ partitionChildren ::
 partitionChildren = foldl go ([], [], [])
   where
   go (instances, dctors, members) rcd =
-    case rcdType rcd of
-      ChildInstance        -> (rcd : instances, dctors, members)
-      ChildDataConstructor -> (instances, rcd : dctors, members)
-      ChildTypeClassMember -> (instances, dctors, rcd : members)
+    case rcdInfo rcd of
+      ChildInstance _          -> (rcd : instances, dctors, members)
+      ChildDataConstructor _ _ -> (instances, rcd : dctors, members)
+      ChildTypeClassMember _ _ -> (instances, dctors, rcd : members)

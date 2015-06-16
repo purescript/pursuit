@@ -45,7 +45,19 @@ codeAsHoogle = D.outputWith elemAsText
 
 declAsHoogle :: D.RenderedDeclaration -> LT.Text
 declAsHoogle D.RenderedDeclaration{..} =
-  commentsAsHoogle rdComments <> codeAsHoogle rdCode
+     commentsAsHoogle rdComments
+  <> codeAsHoogle rdCode
+  <> "\n\n"
+  <> foldMap ((<> "\n\n") . childDeclAsHoogle) rdChildren
+
+childDeclAsHoogle :: D.RenderedChildDeclaration -> LT.Text
+childDeclAsHoogle D.RenderedChildDeclaration{..} =
+  commentsAsHoogle rcdComments <> codeAsHoogle code
+  where
+  code = case rcdInfo of
+    D.ChildInstance c -> c
+    D.ChildDataConstructor _ c -> c
+    D.ChildTypeClassMember _ c -> c
 
 moduleAsHoogle :: D.RenderedModule -> LT.Text
 moduleAsHoogle D.RenderedModule{..} =

@@ -29,6 +29,7 @@ library
                      Handler.GithubOAuth
                      Handler.Caching
                      Handler.Utils
+                     Model.DocLinks
                      Model.DocsAsHtml
                      Model.DocsAsHoogle
                      TemplateHelpers
