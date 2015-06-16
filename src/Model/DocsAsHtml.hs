@@ -108,9 +108,8 @@ declAsHtml ctx RenderedDeclaration{..} =
       code_ [class_ "code-block"] $
         codeAsHtml ctx rdCode
 
-      case rdComments of
-        Just cs -> renderComments cs
-        Nothing -> return ()
+      for_ rdFixity renderFixity
+      for_ rdComments renderComments
 
       let (instances, dctors, members) = partitionChildren rdChildren
 
@@ -182,6 +181,15 @@ linkToSource (LinksContext{..}, _) (P.SourceSpan name start end) =
   relativeToBase = intercalate "/" . dropWhile (/= "src") . splitOn "/"
   githubBaseUrl = concat ["https://github.com/", user, "/", repo]
   fragment = "L" ++ show startLine ++ "-L" ++ show endLine
+
+renderFixity :: P.Fixity -> Html ()
+renderFixity (P.Fixity associativity precedence) =
+  p_ (em_ (text (associativityStr <> " / precedence " <> show precedence)))
+  where
+  associativityStr = case associativity of
+    P.Infixl -> "left-associative"
+    P.Infixr -> "right-associative"
+    P.Infix  -> "non-associative"
 
 -- TODO: use GitHub API instead?
 renderComments :: String -> Html ()
