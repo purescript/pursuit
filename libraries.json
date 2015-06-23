@@ -25,7 +25,7 @@
   },
   {
     "bowerName": "purescript-arrows",
-    "github": { "user": "purescript-contrib", "repo": "purescript-arrows" }
+    "github": { "user": "purescript", "repo": "purescript-arrows" }
   },
   {
     "bowerName": "purescript-automata",
@@ -41,7 +41,19 @@
   },
   {
     "bowerName": "purescript-canvas",
-    "github": { "user": "purescript-contrib", "repo": "purescript-canvas" }
+    "github": { "user": "paf31", "repo": "purescript-canvas" }
+  },
+  {
+    "bowerName": "purescript-memoize",
+    "github": { "user": "paf31", "repo": "purescript-memoize" }
+  },
+  {
+    "bowerName": "purescript-jquery",
+    "github": { "user": "paf31", "repo": "purescript-jquery" }
+  },
+  {
+    "bowerName": "purescript-string-parsers",
+    "github": { "user": "paf31", "repo": "purescript-string-parsers" }
   },
   {
     "bowerName": "purescript-chalk",
@@ -65,7 +77,7 @@
   },
   {
     "bowerName": "purescript-datetime",
-    "github": { "user": "purescript-contrib", "repo": "purescript-datetime" }
+    "github": { "user": "purescript", "repo": "purescript-datetime" }
   },
   {
     "bowerName": "purescript-distributive",
@@ -161,7 +173,7 @@
   },
   {
     "bowerName": "purescript-lists",
-    "github": { "user": "purescript-contrib", "repo": "purescript-lists" }
+    "github": { "user": "purescript", "repo": "purescript-lists" }
   },
   {
     "bowerName": "purescript-maps",
@@ -276,6 +288,10 @@
     "github": { "user": "purescript", "repo": "purescript-strings" }
   },
   {
+    "bowerName": "purescript-thermite",
+    "github": { "user": "paf31", "repo": "purescript-thermite" }
+  },
+  {
     "bowerName": "purescript-tiny-emitter",
     "github": { "user": "joneshf", "repo": "purescript-tiny-emitter" }
   },
@@ -305,7 +321,7 @@
   },
   {
     "bowerName": "purescript-virtual-dom",
-    "github": { "user": "purescript-contrib", "repo": "purescript-virtual-dom" }
+    "github": { "user": "garyb", "repo": "purescript-virtual-dom" }
   },
   {
     "bowerName": "purescript-void",
@@ -314,5 +330,9 @@
   {
     "bowerName": "purescript-webstorage",
     "github": { "user": "joneshf", "repo": "purescript-webstorage" }
+  },
+  {
+    "bowerName": "purescript-yargs",
+    "github": { "user": "paf31", "repo": "purescript-yargs" }
   }
 ]
