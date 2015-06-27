@@ -1,5 +1,6 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Model.DocsAsHoogle
   ( packageAsHoogle
@@ -9,6 +10,7 @@ module Model.DocsAsHoogle
 -- | an input file, suitable for supplying to Hoogle to build a database from.
 
 import Prelude
+import Control.Arrow (second)
 import Data.Foldable (foldMap)
 import Data.Monoid
 import Data.Version (showVersion)
@@ -88,40 +90,84 @@ renderComments =
   renderMarkdown = Cheapskate.markdown Cheapskate.def
 
 renderDeclaration :: D.Declaration -> D.RenderedCode
-renderDeclaration = D.renderDeclaration
+renderDeclaration = D.renderDeclaration . preprocessDeclaration
 
 renderChildDeclaration :: D.Declaration -> D.ChildDeclaration -> D.RenderedCode
-renderChildDeclaration parent decl@D.ChildDeclaration{..} =
-  case cdeclInfo of
-    D.ChildDataConstructor tys ->
-      D.ident cdeclTitle <> D.sp <> D.syntax "::" <> D.sp <> D.renderType ty
-      where
-      ty = P.quantify $ foldr (\a b -> P.TypeApp (P.TypeApp P.tyFunction a) b) parentType tys
-      parentType =
-        case D.declInfo parent of
-          D.DataDeclaration _ args ->
-            D.typeApp (D.declTitle parent) args
-          _ ->
-            invalidArgument $
-              "the parent of a data constructor was something other than a "
-              <> "data declaration"
-    D.ChildTypeClassMember ty ->
-      D.ident cdeclTitle <> D.sp <>
-        D.syntax "::" <> D.sp <>
-        D.renderType (addConstraint classConstraint ty)
-      where
-      classConstraint =
-        case D.declInfo parent of
-          D.TypeClassDeclaration args _ ->
-            (P.Qualified Nothing (P.ProperName (D.declTitle parent)), map D.toTypeVar args)
-          _ ->
-            invalidArgument $
-              "the parent of a type class member was something other than a "
-              <> "type class"
+renderChildDeclaration
+  (preprocessDeclaration -> parent)
+  (preprocessChildDeclaration -> decl@D.ChildDeclaration{..}) =
+    case cdeclInfo of
+      D.ChildDataConstructor tys ->
+        D.ident cdeclTitle <> D.sp <> D.syntax "::" <> D.sp <> D.renderType ty
+        where
+        ty = P.quantify $ foldr (\a b -> P.TypeApp (P.TypeApp P.tyFunction a) b) parentType tys
+        parentType =
+          case D.declInfo parent of
+            D.DataDeclaration _ args ->
+              D.typeApp (D.declTitle parent) args
+            _ ->
+              invalidArgument $
+                "the parent of a data constructor was something other than a "
+                <> "data declaration"
+      D.ChildTypeClassMember ty ->
+        D.ident cdeclTitle <> D.sp <>
+          D.syntax "::" <> D.sp <>
+          D.renderType (addConstraint classConstraint ty)
+        where
+        classConstraint =
+          case D.declInfo parent of
+            D.TypeClassDeclaration args _ ->
+              (P.Qualified Nothing (P.ProperName (D.declTitle parent)), map D.toTypeVar args)
+            _ ->
+              invalidArgument $
+                "the parent of a type class member was something other than a "
+                <> "type class"
 
-      addConstraint c ty' = P.moveQuantifiersToFront (P.quantify (P.ConstrainedType [c] ty'))
-    _ ->
-      D.renderChildDeclaration decl
+        addConstraint c ty' = P.moveQuantifiersToFront (P.quantify (P.ConstrainedType [c] ty'))
+      _ ->
+        D.renderChildDeclaration decl
   where
   invalidArgument msg =
     error $ "Invalid argument in Model.DocsAsHoogle.renderChildDeclaration: " <> msg
+
+preprocessDeclaration :: D.Declaration -> D.Declaration
+preprocessDeclaration decl =
+  decl { D.declInfo = everywhereOnTypesInfo transformRows (D.declInfo decl) }
+
+preprocessChildDeclaration :: D.ChildDeclaration -> D.ChildDeclaration
+preprocessChildDeclaration decl =
+  decl { D.cdeclInfo = everywhereOnTypesChildInfo transformRows (D.cdeclInfo decl) }
+
+-- | Transform rows into a different encoding which can be understood by a
+-- Haskell parser
+transformRows :: P.Type -> P.Type
+transformRows ty' = case P.rowToList ty' of
+  ([], P.REmpty) -> rowSentinels []
+  ([], other)    -> other
+  (tys, _)       -> rowSentinels tys
+  where
+  rowSentinels :: [(String, P.Type)] -> P.Type
+  rowSentinels =
+    foldl P.TypeApp rowCtor . map (\(l, ty) -> P.TypeApp (labelCtor l) ty)
+
+  rowCtor = P.TypeConstructor $ P.Qualified Nothing $ P.ProperName "PS_Row"
+  labelCtor label = P.TypeConstructor $ P.Qualified Nothing $ P.ProperName $ "PS_label_" ++ label
+
+everywhereOnTypesInfo :: (P.Type -> P.Type) -> D.DeclarationInfo -> D.DeclarationInfo
+everywhereOnTypesInfo f info =
+  case info of
+    D.ValueDeclaration ty -> D.ValueDeclaration (go ty)
+    D.TypeSynonymDeclaration args ty -> D.TypeSynonymDeclaration args (go ty)
+    D.TypeClassDeclaration args implies -> D.TypeClassDeclaration args (map (second (map go)) implies)
+    other -> other
+  where
+  go = P.everywhereOnTypes f
+
+everywhereOnTypesChildInfo :: (P.Type -> P.Type) -> D.ChildDeclarationInfo -> D.ChildDeclarationInfo
+everywhereOnTypesChildInfo f info =
+  case info of
+    D.ChildDataConstructor tys -> D.ChildDataConstructor (map go tys)
+    D.ChildInstance constraints ty -> D.ChildInstance (map (second (map go)) constraints) (go ty)
+    D.ChildTypeClassMember ty -> D.ChildTypeClassMember (go ty)
+  where
+  go = P.everywhereOnTypes f
