@@ -35,7 +35,7 @@ packageAsHoogle pkg@D.Package{..} = preamble <> modules
                ]
   ctx = getLinksContext pkg
   modules = foldMap renderModule pkgModules
-  renderModule m = moduleAsHoogle (ctx, P.moduleNameFromString (D.rmName m)) m
+  renderModule m = moduleAsHoogle (ctx, P.moduleNameFromString (D.modName m)) m
 
 codeAsHoogle :: LinksContext' -> D.RenderedCode -> LT.Text
 codeAsHoogle ctx = D.outputWith elemAsText
@@ -59,27 +59,22 @@ qualifyConstructor ctx ctor' containMn =
     DepsModule _ otherPkg _ otherMn ctor ->
       Bower.runPackageName otherPkg ++ ":" ++ show otherMn ++ "." ++ ctor
 
-declAsHoogle :: LinksContext' -> D.RenderedDeclaration -> LT.Text
-declAsHoogle ctx D.RenderedDeclaration{..} =
-     commentsAsHoogle rdComments
-  <> codeAsHoogle ctx rdCode
+declAsHoogle :: LinksContext' -> D.Declaration -> LT.Text
+declAsHoogle ctx d@D.Declaration{..} =
+     commentsAsHoogle declComments
+  <> codeAsHoogle ctx (renderDeclaration d)
   <> "\n\n"
-  <> foldMap ((<> "\n\n") . childDeclAsHoogle ctx) rdChildren
+  <> foldMap ((<> "\n\n") . childDeclAsHoogle ctx) declChildren
 
-childDeclAsHoogle :: LinksContext' -> D.RenderedChildDeclaration -> LT.Text
-childDeclAsHoogle ctx D.RenderedChildDeclaration{..} =
-  commentsAsHoogle rcdComments <> codeAsHoogle ctx code
-  where
-  code = case rcdInfo of
-    D.ChildInstance c -> c
-    D.ChildDataConstructor _ c -> c
-    D.ChildTypeClassMember _ c -> c
+childDeclAsHoogle :: LinksContext' -> D.ChildDeclaration -> LT.Text
+childDeclAsHoogle ctx d@D.ChildDeclaration{..} =
+  commentsAsHoogle cdeclComments <> codeAsHoogle ctx (renderChildDeclaration d)
 
-moduleAsHoogle :: LinksContext' -> D.RenderedModule -> LT.Text
-moduleAsHoogle ctx D.RenderedModule{..} =
-  commentsAsHoogle rmComments
-    <> "module " <> LT.pack rmName <> " where\n\n"
-    <> foldMap ((<> "\n\n") . declAsHoogle ctx) rmDeclarations
+moduleAsHoogle :: LinksContext' -> D.Module -> LT.Text
+moduleAsHoogle ctx D.Module{..} =
+  commentsAsHoogle modComments
+    <> "module " <> LT.pack modName <> " where\n\n"
+    <> foldMap ((<> "\n\n") . declAsHoogle ctx) modDeclarations
 
 commentsAsHoogle :: Maybe String -> LT.Text
 commentsAsHoogle =
@@ -90,3 +85,9 @@ renderComments =
   H.renderHtml . H.toHtml . renderMarkdown . T.pack
   where
   renderMarkdown = Cheapskate.markdown Cheapskate.def
+
+renderDeclaration :: D.Declaration -> D.RenderedCode
+renderDeclaration = D.renderDeclaration -- for now
+
+renderChildDeclaration :: D.ChildDeclaration -> D.RenderedCode
+renderChildDeclaration = D.renderChildDeclaration -- for now
