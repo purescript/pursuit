@@ -64,11 +64,12 @@ declAsHoogle ctx d@D.Declaration{..} =
      commentsAsHoogle declComments
   <> codeAsHoogle ctx (renderDeclaration d)
   <> "\n\n"
-  <> foldMap ((<> "\n\n") . childDeclAsHoogle ctx) declChildren
+  <> foldMap ((<> "\n\n") . childDeclAsHoogle ctx d) declChildren
 
-childDeclAsHoogle :: LinksContext' -> D.ChildDeclaration -> LT.Text
-childDeclAsHoogle ctx d@D.ChildDeclaration{..} =
-  commentsAsHoogle cdeclComments <> codeAsHoogle ctx (renderChildDeclaration d)
+childDeclAsHoogle :: LinksContext' -> D.Declaration -> D.ChildDeclaration -> LT.Text
+childDeclAsHoogle ctx parent d@D.ChildDeclaration{..} =
+     commentsAsHoogle cdeclComments
+  <> codeAsHoogle ctx (renderChildDeclaration parent d)
 
 moduleAsHoogle :: LinksContext' -> D.Module -> LT.Text
 moduleAsHoogle ctx D.Module{..} =
@@ -87,7 +88,40 @@ renderComments =
   renderMarkdown = Cheapskate.markdown Cheapskate.def
 
 renderDeclaration :: D.Declaration -> D.RenderedCode
-renderDeclaration = D.renderDeclaration -- for now
+renderDeclaration = D.renderDeclaration
 
-renderChildDeclaration :: D.ChildDeclaration -> D.RenderedCode
-renderChildDeclaration = D.renderChildDeclaration -- for now
+renderChildDeclaration :: D.Declaration -> D.ChildDeclaration -> D.RenderedCode
+renderChildDeclaration parent decl@D.ChildDeclaration{..} =
+  case cdeclInfo of
+    D.ChildDataConstructor tys ->
+      D.ident cdeclTitle <> D.sp <> D.syntax "::" <> D.sp <> D.renderType ty
+      where
+      ty = P.quantify $ foldr (\a b -> P.TypeApp (P.TypeApp P.tyFunction a) b) parentType tys
+      parentType =
+        case D.declInfo parent of
+          D.DataDeclaration _ args ->
+            D.typeApp (D.declTitle parent) args
+          _ ->
+            invalidArgument $
+              "the parent of a data constructor was something other than a "
+              <> "data declaration"
+    D.ChildTypeClassMember ty ->
+      D.ident cdeclTitle <> D.sp <>
+        D.syntax "::" <> D.sp <>
+        D.renderType (addConstraint classConstraint ty)
+      where
+      classConstraint =
+        case D.declInfo parent of
+          D.TypeClassDeclaration args _ ->
+            (P.Qualified Nothing (P.ProperName (D.declTitle parent)), map D.toTypeVar args)
+          _ ->
+            invalidArgument $
+              "the parent of a type class member was something other than a "
+              <> "type class"
+
+      addConstraint c ty' = P.moveQuantifiersToFront (P.quantify (P.ConstrainedType [c] ty'))
+    _ ->
+      D.renderChildDeclaration decl
+  where
+  invalidArgument msg =
+    error $ "Invalid argument in Model.DocsAsHoogle.renderChildDeclaration: " <> msg
