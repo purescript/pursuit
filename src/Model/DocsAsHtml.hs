@@ -43,6 +43,7 @@ import qualified Language.PureScript as P
 
 import Language.PureScript.Docs.Types
 import Language.PureScript.Docs.RenderedCode hiding (sp)
+import qualified Language.PureScript.Docs.Render as Render
 
 import Model.DocLinks
 
@@ -61,14 +62,14 @@ packageAsHtml pkg@Package{..} =
   modules = map (moduleAsHtml ctx) pkgModules
   htmlAsText = map (second renderText)
 
-moduleAsHtml :: LinksContext -> RenderedModule -> (P.ModuleName, Html ())
-moduleAsHtml ctx RenderedModule{..} = (mn, html)
+moduleAsHtml :: LinksContext -> Module -> (P.ModuleName, Html ())
+moduleAsHtml ctx Module{..} = (mn, html)
   where
-  mn = P.moduleNameFromString rmName
+  mn = P.moduleNameFromString modName
   ctx' = (ctx, mn)
   html = do
-    for_ rmComments renderComments
-    for_ rmDeclarations (declAsHtml ctx')
+    for_ modComments renderComments
+    for_ modDeclarations (declAsHtml ctx')
 
 renderIndex :: LinksContext -> [(Maybe Char, Html ())]
 renderIndex LinksContext{..} = go ctxBookmarks
@@ -99,19 +100,19 @@ renderIndex LinksContext{..} = go ctxBookmarks
           new = DList.snoc cur val
       in  M.insert idx new m
 
-declAsHtml :: LinksContext' -> RenderedDeclaration -> Html ()
-declAsHtml ctx RenderedDeclaration{..} =
-  div_ [class_ "decl", id_ ("d:" <> T.pack rdTitle)] $ do
-    a_ [href_ (T.pack (fragmentFor rdTitle))] $
-      h3_ (text rdTitle)
+declAsHtml :: LinksContext' -> Declaration -> Html ()
+declAsHtml ctx d@Declaration{..} =
+  div_ [class_ "decl", id_ ("d:" <> T.pack declTitle)] $ do
+    a_ [href_ (T.pack (fragmentFor declTitle))] $
+      h3_ (text declTitle)
     div_ [class_ "decl-inner"] $ do
       code_ [class_ "code-block"] $
-        codeAsHtml ctx rdCode
+        codeAsHtml ctx (Render.renderDeclaration d)
 
-      for_ rdFixity renderFixity
-      for_ rdComments renderComments
+      for_ declFixity renderFixity
+      for_ declComments renderComments
 
-      let (instances, dctors, members) = partitionChildren rdChildren
+      let (instances, dctors, members) = partitionChildren declChildren
 
       when (not (null dctors)) $ do
         h4_ "Constructors"
@@ -125,16 +126,13 @@ declAsHtml ctx RenderedDeclaration{..} =
         h4_ "Instances"
         renderChildren ctx instances
 
-      for_ rdSourceSpan (linkToSource ctx)
+      for_ declSourceSpan (linkToSource ctx)
 
-renderChildren :: LinksContext' -> [RenderedChildDeclaration] -> Html ()
+renderChildren :: LinksContext' -> [ChildDeclaration] -> Html ()
 renderChildren _   [] = return ()
 renderChildren ctx xs = go xs
   where
-  go = ul_ . mapM_ (li_ . code_ . codeAsHtml ctx . code . rcdInfo)
-  code (ChildInstance c) = c
-  code (ChildDataConstructor c _) = c
-  code (ChildTypeClassMember c _) = c
+  go = ul_ . mapM_ (li_ . code_ . codeAsHtml ctx . Render.renderChildDeclaration)
 
 codeAsHtml :: LinksContext' -> RenderedCode -> Html ()
 codeAsHtml ctx = outputWith elemAsHtml
@@ -231,12 +229,12 @@ linkTo :: String -> Html () -> Html ()
 linkTo href inner = a_ [href_ (fromString href)] inner
 
 partitionChildren ::
-  [RenderedChildDeclaration] ->
-  ([RenderedChildDeclaration], [RenderedChildDeclaration], [RenderedChildDeclaration])
+  [ChildDeclaration] ->
+  ([ChildDeclaration], [ChildDeclaration], [ChildDeclaration])
 partitionChildren = foldl go ([], [], [])
   where
   go (instances, dctors, members) rcd =
-    case rcdInfo rcd of
-      ChildInstance _          -> (rcd : instances, dctors, members)
-      ChildDataConstructor _ _ -> (instances, rcd : dctors, members)
-      ChildTypeClassMember _ _ -> (instances, dctors, rcd : members)
+    case cdeclInfo rcd of
+      ChildInstance _ _      -> (rcd : instances, dctors, members)
+      ChildDataConstructor _ -> (instances, rcd : dctors, members)
+      ChildTypeClassMember _ -> (instances, dctors, rcd : members)
