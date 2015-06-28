@@ -12,6 +12,7 @@ module Model.DocsAsHoogle
 import Prelude
 import Control.Arrow (first, second)
 import Data.Foldable (foldMap)
+import Data.Maybe (fromMaybe)
 import Data.Monoid
 import Data.Version (showVersion)
 import qualified Data.Text as T
@@ -93,10 +94,20 @@ renderDeclaration :: D.Declaration -> D.RenderedCode
 renderDeclaration =
   D.renderDeclarationWithOptions hoogleRenderTypeOptions . preprocessDeclaration
 
+-- | Renders code in a child declaration, with the following differences from
+-- the normal output:
+--
+-- * Data constructors are presented like value declarations, eg
+--   `Just :: forall a. a -> Maybe a`.
+--
+-- * Type class members include a constraint for the relevant type class.
+--
+-- * Type instances' names are omitted (in order to be parseable as Haskell
+--   code).
 renderChildDeclaration :: D.Declaration -> D.ChildDeclaration -> D.RenderedCode
 renderChildDeclaration
   (preprocessDeclaration -> parent)
-  (preprocessChildDeclaration -> decl@D.ChildDeclaration{..}) =
+  (preprocessChildDeclaration -> D.ChildDeclaration{..}) =
     case cdeclInfo of
       D.ChildDataConstructor tys ->
         D.ident cdeclTitle <> D.sp <> D.syntax "::" <> D.sp <> renderType ty
@@ -125,8 +136,11 @@ renderChildDeclaration
                 <> "type class"
 
         addConstraint c ty' = P.moveQuantifiersToFront (P.quantify (P.ConstrainedType [c] ty'))
-      _ ->
-        D.renderChildDeclarationWithOptions hoogleRenderTypeOptions decl
+      D.ChildInstance constraints ty ->
+        D.keywordInstance <> D.sp <>
+          fromMaybe mempty (renderConstraints constraints) <> D.sp <>
+          renderType ty
+
   where
   invalidArgument msg =
     error $ "Invalid argument in Model.DocsAsHoogle.renderChildDeclaration: " <> msg
@@ -137,6 +151,9 @@ hoogleRenderTypeOptions =
 
 renderType :: P.Type -> D.RenderedCode
 renderType = D.renderTypeWithOptions hoogleRenderTypeOptions
+
+renderConstraints :: [P.Constraint] -> Maybe D.RenderedCode
+renderConstraints = D.renderConstraintsWithOptions hoogleRenderTypeOptions
 
 preprocessDeclaration :: D.Declaration -> D.Declaration
 preprocessDeclaration decl =
