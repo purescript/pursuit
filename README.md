@@ -64,7 +64,7 @@ The suggested markup for a badge is:
 
 Pursuit currently uses the filesystem as a database, since it requires no setup
 and it makes it easy to use Git and GitHub for backing up. The data directory
-is set via an environment variable (see [Configuration][#configuration]).
+is set via an environment variable (see [Configuration](#configuration)).
 
 The structure is as follows:
 
@@ -82,7 +82,7 @@ There is also a `cache/` directory, but that is probably going away soon.
 
 The `uploaded/` directory contains packages which have been uploaded and are
 pending verification (that is, those between steps 5-7 in the [Submitting
-packages][#submitting-packages] guide). They each get a long, random filename,
+packages](#submitting-packages) guide). They each get a long, random filename,
 which is also used as the verification URL which they are prompted to visit
 after uploading. There is a maximum of 100 packages pending upload at any given
 time; if more are submitted, then the oldest is deleted. Once a packaage has
