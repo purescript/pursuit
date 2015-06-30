@@ -85,7 +85,7 @@ pending verification (that is, those between steps 5-7 in the [Submitting
 packages](#submitting-packages) guide). They each get a long, random filename,
 which is also used as the verification URL which they are prompted to visit
 after uploading. There is a maximum of 100 packages pending upload at any given
-time; if more are submitted, then the oldest is deleted. Once a packaage has
+time; if more are submitted, then the oldest is deleted. Once a package has
 been verified, it is moved into the `verified/` directory.
 
 The `verified/` directory stores packages which have been verified, and
