@@ -6,14 +6,10 @@
 module Settings where
 
 import ClassyPrelude.Yesod
-import Control.Exception           (throw)
-import Data.Aeson                  (Result (..), fromJSON, withObject, (.!=),
-                                    (.:?))
-import Data.FileEmbed              (embedFile)
-import Data.Yaml                   (decodeEither')
+import qualified Data.Aeson as A
+import System.Environment          (lookupEnv)
 import Language.Haskell.TH.Syntax  (Exp, Name, Q)
 import Network.Wai.Handler.Warp    (HostPreference)
-import Yesod.Default.Config2       (applyEnvValue, configSettingsYml)
 import Yesod.Default.Util          (WidgetFileSettings, widgetFileNoReload,
                                     widgetFileReload)
 
@@ -61,41 +57,64 @@ data AppSettings = AppSettings
     -- ^ GitHub OAuth client secret
     }
 
-instance FromJSON AppSettings where
-    parseJSON = withObject "AppSettings" $ \o -> do
-        let defaultDev =
+isDevelopment :: Bool
 #if DEVELOPMENT
-                True
+isDevelopment = True
 #else
-                False
-#endif
-        appStaticDir              <- o .: "static-dir"
-        appRoot                   <- o .: "approot"
-        appHost                   <- fromString <$> o .: "host"
-        appPort                   <- o .: "port"
-        appIpFromHeader           <- o .: "ip-from-header"
-
-        appDetailedRequestLogging <- o .:? "detailed-logging" .!= defaultDev
-        appShouldLogAll           <- o .:? "should-log-all"   .!= defaultDev
-        appReloadTemplates        <- o .:? "reload-templates" .!= defaultDev
-        appMutableStatic          <- o .:? "mutable-static"   .!= defaultDev
-        appSkipCombining          <- o .:? "skip-combining"   .!= defaultDev
-
-        appAnalytics              <- o .:? "analytics"
-        appDataDir                <- o .: "data-dir"
-
-#if DEVELOPMENT
-        let appGithubAuthToken    = Nothing
-        let appGithubClientID     = "618b30c313f09b9ca795"
-        let appGithubClientSecret = "053aaf80116894788ac38f7e2f8d8828fa007969"
-#else
-        let enc = encodeUtf8 :: Text -> ByteString
-        appGithubAuthToken    <- map (map (GithubAuthToken . enc)) $ o .: "github-auth-token"
-        appGithubClientID     <- map enc $ o .: "github-client-id"
-        appGithubClientSecret <- map enc $ o .: "github-client-secret"
+isDevelopment = False
 #endif
 
-        return AppSettings {..}
+getAppSettings :: IO AppSettings
+getAppSettings = do
+  let appDetailedRequestLogging = isDevelopment
+  let appShouldLogAll           = isDevelopment
+  let appReloadTemplates        = isDevelopment
+  let appMutableStatic          = isDevelopment
+  let appSkipCombining          = isDevelopment
+
+  appStaticDir    <- env "STATIC_DIR" .!= "./static"
+  appRoot         <- env "APPROOT" .!= "http://localhost:3000"
+  appHost         <- fromString <$> env "HOST" .!= "*4"
+  appPort         <- env "PORT" .!= 3000
+  appIpFromHeader <- env "IP_FROM_HEADER" .!= False
+
+  appAnalytics <- env "GOOGLE_ANALYTICS_CODE"
+  appDataDir   <- env "DATA_DIR" .!= "./data"
+
+  appGithubAuthToken    <- map (GithubAuthToken . fromString) <$> env "GITHUB_AUTH_TOKEN"
+  appGithubClientID     <- fromString <$> env' "GITHUB_CLIENT_ID"
+  appGithubClientSecret <- fromString <$> env' "GITHUB_CLIENT_SECRET"
+
+  return AppSettings {..}
+
+  where
+  env  = lookupEnvironment . ("PURSUIT_" ++)
+  env' = getEnvironment    . ("PURSUIT_" ++)
+
+  (.!=) :: (Functor f) => f (Maybe a) -> a -> f a
+  action .!= def' = fromMaybe def' <$> action
+
+lookupEnvironment :: (A.FromJSON a) => String -> IO (Maybe a)
+lookupEnvironment var = do
+  mstr <- lookupEnv var
+  case mstr of
+    Nothing -> return Nothing
+    Just str -> case parseString str of
+      Right val -> return (Just val)
+      Left err -> error $ "Failed to parse environment variable" ++
+                          " \"" ++ var ++ "\": " ++ err
+  where
+  parseString str = case A.fromJSON (A.String (pack str)) of
+    A.Success x -> Right x
+    A.Error err -> Left err
+
+getEnvironment :: (A.FromJSON a) => String -> IO a
+getEnvironment var = do
+  r <- lookupEnvironment var
+  case r of
+    Just r' -> return r'
+    Nothing -> error $ "Required environment variable \"" ++ var ++ "\" " ++
+                       "is not set"
 
 -- | Settings for 'widgetFile', such as which template languages to support and
 -- default Hamlet settings.
@@ -114,25 +133,10 @@ combineSettings = def
 -- user.
 
 widgetFile :: String -> Q Exp
-widgetFile = (if appReloadTemplates compileTimeAppSettings
+widgetFile = (if isDevelopment
                 then widgetFileReload
                 else widgetFileNoReload)
               widgetFileSettings
-
--- | Raw bytes at compile time of @config/settings.yml@
-configSettingsYmlBS :: ByteString
-configSettingsYmlBS = $(embedFile configSettingsYml)
-
--- | @config/settings.yml@, parsed to a @Value@.
-configSettingsYmlValue :: Value
-configSettingsYmlValue = either throw id $ decodeEither' configSettingsYmlBS
-
--- | A version of @AppSettings@ parsed at compile time from @config/settings.yml@.
-compileTimeAppSettings :: AppSettings
-compileTimeAppSettings =
-    case fromJSON $ applyEnvValue False mempty configSettingsYmlValue of
-        Error e -> error e
-        Success settings -> settings
 
 -- The following two functions can be used to combine multiple CSS or JS files
 -- at compile time to decrease the number of http requests.
@@ -142,10 +146,10 @@ compileTimeAppSettings =
 
 combineStylesheets :: Name -> [Route Static] -> Q Exp
 combineStylesheets = combineStylesheets'
-    (appSkipCombining compileTimeAppSettings)
+    isDevelopment
     combineSettings
 
 combineScripts :: Name -> [Route Static] -> Q Exp
 combineScripts = combineScripts'
-    (appSkipCombining compileTimeAppSettings)
+    isDevelopment
     combineSettings
