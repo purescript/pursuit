@@ -13,13 +13,16 @@ There is currently a pre-alpha version deployed at
 1. Put the code up on GitHub. (Currently, GitHub is the only supported hosting
    method. If you'd rather host your code somewhere else, please open an issue
    and let us know).
+
 2. Release your package on Bower, by using `bower register`, creating a
    git tag, and pushing the tag to GitHub.
+
 3. Ensure that the tagged version is checked out, change to your project
    directory, and run `psc-publish > pursuit.json`. This will go through your
    `bower.json` file and all of your code, collecting all of the information
    necessary to host your package on Pursuit, and dump that data to
    a new file called `pursuit.json`.
+
 4. Send an HTTP POST request, including the JSON data as the request body, to
    http://pursuit.purescript.org/packages. For example, with `curl`:
 
@@ -28,12 +31,17 @@ There is currently a pre-alpha version deployed at
    ```
 
    (Don't worry, this will become easier soon).
-5. In the reply, there will be a URL which you should visit. This is to
-   associate a GitHub user with each package upload.
+
+5. In the reply, there will be a URL which you should visit in your browser.
+
 6. Log in using GitHub OAuth.
+
 7. Press the button to confirm the package upload.
 
 Your package, together with documentation, should now appear in Pursuit.
+
+The purpose of the two-step uploading/verifying process is to associate a
+GitHub user with each package upload.
 
 ### Package badges
 
@@ -94,3 +102,16 @@ directory into a git repository, making a commit, and pushing it to GitHub.
 All configuration is done at startup via environment variables. The relevant
 code is in the Settings module.
 
+All configuration variable names start with `PURSUIT_` (eg,
+`PURSUIT_STATIC_DIR`). Most environment variables are not required, and have
+sensible defaults if not specified. The ones which _are_ required are:
+
+* `PURSUIT_GITHUB_CLIENT_ID`: Github OAuth client id, for signing users in.
+* `PURSUIT_GITHUB_CLIENT_SECRET`: Github OAuth client secret, for signing users
+  in.
+
+See `src/Settings.hs` for more details.
+
+One way to supply the application with environment variables (if you are on a
+system which uses Bash) is to use a script like the one in
+`config/development.env`
