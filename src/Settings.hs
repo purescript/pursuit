@@ -92,7 +92,7 @@ getAppSettings = do
   env' = getEnvironment    . ("PURSUIT_" ++)
 
   (.!=) :: (Functor f) => f (Maybe a) -> a -> f a
-  action .!= def' = fromMaybe def' <$> action
+  x .!= def' = fromMaybe def' <$> x
 
 lookupEnvironment :: (A.FromJSON a) => String -> IO (Maybe a)
 lookupEnvironment var = do
