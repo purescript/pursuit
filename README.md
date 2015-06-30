@@ -114,4 +114,4 @@ See `src/Settings.hs` for more details.
 
 One way to supply the application with environment variables (if you are on a
 system which uses Bash) is to use a script like the one in
-`config/development.env`
+`config/development.env`.
