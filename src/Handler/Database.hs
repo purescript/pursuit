@@ -1,6 +1,7 @@
 
 module Handler.Database
-  ( lookupPackage
+  ( getAllPackageNames
+  , lookupPackage
   , availableVersionsFor
   , insertPackage
   , insertPendingVerification
@@ -20,11 +21,17 @@ import qualified Data.ByteString.Base64.URL as Base64
 import System.Directory (getDirectoryContents, removeFile, getModificationTime)
 import System.FilePath (takeDirectory)
 
-import Web.Bower.PackageMeta (PackageName, runPackageName)
+import Web.Bower.PackageMeta (PackageName, mkPackageName, runPackageName)
 import qualified Language.PureScript.Docs as D
 
 import Handler.Utils
 import Handler.Caching (clearCache)
+
+getAllPackageNames :: Handler [PackageName]
+getAllPackageNames = do
+  dir <- getDataDir
+  contents <- liftIO $ getDirectoryContents (dir ++ "/verified/")
+  return $ rights $ map mkPackageName contents
 
 lookupPackage :: PackageName -> Version -> Handler (Maybe D.VerifiedPackage)
 lookupPackage pkgName version = do

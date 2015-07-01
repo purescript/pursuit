@@ -11,6 +11,11 @@ import Handler.Database
 import Handler.Caching
 import TemplateHelpers
 
+getHomeR :: Handler Html
+getHomeR = do
+  pkgNames <- sort <$> getAllPackageNames
+  defaultLayout $(widgetFile "homepage")
+
 getPackageR :: PathPackageName -> Handler Html
 getPackageR ppkgName@(PathPackageName pkgName) = do
   v <- getLatestVersion pkgName

@@ -19,7 +19,6 @@ library
                      Import.NoFoundation
                      Settings
                      Handler.Common
-                     Handler.Home
                      Handler.Packages
                      Handler.Hoogle
                      Handler.PackageBadges
