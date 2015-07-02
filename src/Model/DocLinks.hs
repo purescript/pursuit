@@ -16,6 +16,8 @@ data LinksContext = LinksContext
   { ctxGithub               :: (GithubUser, GithubRepo)
   , ctxBookmarks            :: [Bookmark]
   , ctxResolvedDependencies :: [(PackageName, Version)]
+  , ctxPackageName          :: PackageName
+  , ctxVersion              :: Version
   }
   deriving (Show, Eq, Ord)
 
@@ -61,4 +63,6 @@ getLinksContext Package{..} =
     { ctxGithub               = pkgGithub
     , ctxBookmarks            = pkgBookmarks
     , ctxResolvedDependencies = pkgResolvedDependencies
+    , ctxPackageName          = bowerName pkgMeta
+    , ctxVersion              = pkgVersion
     }

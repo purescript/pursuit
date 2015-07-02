@@ -24,7 +24,6 @@ import qualified Data.DList as DList
 import Data.List.Split (splitOn)
 import Data.Default (def)
 import Data.String (fromString)
-import Data.Version
 import qualified Data.Map as M
 
 import qualified Data.Text.Lazy as LT
@@ -36,8 +35,6 @@ import qualified Text.Blaze.Html.Renderer.Text as H
 import qualified Cheapskate
 
 import System.FilePath ((</>))
-
-import Web.Bower.PackageMeta hiding (Version)
 
 import qualified Language.PureScript as P
 
@@ -53,23 +50,25 @@ data HtmlOutput a = HtmlOutput
   }
   deriving (Show)
 
-packageAsHtml :: Package a -> HtmlOutput LT.Text
-packageAsHtml pkg@Package{..} =
+type DocLinkRenderer = LinksContext' -> DocLink -> T.Text
+
+packageAsHtml :: DocLinkRenderer -> Package a -> HtmlOutput LT.Text
+packageAsHtml r pkg@Package{..} =
   HtmlOutput (htmlAsText indexFile) (htmlAsText modules)
   where
   ctx = getLinksContext pkg
   indexFile = renderIndex ctx
-  modules = map (moduleAsHtml ctx) pkgModules
+  modules = map (moduleAsHtml r ctx) pkgModules
   htmlAsText = map (second renderText)
 
-moduleAsHtml :: LinksContext -> Module -> (P.ModuleName, Html ())
-moduleAsHtml ctx Module{..} = (mn, html)
+moduleAsHtml :: DocLinkRenderer -> LinksContext -> Module -> (P.ModuleName, Html ())
+moduleAsHtml r ctx Module{..} = (mn, html)
   where
   mn = P.moduleNameFromString modName
   ctx' = (ctx, mn)
   html = do
     for_ modComments renderComments
-    for_ modDeclarations (declAsHtml ctx')
+    for_ modDeclarations (declAsHtml r ctx')
 
 renderIndex :: LinksContext -> [(Maybe Char, Html ())]
 renderIndex LinksContext{..} = go ctxBookmarks
@@ -100,14 +99,15 @@ renderIndex LinksContext{..} = go ctxBookmarks
           new = DList.snoc cur val
       in  M.insert idx new m
 
-declAsHtml :: LinksContext' -> Declaration -> Html ()
-declAsHtml ctx d@Declaration{..} =
-  div_ [class_ "decl", id_ ("d:" <> T.pack declTitle)] $ do
-    a_ [href_ (T.pack (fragmentFor declTitle))] $
+declAsHtml :: DocLinkRenderer -> LinksContext' -> Declaration -> Html ()
+declAsHtml r ctx d@Declaration{..} = do
+  let declFragment = T.pack $ makeFragment declTitle
+  div_ [class_ "decl", id_ (T.drop 1 declFragment)] $ do
+    linkTo declFragment $
       h3_ (text declTitle)
     div_ [class_ "decl-inner"] $ do
       code_ [class_ "code-block"] $
-        codeAsHtml ctx (Render.renderDeclaration d)
+        codeAsHtml r ctx (Render.renderDeclaration d)
 
       for_ declFixity renderFixity
       for_ declComments renderComments
@@ -116,55 +116,55 @@ declAsHtml ctx d@Declaration{..} =
 
       when (not (null dctors)) $ do
         h4_ "Constructors"
-        renderChildren ctx dctors
+        renderChildren r ctx dctors
 
       when (not (null members)) $ do
         h4_ "Members"
-        renderChildren ctx members
+        renderChildren r ctx members
 
       when (not (null instances)) $ do
         h4_ "Instances"
-        renderChildren ctx instances
+        renderChildren r ctx instances
 
       for_ declSourceSpan (linkToSource ctx)
 
-renderChildren :: LinksContext' -> [ChildDeclaration] -> Html ()
-renderChildren _   [] = return ()
-renderChildren ctx xs = go xs
+renderChildren :: DocLinkRenderer -> LinksContext' -> [ChildDeclaration] -> Html ()
+renderChildren _ _   [] = return ()
+renderChildren r ctx xs = go xs
   where
-  go = ul_ . mapM_ (li_ . code_ . codeAsHtml ctx . Render.renderChildDeclaration)
+  go = ul_ . mapM_ (li_ . code_ . codeAsHtml r ctx . Render.renderChildDeclaration)
 
-codeAsHtml :: LinksContext' -> RenderedCode -> Html ()
-codeAsHtml ctx = outputWith elemAsHtml
+codeAsHtml :: DocLinkRenderer -> LinksContext' -> RenderedCode -> Html ()
+codeAsHtml r ctx = outputWith elemAsHtml
   where
   elemAsHtml (Syntax x)  = withClass "syntax" (text x)
   elemAsHtml (Ident x)   = withClass "ident" (text x)
-  elemAsHtml (Ctor x mn) = linkToConstructor ctx x mn (withClass "ctor" (text x))
+  elemAsHtml (Ctor x mn) = linkToConstructor r ctx x mn (withClass "ctor" (text x))
   elemAsHtml (Kind x)    = text x
   elemAsHtml (Keyword x) = withClass "keyword" (text x)
   elemAsHtml Space       = text " "
 
-renderLink :: DocLink -> Html () -> Html ()
-renderLink (SameModule x) = linkTo (fragmentFor x)
-renderLink (LocalModule srcMn destMn x) =
-  let uri = filePathFor destMn `relativeTo` filePathFor srcMn
-  in  linkTo (uri ++ fragmentFor x)
-renderLink (DepsModule srcMn pkgName pkgVersion destMn x) =
-  let relativeTo' = relativeToOtherPackage pkgName pkgVersion
-      uri = filePathFor destMn `relativeTo'` filePathFor srcMn
-  in  linkTo (uri ++ fragmentFor x)
+renderLink :: DocLinkRenderer -> LinksContext' -> DocLink -> Html () -> Html ()
+renderLink r ctx link = linkTo (r ctx link <> T.pack (fragmentFor link))
 
 -- TODO: escaping?
-fragmentFor :: String -> String
-fragmentFor = ("#d:" ++)
+makeFragment :: String -> String
+makeFragment = ("#d:" ++)
 
-linkToConstructor :: LinksContext' -> String -> ContainingModule -> Html () -> Html ()
-linkToConstructor ctx ctor' containMn =
-  maybe id renderLink (getLink ctx ctor' containMn)
+fragmentFor :: DocLink -> String
+fragmentFor = makeFragment . title
+  where
+  title (SameModule t) = t
+  title (LocalModule _ _ t) = t
+  title (DepsModule _ _ _ _ t) = t
+
+linkToConstructor :: DocLinkRenderer -> LinksContext' -> String -> ContainingModule -> Html () -> Html ()
+linkToConstructor r ctx ctor' containMn =
+  maybe id (renderLink r ctx) (getLink ctx ctor' containMn)
 
 linkToSource :: LinksContext' -> P.SourceSpan -> Html ()
 linkToSource (LinksContext{..}, _) (P.SourceSpan name start end) =
-  p_ (linkTo (concat
+  p_ (linkTo (T.pack $ concat
                [ githubBaseUrl
                , "/tree/master/"
                , relativeToBase name
@@ -195,6 +195,8 @@ renderComments = toHtmlRaw . H.renderHtml . H.toHtml . Cheapskate.markdown def .
 
 -- | if `to` and `from` are both files in the current package, generate a
 -- FilePath for `to` relative to `from`.
+--
+-- TODO: Remove this
 relativeTo :: FilePath -> FilePath -> FilePath
 relativeTo to from = go (splitOn "/" to) (splitOn "/" from)
   where
@@ -203,18 +205,13 @@ relativeTo to from = go (splitOn "/" to) (splitOn "/" from)
 
 -- | Generate a FilePath for module documentation for a module in the current
 -- package.
+--
+-- TODO: Remove this
 filePathFor :: P.ModuleName -> FilePath
 filePathFor (P.ModuleName parts) = go parts
   where
   go [] = "index.html"
   go (x : xs) = show x </> go xs
-
--- | Like `relativeTo`, but in the case where `to` is in another package.
-relativeToOtherPackage :: PackageName -> Version -> FilePath -> FilePath -> FilePath
-relativeToOtherPackage name (showVersion -> vers) to from =
-  intercalate "/" (dots ++ [runPackageName name, vers] ++ splitOn "/" to)
-  where
-  dots = replicate (length from - 1) ".."
 
 text :: String -> Html ()
 text = toHtml
@@ -225,8 +222,8 @@ sp = text " "
 withClass :: String -> Html () -> Html ()
 withClass className content = span_ [class_ (fromString className)] content
 
-linkTo :: String -> Html () -> Html ()
-linkTo href inner = a_ [href_ (fromString href)] inner
+linkTo :: T.Text -> Html () -> Html ()
+linkTo href inner = a_ [href_ href] inner
 
 partitionChildren ::
   [ChildDeclaration] ->

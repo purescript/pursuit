@@ -2,13 +2,14 @@
 module TemplateHelpers where
 
 import Import
-import Text.Blaze.Html5 as H hiding (map)
+import Text.Blaze.Html5 as H hiding (map, link)
 import Text.Blaze.Html5.Attributes as A
 import qualified Web.Bower.PackageMeta as Bower
 import qualified Language.PureScript as P
 import qualified Language.PureScript.Docs as D
 
 import Model.DocsAsHtml (packageAsHtml, htmlModules)
+import Model.DocLinks
 import qualified GithubAPI
 
 linkToGithubUser :: D.GithubUser -> Html
@@ -31,16 +32,17 @@ renderVersionRange :: Bower.VersionRange -> Html
 renderVersionRange = toHtml . Bower.runVersionRange
 
 renderModuleList :: D.VerifiedPackage -> Handler Html
-renderModuleList pkg =
-  let docsOutput = packageAsHtml pkg
+renderModuleList pkg = do
+  docLinkRenderer <- getDocLinkRenderer
+  let docsOutput = packageAsHtml docLinkRenderer pkg
       moduleNames = sort $ map (P.runModuleName . fst) $ htmlModules docsOutput
-  in
-    withUrlRenderer [hamlet|
-      <ul .documentation-contents>
-        $forall name <- moduleNames
-          <li>
-            <a href=@{moduleDocsRoute pkg name}>#{name}
-      |]
+
+  withUrlRenderer [hamlet|
+    <ul .documentation-contents>
+      $forall name <- moduleNames
+        <li>
+          <a href=@{moduleDocsRoute pkg name}>#{name}
+    |]
 
 tryGetReadme :: D.VerifiedPackage -> Handler (Maybe Html)
 tryGetReadme D.Package{..} = do
@@ -56,7 +58,30 @@ tryGetReadme D.Package{..} = do
       return Nothing
 
 renderHtmlDocs :: D.VerifiedPackage -> String -> Handler (Maybe Html)
-renderHtmlDocs pkg mnString =
-  let docsOutput = packageAsHtml pkg
+renderHtmlDocs pkg mnString = do
+  docLinkRenderer <- getDocLinkRenderer
+  let docsOutput = packageAsHtml docLinkRenderer pkg
       mn = P.moduleNameFromString mnString
-  in return $ map preEscapedToHtml $ lookup mn (htmlModules docsOutput)
+  return $ map preEscapedToHtml $ lookup mn (htmlModules docsOutput)
+
+-- | Produce a Route for a given DocLink. Note that we do not include the
+-- fragment; this is the responsibility of the DocsAsHtml module.
+docLinkRoute :: LinksContext' -> DocLink -> Route App
+docLinkRoute (LinksContext{..}, srcModule) link = case link of
+  SameModule _ ->
+    mkRoute ctxPackageName ctxVersion srcModule
+  LocalModule _ otherModule _ ->
+    mkRoute ctxPackageName ctxVersion otherModule
+  DepsModule _ otherPackageName otherVersion otherModule _ ->
+    mkRoute otherPackageName otherVersion otherModule
+  where
+  mkRoute pkgName version modName =
+    PackageVersionModuleDocsR
+      (PathPackageName pkgName)
+      (PathVersion version)
+      (P.runModuleName modName)
+
+getDocLinkRenderer :: Handler (LinksContext' -> DocLink -> Text)
+getDocLinkRenderer = do
+  renderUrl <- getUrlRender
+  return $ \ctx link -> renderUrl (docLinkRoute ctx link)
