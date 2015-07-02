@@ -22,7 +22,7 @@ getPackageR :: PathPackageName -> Handler Html
 getPackageR ppkgName@(PathPackageName pkgName) = do
   v <- getLatestVersion pkgName
   case v of
-    Nothing -> notFound
+    Nothing -> packageNotFound pkgName
     Just v' -> redirect (PackageVersionR ppkgName (PathVersion v'))
 
 getLatestVersion :: PackageName -> Handler (Maybe Version)
@@ -71,9 +71,12 @@ findPackage pkgName version cont = do
   pkg' <- lookupPackage pkgName version
   case pkg' of
     Just pkg -> cont pkg
-    Nothing -> do
-      content <- defaultLayout $(widgetFile "packageNotFound")
-      sendResponseStatus notFound404 content
+    Nothing -> packageNotFound pkgName
+
+packageNotFound :: PackageName -> Handler a
+packageNotFound pkgName = do
+  content <- defaultLayout $(widgetFile "packageNotFound")
+  sendResponseStatus notFound404 content
 
 versionSelector :: PackageName -> Version -> WidgetT App IO ()
 versionSelector pkgName version = do
