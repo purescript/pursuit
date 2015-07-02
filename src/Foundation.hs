@@ -152,17 +152,6 @@ instance RenderMessage App FormMessage where
 unsafeHandler :: App -> Handler a -> IO a
 unsafeHandler = Unsafe.fakeHandlerGetLogger appLogger
 
--- queryDb :: (PursuitDatabase -> a) -> HandlerT App IO a
--- queryDb f = do
---   tvar <- appDatabase <$> getYesod
---   db <- liftIO (readTVarIO tvar)
---   return (f db)
-
--- updateDb :: (PursuitDatabase -> PursuitDatabase) -> HandlerT App IO ()
--- updateDb f = do
---   tvar <- appDatabase <$> getYesod
---   liftIO (atomically (modifyTVar tvar f))
-
 packageNameRoute :: PackageName -> Route App
 packageNameRoute pkgName =
   PackageR (PathPackageName pkgName)
