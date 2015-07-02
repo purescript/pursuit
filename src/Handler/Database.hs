@@ -63,8 +63,7 @@ decodeVerifiedPackageFile :: String -> BL.ByteString -> Handler D.VerifiedPackag
 decodeVerifiedPackageFile filepath contents =
   decodePackageFile filepath contents
 
--- | Prefer decodeVerifiedPackageFile or decodeUploadedPackageFile to this
--- function.
+-- | Prefer decodeVerifiedPackageFile to this function, where possible.
 decodePackageFile :: (A.FromJSON a) => String -> BL.ByteString -> Handler (D.Package a)
 decodePackageFile filepath contents = do
   case A.eitherDecode contents of
