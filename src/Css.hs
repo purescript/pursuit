@@ -73,10 +73,13 @@ linkColor :: HSV
 linkColor = fromRGB 196 149 58
 
 errorBackgroundColor :: HSV
-errorBackgroundColor = fromRGB 240 80 80
+errorBackgroundColor = fromRGB 255 240 240
+
+errorBorderColor :: HSV
+errorBorderColor = fromRGB 200 80 80
 
 successBackgroundColor :: HSV
-successBackgroundColor = fromRGB 80 240 80
+successBackgroundColor = fromRGB 150 240 150
 
 notAvailableBackgroundColor :: HSV
-notAvailableBackgroundColor = fromRGB 240 240 80
+notAvailableBackgroundColor = fromRGB 240 240 150

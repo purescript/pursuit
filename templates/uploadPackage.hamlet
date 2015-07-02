@@ -8,7 +8,7 @@
   \.
 
 $maybe err <- merror
-  <div .form-error>
+  <div .message .error>
     <p>
       An error occurred, and your package could not be uploaded. This might be
       a bug. You can

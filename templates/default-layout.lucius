@@ -125,6 +125,7 @@ a:hover {
 /* Messages */
 .message {
   border: 5px solid;
+  border-radius: 5px;
   /* the !important is here to ensure that it overrides the .col-main
      *:first-child rule */
   padding: 1em !important;
@@ -133,7 +134,7 @@ a:hover {
 
 .error {
   background-color: #{Css.errorBackgroundColor};
-  border-color: #{Css.darken20 Css.errorBackgroundColor};
+  border-color: #{Css.errorBorderColor};
 }
 
 .success {
