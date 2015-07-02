@@ -1,5 +1,5 @@
 
-<h2>Guides: Submitting packages
+<h2>Guides: Uploading packages
 
 <ol>
   <li>
@@ -9,14 +9,14 @@
 
   <li>
     Release your package on Bower, by using
-    <code>bower register
-    , creating a git tag, and pushing the tag to GitHub.
+    <code>bower register#
+    \, creating a git tag, and pushing the tag to GitHub.
 
   <li>
     Ensure that the tagged version is checked out, change to your project
     directory, and run
-    <code>psc-publish > pursuit.json
-    . This will go through your bower.json file and all of your code,
+    <code>psc-publish > pursuit.json#
+    \. This will go through your bower.json file and all of your code,
     collecting all of the information necessary to host your package on
     Pursuit, and dump that data to a new file called pursuit.json.
 
