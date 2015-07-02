@@ -106,7 +106,7 @@ a:hover {
 
 .top-banner form {
   color: #{Css.bannerBackground};
-  width: 60%;
+  width: 50%;
 }
 
 .top-banner input {
@@ -114,6 +114,11 @@ a:hover {
   line-height: 1.5;
   padding: 0.2em;
   border-radius: 3px;
+}
+
+.top-banner .banner-item.upload {
+  float: right;
+  font-size: 150%;
 }
 
 /* Sidebar */
