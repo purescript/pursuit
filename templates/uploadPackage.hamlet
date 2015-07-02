@@ -1,0 +1,25 @@
+<h2>Upload a package
+
+<p>
+  You can upload the files produced by
+  <code>psc-publish
+  here in order to put your packages on Pursuit. See also the
+  <a href=@{GuidePackageUploadR}>package uploading guide#
+  \.
+
+$maybe err <- merror
+  <div .form-error>
+    <p>
+      An error occurred, and your package could not be uploaded. This might be
+      a bug. You can
+      <a href="https://github.com/purescript/pursuit/issues/new">open an issue
+      or let us know in #purescript IRC on Freenode.
+    <p>
+      Detailed information:<br>
+      $forall line <- err
+        #{line}
+        <br>
+
+<form method="post" action=@{UploadPackageR} enctype=#{enctype}>
+  ^{widget}
+  <button>Submit

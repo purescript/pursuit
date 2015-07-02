@@ -1,6 +1,6 @@
 <main .container role="main">
   <h1 style="text-align: center">
-    <strong>Pursuit #
+    <strong>Pursuit
     is the home of PureScript documentation.
 
   $if null pkgNames

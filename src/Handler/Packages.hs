@@ -6,9 +6,11 @@ import Text.Julius (rawJS)
 import Data.Version
 import qualified Language.PureScript.Docs as D
 import Web.Bower.PackageMeta (PackageName, runPackageName, bowerDependencies, bowerLicence)
+import qualified Data.Aeson.BetterErrors as A
 
 import Handler.Database
 import Handler.Caching
+import Handler.GithubOAuth
 import TemplateHelpers
 
 getHomeR :: Handler Html
@@ -41,20 +43,6 @@ getPackageVersionR (PathPackageName pkgName) (PathVersion version) =
 
 getPackageIndexR :: Handler Html
 getPackageIndexR = redirect HomeR
-
-postPackageIndexR :: Handler Value
-postPackageIndexR = do
-  pkg <- requireJsonBody
-  key <- generateKey
-  insertPendingVerification pkg key
-
-  renderUrl <- getUrlRender
-  let responseContent =
-          object [ "status" .= ("pending verification" :: Text)
-                 , "verifyUrl" .= renderUrl (VerifyR key)
-                 ]
-
-  sendResponseStatus accepted202 responseContent
 
 getPackageVersionDocsR :: PathPackageName -> PathVersion -> Handler Html
 getPackageVersionDocsR (PathPackageName pkgName) (PathVersion version) =
@@ -165,3 +153,38 @@ documentationPage pkg@D.Package{..} widget =
     <div .col-main>
       ^{widget}
     |]
+
+uploadPackageForm :: Html -> MForm Handler (FormResult FileInfo, Widget)
+uploadPackageForm = renderDivs $ areq fileField "" Nothing
+
+renderUploadPackageForm :: Widget -> Enctype -> Maybe [Text] -> Handler Html
+renderUploadPackageForm widget enctype merror =
+  defaultLayout $(widgetFile "uploadPackage")
+
+getUploadPackageR :: Handler Html
+getUploadPackageR =
+  requireAuthentication $ \_ -> do
+    (widget, enctype) <- generateFormPost uploadPackageForm
+    renderUploadPackageForm widget enctype Nothing
+
+postUploadPackageR :: Handler Html
+postUploadPackageR =
+  requireAuthentication $ \user -> do
+    ((result, widget), enctype) <- runFormPost uploadPackageForm
+    case result of
+      FormSuccess file -> do
+        bytes <- runResourceT $ fileSource file $$ sinkLazy
+        case D.parseUploadedPackage bytes of
+          Right pkg -> do
+            let pkg' = D.verifyPackage user pkg
+            insertPackage pkg'
+            setMessage "Your package was uploaded succesfully."
+            redirect (packageRoute pkg')
+          Left err -> renderUploadPackageForm widget enctype
+                        (Just $ displayJsonError err)
+      _ -> renderUploadPackageForm widget enctype Nothing
+
+displayJsonError :: A.ParseError D.PackageError -> [Text]
+displayJsonError e = case e of
+  A.InvalidJSON _ -> ["The file you submitted was not valid JSON."]
+  _ -> A.displayError D.displayPackageError e

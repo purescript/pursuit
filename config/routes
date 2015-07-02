@@ -5,12 +5,14 @@
 
 / HomeR GET
 
-/packages                                              PackageIndexR               GET   POST
+/packages                                              PackageIndexR               GET
 /packages/#PathPackageName                             PackageR                    GET
 /packages/#PathPackageName/#PathVersion                PackageVersionR             GET
 /packages/#PathPackageName/#PathVersion/docs           PackageVersionDocsR         GET
 /packages/#PathPackageName/#PathVersion/docs/#String   PackageVersionModuleDocsR   GET
 /packages/#PathPackageName/#PathVersion/hoogle         PackageHoogleR              GET
 !/packages/#PathPackageName/badge                      PackageBadgeR               GET
-/verify/#VerificationKey                               VerifyR                     GET   POST
+/upload                                                UploadPackageR              GET POST
 /oauth/callback                                        OAuthCallbackR              GET
+
+/guides/uploading-packages GuidePackageUploadR GET

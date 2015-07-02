@@ -22,11 +22,11 @@ library
                      Handler.Packages
                      Handler.Hoogle
                      Handler.PackageBadges
-                     Handler.Verification
                      Handler.Database
                      Handler.GithubOAuth
                      Handler.Caching
                      Handler.Utils
+                     Handler.Guides
                      Model.DocLinks
                      Model.DocsAsHtml
                      Model.DocsAsHoogle
@@ -109,6 +109,7 @@ library
                  , http-types
                  , case-insensitive
                  , conduit-extra
+                 , aeson-better-errors
 
     if flag(dev)
       build-depends: foreign-store
