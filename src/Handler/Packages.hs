@@ -33,9 +33,9 @@ getLatestVersion pkgName = do
 
 getPackageVersionR :: PathPackageName -> PathVersion -> Handler Html
 getPackageVersionR (PathPackageName pkgName) (PathVersion version) =
-  findPackage pkgName version $ \pkg@D.Package{..} -> do
-    moduleList <- cache    (pkgName, Just version, "module-list") (renderModuleList pkg)
-    mreadme    <- cacheMay (pkgName, Just version, "readme")      (tryGetReadme pkg)
+  cacheHtml $ findPackage pkgName version $ \pkg@D.Package{..} -> do
+    moduleList <- renderModuleList pkg
+    mreadme    <- tryGetReadme pkg
     defaultLayout $ do
       setTitle (toHtml (runPackageName pkgName))
       let dependencies = bowerDependencies pkgMeta
@@ -51,9 +51,8 @@ getPackageVersionDocsR (PathPackageName pkgName) (PathVersion version) =
 
 getPackageVersionModuleDocsR :: PathPackageName -> PathVersion -> String -> Handler Html
 getPackageVersionModuleDocsR (PathPackageName pkgName) (PathVersion version) mnString =
-  findPackage pkgName version $ \pkg@D.Package{..} -> do
-    mhtmlDocs <- cacheMay (pkgName, Just version, "module_" ++ mnString) $
-                  renderHtmlDocs pkg mnString
+  cacheHtml $ findPackage pkgName version $ \pkg@D.Package{..} -> do
+    mhtmlDocs <- renderHtmlDocs pkg mnString
     case mhtmlDocs of
       Nothing -> notFound
       Just htmlDocs ->
@@ -87,7 +86,7 @@ versionSelector pkgName version = do
   dummyRoute  <- maybe HomeR (flip substituteVersion dummyVersion) <$> getCurrentRoute
   dummyRoute' <- getUrlRender <*> pure dummyRoute
 
-  html <- handlerToWidget $ cache (pkgName, Nothing, "version-selector") $ do
+  html <- handlerToWidget $ do
     versions' <- availableVersionsFor pkgName
     let versions = sortBy (comparing Down) versions'
     let isLatest v = maybe False (== v) (headMay versions)
