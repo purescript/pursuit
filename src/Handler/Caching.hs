@@ -2,6 +2,7 @@
 module Handler.Caching
   ( cache
   , cacheHtml
+  , cacheSvg
   , cacheJSON
   , clearCache
   ) where
@@ -11,6 +12,8 @@ import Control.Category ((>>>))
 import Data.Version (Version, showVersion)
 import qualified Data.ByteString.Lazy as LB
 import Text.Blaze.Html.Renderer.Utf8 (renderHtml)
+import Text.Blaze.Svg11 (Svg)
+import Text.Blaze.Svg.Renderer.Utf8 (renderSvg)
 import System.Directory (removeDirectoryRecursive)
 import Web.Bower.PackageMeta (PackageName, runPackageName)
 import Data.Aeson (encode)
@@ -37,6 +40,9 @@ cache toLbs basename action = action >>= (\body -> write body $> body)
 
 cacheHtml :: Handler Html -> Handler Html
 cacheHtml = cache renderHtml "index.html"
+
+cacheSvg :: Handler Svg -> Handler Svg
+cacheSvg = cache renderSvg "index.svg"
 
 cacheJSON :: Handler Value -> Handler Value
 cacheJSON = cache encode "index.json"
