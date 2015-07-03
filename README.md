@@ -8,41 +8,6 @@ There is currently a pre-alpha version deployed at
 
 ## Information for package authors
 
-### Submitting packages
-
-1. Put the code up on GitHub. (Currently, GitHub is the only supported hosting
-   method. If you'd rather host your code somewhere else, please open an issue
-   and let us know).
-
-2. Release your package on Bower, by using `bower register`, creating a
-   git tag, and pushing the tag to GitHub.
-
-3. Ensure that the tagged version is checked out, change to your project
-   directory, and run `psc-publish > pursuit.json`. This will go through your
-   `bower.json` file and all of your code, collecting all of the information
-   necessary to host your package on Pursuit, and dump that data to
-   a new file called `pursuit.json`.
-
-4. Send an HTTP POST request, including the JSON data as the request body, to
-   http://pursuit.purescript.org/packages. For example, with `curl`:
-
-   ```
-   $ curl -X POST http://pursuit.purescript.org/packages -d @pursuit.json
-   ```
-
-   (Don't worry, this will become easier soon).
-
-5. In the reply, there will be a URL which you should visit in your browser.
-
-6. Log in using GitHub OAuth.
-
-7. Press the button to confirm the package upload.
-
-Your package, together with documentation, should now appear in Pursuit.
-
-The purpose of the two-step uploading/verifying process is to associate a
-GitHub user with each package upload.
-
 ### Package badges
 
 Pursuit can generate SVG badges for your packages, which you can put on your
@@ -70,23 +35,24 @@ The structure is as follows:
 
 ```
 /
-  uploaded/
-   5sXe_9p8XtG94D7swZuYbel66Fbgn5yoZC3N-u7vIhB14n8VYYBfEB2ySYp24PVdlEANEEKPWEF74c9y.json 
+  cache/
+    packages/
+      purescript-prelude/
+        0.1.0/
+          index.html
+          docs/
+            Prelude/
+              index.html
   verified/
     purescript-prelude/
       0.1.0.json
       0.1.1.json
 ```
 
-There is also a `cache/` directory, but that is probably going away soon.
-
-The `uploaded/` directory contains packages which have been uploaded and are
-pending verification (that is, those between steps 5-7 in the [Submitting
-packages](#submitting-packages) guide). They each get a long, random filename,
-which is also used as the verification URL which they are prompted to visit
-after uploading. There is a maximum of 100 packages pending upload at any given
-time; if more are submitted, then the oldest is deleted. Once a package has
-been verified, it is moved into the `verified/` directory.
+The `cache/` directory has files that mirror the URL structure of the web
+application, and contains files which do not change and may be served as-is
+without forwarding the request on to the Yesod application. See Handler.Caching
+for more details.
 
 The `verified/` directory stores packages which have been verified, and
 therefore appear on the site. Each package has its own directory, and then
