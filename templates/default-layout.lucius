@@ -167,9 +167,7 @@ a h2 {
 
 /* Version selector */
 select.version-selector {
-  background-color: #{Css.darken5 Css.backgroundColor};
   margin-top: 0.4em !important;
-  padding: 0.2em 0.8em !important;
   float: left;
   width: auto;
   min-width: 20%;
