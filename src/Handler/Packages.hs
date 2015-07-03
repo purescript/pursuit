@@ -136,7 +136,6 @@ postUploadPackageR =
           Right pkg -> do
             let pkg' = D.verifyPackage user pkg
             insertPackage pkg'
-            setMessage "Your package was uploaded succesfully."
             redirect (packageRoute pkg')
           Left err -> renderUploadPackageForm widget enctype
                         (Just $ displayJsonError err)
