@@ -30,7 +30,7 @@ catchDoesNotExist act =
     | isDoesNotExistErrorType (ioeGetErrorType e) = Just ()
     | otherwise = Nothing
 
-writeFileWithParents :: (IOData a) => String -> a -> IO ()
-writeFileWithParents file contents = do
+writeFileWithParents :: (IOData a, MonadIO m) => String -> a -> m ()
+writeFileWithParents file contents = liftIO $ do
   createDirectoryIfMissing True (takeDirectory file)
   writeFile (fpFromString file) contents

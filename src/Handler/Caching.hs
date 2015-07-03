@@ -31,7 +31,7 @@ cache toLbs basename action = action >>= (\body -> write body $> body)
         dir <- getRouteCacheDir route
         let path = dir ++ "/" ++ basename
         $logDebug ("writing response to disk for caching: /" ++ pack path)
-        writeFile (fpFromString path) (toLbs body)
+        writeFileWithParents path (toLbs body)
 
 cacheHtml :: Handler Html -> Handler Html
 cacheHtml = cache renderHtml "index.html"
