@@ -34,6 +34,8 @@ library
                      GithubAPI
                      Css
 
+    other-modules:   Paths_pursuit
+
     if flag(dev) || flag(library-only)
         cpp-options:   -DDEVELOPMENT
         ghc-options:   -Wall -fwarn-tabs -O0
