@@ -85,7 +85,7 @@ childDeclAsHoogle ctx parent d@D.ChildDeclaration{..} =
 moduleAsHoogle :: LinksContext' -> D.Module -> LT.Text
 moduleAsHoogle ctx D.Module{..} =
   commentsAsHoogle modComments
-    <> "module " <> LT.pack modName <> " where\n\n"
+    <> "module " <> LT.pack modName <> "\n\n"
     <> foldMap ((<> "\n\n") . declAsHoogle ctx) modDeclarations
 
 commentsAsHoogle :: Maybe String -> LT.Text

@@ -47,10 +47,17 @@ getTimestampedFilename suffix = do
 dummyHackageUrl :: String
 dummyHackageUrl = "dummy.hackage.url/"
 
--- | Given a Hoogle result url, try to extract the name of the package and the
--- title of the relevant declaration.
-extractPackageAndTitle :: String -> Maybe (Bower.PackageName, String)
-extractPackageAndTitle url = (,) <$> extractPackage url <*> pure (extractTitle url)
+-- | Given a Hoogle result url, try to extract:
+--   * the name of the package,
+--   * the module that the declaration is in,
+--   * the title of the declaration.
+--
+-- This is quite horrible. Sorry.
+extractDeclDetails :: String -> Maybe (Bower.PackageName, String, String)
+extractDeclDetails url =
+  (,,) <$> extractPackage url
+       <*> extractModule url
+       <*> pure (extractTitle url)
   where
   extractPackage =
     stripPrefix (dummyHackageUrl ++ "package/")
@@ -60,11 +67,18 @@ extractPackageAndTitle url = (,) <$> extractPackage url <*> pure (extractTitle u
   rightMay (Right x) = Just x
   rightMay _         = Nothing
 
+  extractModule =
+    reverse
+    >>> dropWhile (/= '#')
+    >>> drop 1
+    >>> stripPrefix (reverse ".html")
+    >>> map (takeWhile (/= '/') >>> reverse)
+
   extractTitle =
     reverse
-    >>> takeWhile (/= '/')
+    >>> takeWhile (/= '#')
     >>> reverse
-    >>> drop 3
+    >>> drop 2
     >>> decodeAnchorId
 
 -- | Takes an anchor id (created by haddock-api:Haddock.Utils.makeAnchorId) and
@@ -82,7 +96,7 @@ decodeAnchorId = go []
       Nothing   -> go (xs ++ ['-']) ys
   go xs (y:ys) = go (xs ++ [y]) ys
 
-searchDatabase :: Hoogle.Database -> String -> Handler [(Bower.PackageName, String)]
+searchDatabase :: Hoogle.Database -> String -> Handler [(Bower.PackageName, String, String)]
 searchDatabase db query =
   case Hoogle.parseQuery Hoogle.Haskell query of
     Left err ->
@@ -92,7 +106,7 @@ searchDatabase db query =
       in  return $ mapMaybe munge results
   where
   munge =
-    extractPackageAndTitle <=< resultUrl . snd
+    extractDeclDetails <=< resultUrl . snd
 
   resultUrl r =
     case Hoogle.locations r of
