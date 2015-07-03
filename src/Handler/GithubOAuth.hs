@@ -45,7 +45,7 @@ getOAuthCallbackR = do
   case mtoken of
     Nothing -> badRequest "Invalid code"
     Just token -> do
-      eResult <- liftIO $ GithubAPI.getUser token
+      eResult <- GithubAPI.getUser token
       case eResult of
         Left err -> do
           $logError (tshow err)

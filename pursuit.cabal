@@ -110,6 +110,7 @@ library
                  , case-insensitive
                  , conduit-extra
                  , aeson-better-errors
+                 , exceptions
 
     if flag(dev)
       build-depends: foreign-store

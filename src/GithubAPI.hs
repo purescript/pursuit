@@ -1,9 +1,12 @@
 
-module GithubAPI where
+module GithubAPI
+  ( getReadme
+  , getUser
+  ) where
 
 import Import
 import Text.Blaze.Html (preEscapedToHtml)
-import qualified Control.Exception as E
+import qualified Control.Monad.Catch as Catch
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Aeson as A
 import qualified Data.HashMap.Strict as HashMap
@@ -13,33 +16,37 @@ import qualified Language.PureScript.Docs as D
 
 -- | Get a repository readme, rendered as HTML.
 getReadme ::
+  (MonadCatch m, MonadIO m, HasHttpManager env, MonadReader env m) =>
   Maybe GithubAuthToken ->
   D.GithubUser ->
   D.GithubRepo ->
   String -> -- ^ ref: commit, branch, etc.
-  IO (Either HttpException Html)
+  m (Either HttpException Html)
 getReadme mauth user repo ref =
-  (map . map) go (getReadme' mauth user repo ref)
+  (liftM . liftM) go (getReadme' mauth user repo ref)
   where
   go = preEscapedToHtml . stripH1 . unpack . decodeUtf8
 
 getReadme' ::
+  (MonadCatch m, MonadIO m, HasHttpManager env, MonadReader env m) =>
   Maybe GithubAuthToken ->
   D.GithubUser ->
   D.GithubRepo ->
   String -> -- ^ ref: commit, branch, etc.
-  IO (Either HttpException BL.ByteString)
+  m (Either HttpException BL.ByteString)
 getReadme' mauth (D.GithubUser user) (D.GithubRepo repo) _ =
   let query = "" -- TODO: this will do for now; should really be ("ref=" ++ ref)
       headers = [("Accept", mediaTypeHtml)] ++ authHeader mauth
   in githubAPI ["repos", user, repo, "readme"] query headers
 
 -- | Get the currently logged in user.
-getUser :: GithubAuthToken -> IO (Either HttpException (Maybe D.GithubUser))
+getUser ::
+  (MonadCatch m, MonadIO m, HasHttpManager env, MonadReader env m) =>
+  GithubAuthToken -> m (Either HttpException (Maybe D.GithubUser))
 getUser token =
-  (map . map) go (getUser' token)
+  (liftM . liftM) go (getUser' token)
   where
-  go = map D.GithubUser . (loginFromJSON <=< A.decode)
+  go = liftM D.GithubUser . (loginFromJSON <=< A.decode)
   loginFromJSON val =
     case val of
       A.Object obj ->
@@ -48,22 +55,25 @@ getUser token =
           _                 -> Nothing
       _            -> Nothing
 
-getUser' :: GithubAuthToken -> IO (Either HttpException BL.ByteString)
+getUser' ::
+  (MonadCatch m, MonadIO m, HasHttpManager env, MonadReader env m) =>
+  GithubAuthToken -> m (Either HttpException BL.ByteString)
 getUser' auth =
   let headers = [("Accept", "application/json")] ++ authHeader (Just auth)
   in githubAPI ["user"] "" headers
 
 githubAPI ::
+  (MonadCatch m, MonadIO m, HasHttpManager env, MonadReader env m) =>
   [String] -> -- ^ Path parts
   String -> -- ^ Query string
   [(CI ByteString, ByteString)] -> -- ^ Extra headers
-  IO (Either HttpException BL.ByteString)
+  m (Either HttpException BL.ByteString)
 githubAPI path query extraHeaders = do
   tryHttp $ do
     initReq <- parseGithubUrlWithQuery path query
     let headers = [("User-Agent", "Pursuit")] ++ extraHeaders
     let req = initReq { requestHeaders = headers }
-    withManager (responseBody <$> httpLbs req)
+    liftM responseBody $ httpLbs req
 
 authHeader :: Maybe GithubAuthToken -> [(CI ByteString, ByteString)]
 authHeader mauth =
@@ -90,5 +100,5 @@ parseGithubUrlWithQuery parts query =
                     , query
                     ]
 
-tryHttp :: IO a -> IO (Either HttpException a)
-tryHttp = E.try
+tryHttp :: MonadCatch m => m a -> m (Either HttpException a)
+tryHttp = Catch.try

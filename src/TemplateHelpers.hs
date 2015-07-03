@@ -49,7 +49,7 @@ tryGetReadme D.Package{..} = do
   mtoken <- appGithubAuthToken . appSettings <$> getYesod
   let (ghUser, ghRepo) = pkgGithub
   let ghTag = pkgVersionTag
-  ereadme <- liftIO (GithubAPI.getReadme mtoken ghUser ghRepo ghTag)
+  ereadme <- GithubAPI.getReadme mtoken ghUser ghRepo ghTag
   case ereadme of
     Right readme ->
       return (Just readme)
