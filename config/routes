@@ -12,6 +12,7 @@
 /packages/#PathPackageName/#PathVersion/docs/#String   PackageVersionModuleDocsR   GET
 /packages/#PathPackageName/#PathVersion/hoogle         PackageHoogleR              GET
 !/packages/#PathPackageName/badge                      PackageBadgeR               GET
+!/packages/#PathPackageName/available-versions         PackageAvailableVersionsR   GET
 /upload                                                UploadPackageR              GET POST
 /oauth/callback                                        OAuthCallbackR              GET
 

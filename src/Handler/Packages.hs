@@ -31,6 +31,15 @@ getLatestVersion pkgName = do
   let vs' = toMinLen vs :: Maybe (MinLen One [Version])
   return $ map maximum vs'
 
+getPackageAvailableVersionsR :: PathPackageName -> Handler Value
+getPackageAvailableVersionsR (PathPackageName pkgName) = do
+  renderUrl <- getUrlRender
+  vs <- availableVersionsFor pkgName
+  let toPair v = pack (showVersion v) .= renderUrl (alternateVersionUrl v)
+  return $ object $ map toPair vs
+  where
+  alternateVersionUrl v = PackageVersionR (PathPackageName pkgName) (PathVersion v)
+
 getPackageVersionR :: PathPackageName -> PathVersion -> Handler Html
 getPackageVersionR (PathPackageName pkgName) (PathVersion version) =
   cacheHtml $ findPackage pkgName version $ \pkg@D.Package{..} -> do
