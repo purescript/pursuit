@@ -4,7 +4,7 @@ module Handler.Hoogle where
 import Import
 import Control.Category ((>>>))
 import qualified Data.Text.Lazy as LT
-import Data.Char (chr)
+import Data.Char (chr, isAlphaNum)
 import qualified Hoogle
 import qualified Language.PureScript.Docs as D
 import qualified Web.Bower.PackageMeta as Bower
@@ -80,6 +80,11 @@ extractDeclDetails url =
     >>> reverse
     >>> drop 2
     >>> decodeAnchorId
+    >>> bracketOperators
+
+  bracketOperators str
+    | any (not . isAlphaNum) str = "(" ++ str ++ ")"
+    | otherwise = str
 
 -- | Takes an anchor id (created by haddock-api:Haddock.Utils.makeAnchorId) and
 -- returns the string that produced it.
