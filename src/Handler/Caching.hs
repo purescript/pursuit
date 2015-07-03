@@ -4,6 +4,7 @@ module Handler.Caching
   , cacheHtml
   , cacheSvg
   , cacheJSON
+  , cacheText
   , clearCache
   ) where
 
@@ -11,6 +12,8 @@ import Import
 import Control.Category ((>>>))
 import Data.Version (Version, showVersion)
 import qualified Data.ByteString.Lazy as LB
+import qualified Data.Text.Lazy as LT
+import qualified Data.Text.Lazy.Encoding as LTE
 import Text.Blaze.Html.Renderer.Utf8 (renderHtml)
 import Text.Blaze.Svg11 (Svg)
 import Text.Blaze.Svg.Renderer.Utf8 (renderSvg)
@@ -46,6 +49,9 @@ cacheSvg = cache renderSvg "index.svg"
 
 cacheJSON :: Handler Value -> Handler Value
 cacheJSON = cache encode "index.json"
+
+cacheText :: Handler LT.Text -> Handler LT.Text
+cacheText = cache LTE.encodeUtf8 "index.txt"
 
 -- | Clear the whole cache for a particular package at a particular version.
 -- Called whenever a new version of a package is uploaded.
