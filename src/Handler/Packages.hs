@@ -35,8 +35,10 @@ getPackageAvailableVersionsR :: PathPackageName -> Handler Value
 getPackageAvailableVersionsR (PathPackageName pkgName) = do
   renderUrl <- getUrlRender
   vs <- availableVersionsFor pkgName
-  let toPair v = pack (showVersion v) .= renderUrl (alternateVersionUrl v)
-  return $ object $ map toPair vs
+  let toPair v = [ toJSON $ showVersion v
+                 , toJSON $ renderUrl $ alternateVersionUrl v
+                 ]
+  return $ toJSON $ map toPair vs
   where
   alternateVersionUrl v = PackageVersionR (PathPackageName pkgName) (PathVersion v)
 
@@ -89,64 +91,9 @@ packageNotFound pkgName = do
 versionSelector :: PackageName -> Version -> WidgetT App IO ()
 versionSelector pkgName version = do
   versionSelectorIdent <- newIdent
-
-  let dummyVersion = Version [999,999,999] []
-  let dummyVersionStr = showVersion dummyVersion
-  dummyRoute  <- maybe HomeR (flip substituteVersion dummyVersion) <$> getCurrentRoute
-  dummyRoute' <- getUrlRender <*> pure dummyRoute
-
-  html <- handlerToWidget $ do
-    versions' <- availableVersionsFor pkgName
-    let versions = sortBy (comparing Down) versions'
-    let isLatest v = maybe False (== v) (headMay versions)
-
-    let displayVersion v
-          | isLatest v = [hamlet|latest (#{showVersion v})|]
-          | otherwise  = [hamlet|#{showVersion v}|]
-
-    -- At this stage, rather than putting a selected attribute on the relevant
-    -- <option> tag, we instead mark each <option> with an ID, and select the
-    -- appropriate one using JS *outside the `cache` block*. This is because
-    -- the cached HTML is reused across every version.
-    withUrlRenderer [hamlet|
-        <div .col-aside>
-          <select id=#{versionSelectorIdent} .version-selector>
-            $forall v <- versions
-              <option id=#{htmlVersionId v} data-version=#{showVersion v}>
-                ^{displayVersion v}
-      |]
-
-  toWidget html
-  toWidgetBody [julius|
-      // Set an onchange handler so that selecting a version in the <select>
-      // will navigate to the new page
-      var selectorId = "#{rawJS versionSelectorIdent}"
-      var selector = document.getElementById(selectorId)
-      selector.onchange = function() {
-        window.location.href = this.value
-      };
-
-      // Set the 'selected' attribute on the current version
-      var selectedOption = document.getElementById("#{rawJS (htmlVersionId version)}")
-      selectedOption.setAttribute('selected', null)
-
-      // Set the 'value' attribute on each <option> to the URL it should
-      // point to
-      var options = document.querySelectorAll('select#' + selectorId + ' option')
-      var len = options.length
-      var placeholderUrl = "#{rawJS dummyRoute'}"
-      for (var i = 0; i < len; i++) {
-        var option = options[i]
-        var version = option.getAttribute('data-version')
-        if (version != null) {
-          option.setAttribute('value',
-            placeholderUrl.replace("#{rawJS dummyVersionStr}", version))
-        }
-      }
-    |]
-  where
-  htmlVersionId :: Version -> Text
-  htmlVersionId v = "selector-version-" ++ pack (showVersion v)
+  let route = PackageAvailableVersionsR (PathPackageName pkgName)
+  availableVersionsUrl <- getUrlRender <*> pure route
+  $(widgetFile "versionSelector")
 
 documentationPage ::
   D.VerifiedPackage -> WidgetT App IO () -> WidgetT App IO ()
