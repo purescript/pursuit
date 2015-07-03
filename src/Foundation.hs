@@ -59,7 +59,7 @@ data App = App
     , appStatic      :: Static -- ^ Settings for static file serving.
     , appHttpManager :: Manager
     , appLogger      :: Logger
-    , appCPRNG       :: TVar SystemRNG
+    , appCPRNG       :: TVar SystemRNG -- ^ Random number generator, used for OAuth
     }
 
 instance HasHttpManager App where
