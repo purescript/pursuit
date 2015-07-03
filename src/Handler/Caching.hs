@@ -2,6 +2,7 @@
 module Handler.Caching
   ( cache
   , cacheHtml
+  , cacheJSON
   , clearCache
   ) where
 
@@ -12,6 +13,7 @@ import qualified Data.ByteString.Lazy as LB
 import Text.Blaze.Html.Renderer.Utf8 (renderHtml)
 import System.Directory (removeDirectoryRecursive)
 import Web.Bower.PackageMeta (PackageName, runPackageName)
+import Data.Aeson (encode)
 
 import Handler.Utils
 
@@ -36,6 +38,9 @@ cache toLbs basename action = action >>= (\body -> write body $> body)
 cacheHtml :: Handler Html -> Handler Html
 cacheHtml = cache renderHtml "index.html"
 
+cacheJSON :: Handler Value -> Handler Value
+cacheJSON = cache encode "index.json"
+
 -- | Clear the whole cache for a particular package at a particular version.
 -- Called whenever a new version of a package is uploaded.
 clearCache :: PackageName -> Version -> Handler ()
@@ -44,10 +49,8 @@ clearCache pkgName version = do
                     ", at version: " ++ showVersion version)
 
   dir  <- getRouteCacheDir (PackageVersionR (PathPackageName pkgName) (PathVersion version))
-  -- TODO: After available versions route is implemented
-  -- dir2 <- getRouteCacheDir (PackageAvailableVersionsR (PathPackageName pkgName))
-  liftIO $ void $ catchDoesNotExist $ removeDirectoryRecursive dir
-  -- forM_ [dir, dir2] (liftIO . void . catchDoesNotExist . removeDirectoryRecursive)
+  dir2 <- getRouteCacheDir (PackageAvailableVersionsR (PathPackageName pkgName))
+  forM_ [dir, dir2] (liftIO . void . catchDoesNotExist . removeDirectoryRecursive)
 
 getCacheDir :: Handler String
 getCacheDir = (++ "/cache/") <$> getDataDir

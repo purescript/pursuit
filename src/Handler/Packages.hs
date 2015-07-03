@@ -32,13 +32,14 @@ getLatestVersion pkgName = do
   return $ map maximum vs'
 
 getPackageAvailableVersionsR :: PathPackageName -> Handler Value
-getPackageAvailableVersionsR (PathPackageName pkgName) = do
-  renderUrl <- getUrlRender
-  vs <- availableVersionsFor pkgName
-  let toPair v = [ toJSON $ showVersion v
-                 , toJSON $ renderUrl $ alternateVersionUrl v
-                 ]
-  return $ toJSON $ map toPair vs
+getPackageAvailableVersionsR (PathPackageName pkgName) =
+  cacheJSON $ do
+    renderUrl <- getUrlRender
+    vs <- availableVersionsFor pkgName
+    let toPair v = [ toJSON $ showVersion v
+                   , toJSON $ renderUrl $ alternateVersionUrl v
+                   ]
+    return $ toJSON $ map toPair vs
   where
   alternateVersionUrl v = PackageVersionR (PathPackageName pkgName) (PathVersion v)
 
