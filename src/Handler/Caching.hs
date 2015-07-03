@@ -7,7 +7,7 @@ module Handler.Caching
   , clearCache
   ) where
 
-import Import hiding (basename)
+import Import
 import Control.Category ((>>>))
 import Data.Version (Version, showVersion)
 import qualified Data.ByteString.Lazy as LB

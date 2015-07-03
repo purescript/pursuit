@@ -16,9 +16,9 @@ getDataDir = appDataDir . appSettings <$> getYesod
 
 -- | Read the file at the given path as a lazy ByteString, or return Nothing
 -- if no such file exists.
-readFileMay :: (IOData a) => String -> IO (Maybe a)
+readFileMay :: (IOData a) => FilePath -> IO (Maybe a)
 readFileMay file =
-  catchDoesNotExist (readFile (fpFromString file))
+  catchDoesNotExist (readFile file)
 
 catchDoesNotExist :: IO a -> IO (Maybe a)
 catchDoesNotExist act =
@@ -30,7 +30,7 @@ catchDoesNotExist act =
     | isDoesNotExistErrorType (ioeGetErrorType e) = Just ()
     | otherwise = Nothing
 
-writeFileWithParents :: (IOData a, MonadIO m) => String -> a -> m ()
+writeFileWithParents :: (IOData a, MonadIO m) => FilePath -> a -> m ()
 writeFileWithParents file contents = liftIO $ do
   createDirectoryIfMissing True (takeDirectory file)
-  writeFile (fpFromString file) contents
+  writeFile file contents
