@@ -47,7 +47,7 @@ insertPackage pkg@D.Package{..} = do
   let pkgName = D.packageName pkg
   file <- packageVersionFileFor pkgName pkgVersion
   clearCache pkgName pkgVersion
-  liftIO $ writeFileWithParents file (A.encode pkg)
+  writeFileWithParents file (A.encode pkg)
 
 packageDirFor :: PackageName -> Handler String
 packageDirFor pkgName = do
