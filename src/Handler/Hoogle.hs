@@ -4,6 +4,7 @@ module Handler.Hoogle where
 import Import
 import Control.Category ((>>>))
 import qualified Data.Text.Lazy as LT
+import Data.Char (chr)
 import qualified Hoogle
 import qualified Language.PureScript.Docs as D
 import qualified Web.Bower.PackageMeta as Bower
@@ -56,14 +57,30 @@ extractPackageAndTitle url = (,) <$> extractPackage url <*> pure (extractTitle u
     >>> map (takeWhile (/= '/'))
     >=> (rightMay . Bower.parsePackageName)
 
-  extractTitle =
-    reverse
-    >>> takeWhile (/= ':')
-    >>> reverse
-    -- TODO: decode
-
   rightMay (Right x) = Just x
   rightMay _         = Nothing
+
+  extractTitle =
+    reverse
+    >>> takeWhile (/= '/')
+    >>> reverse
+    >>> drop 3
+    >>> decodeAnchorId
+
+-- | Takes an anchor id (created by haddock-api:Haddock.Utils.makeAnchorId) and
+-- returns the string that produced it.
+--
+-- Eg: "hello" -> "hello", "-33--33-" -> "!!"
+decodeAnchorId :: String -> String
+decodeAnchorId = go []
+  where
+  go xs [] = xs
+  go xs ('-':ys) =
+    let (charCode, rest) = span (/= '-') ys
+    in case readMay charCode of
+      Just code -> go (xs ++ [chr code]) (drop 1 rest)
+      Nothing   -> go (xs ++ ['-']) ys
+  go xs (y:ys) = go (xs ++ [y]) ys
 
 searchDatabase :: Hoogle.Database -> String -> Handler [(Bower.PackageName, String)]
 searchDatabase db query =
