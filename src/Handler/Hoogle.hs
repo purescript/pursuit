@@ -29,9 +29,7 @@ generateDatabase = do
   -- Just to ensure that parent directories exist
   writeFileWithParents outputFile ("<test>" :: Text)
 
-  (db, errs) <- liftIO $ createDatabase inputData outputFile
-  -- TODO: traverse warn errs
-  return db
+  createDatabase inputData outputFile
 
 -- | Gets the directory used as a working directory for database generation.
 getWorkingDirectory :: Handler FilePath
@@ -42,7 +40,7 @@ getWorkingDirectory = (++ "/hoogle/work/") <$> getDataDir
 getTimestampedFilename :: (MonadIO m) => String -> m String
 getTimestampedFilename suffix = do
   time <- liftIO getCurrentTime
-  return $ formatTime defaultTimeLocale "%d%m%y%H%M%S." time ++ suffix
+  return $ formatTime defaultTimeLocale "%Y%m%d-%H%M%S." time ++ suffix
 
 dummyHackageUrl :: String
 dummyHackageUrl = "dummy.hackage.url/"
@@ -72,7 +70,10 @@ extractDeclDetails url =
     >>> dropWhile (/= '#')
     >>> drop 1
     >>> stripPrefix (reverse ".html")
-    >>> map (takeWhile (/= '/') >>> reverse)
+    >>> map (takeWhile (/= '/') >>> reverse >>> map minusToDot)
+
+  minusToDot '-' = '.'
+  minusToDot x = x
 
   extractTitle =
     reverse
@@ -121,11 +122,28 @@ searchDatabase db query =
 createDatabase ::
   String -- ^ Hoogle input data
   -> FilePath -- ^ Output file name
-  -> IO (Hoogle.Database, [Hoogle.ParseError])
+  -> Handler Hoogle.Database
 createDatabase inputData outputFile = do
-  errs <- Hoogle.createDatabase dummyHackageUrl Hoogle.Haskell [] inputData outputFile
-  db <- Hoogle.loadDatabase outputFile
-  return (db, errs)
+  (db, errs) <- liftIO $ do
+    errs <- Hoogle.createDatabase dummyHackageUrl Hoogle.Haskell [] inputData outputFile
+    db <- Hoogle.loadDatabase outputFile
+    return (db, errs)
+
+  unless (null errs) $ do
+    errorsFile <- getFilename "errors.txt"
+    writeFile errorsFile (unlines $ map tshow errs)
+
+    inputFile  <- getFilename "input.txt"
+    writeFile inputFile inputData
+
+    $logWarn ("Hoogle database regeneration produced " <>
+              tshow (length errs) <> " warnings, see " <> pack errorsFile <>
+              " for details.")
+
+  return db
+  where
+  getFilename suffix = (++) <$> getWorkingDirectory
+                            <*> getTimestampedFilename suffix
 
 -- | This is horribly inefficient, but it will do for now.
 getAllPackages :: Handler [D.VerifiedPackage]
