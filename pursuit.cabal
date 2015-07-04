@@ -113,7 +113,8 @@ library
                  , conduit-extra
                  , aeson-better-errors
                  , exceptions
-                 , hoogle ==4.2.41
+                 , hoogle >= 4.2.41 && < 5
+                 , transformers
 
     if flag(dev)
       build-depends: foreign-store
