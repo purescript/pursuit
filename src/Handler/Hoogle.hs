@@ -100,18 +100,21 @@ extractHoogleResult tagStr url = do
   extractModule' :: String -> Maybe String
   extractModule' =
     reverse
-    >>> dropWhile (/= '#')
-    >>> drop 1
+    >>> if' ('#' `elem`) (dropWhile (/= '#') >>> drop 1)
     >>> stripPrefix (reverse ".html")
     >>> map (takeWhile (/= '/') >>> reverse >>> map minusToDot)
+
+  if' f g x
+    | f x       = g x
+    | otherwise = x
+
+  minusToDot '-' = '.'
+  minusToDot x = x
 
   extractModule :: String -> ExceptT String Handler String
   extractModule url' =
     justOr' ("Unable to extract module name: " ++ url') $
       extractModule' url'
-
-  minusToDot '-' = '.'
-  minusToDot x = x
 
   extractTitle =
     reverse
