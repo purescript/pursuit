@@ -16,7 +16,7 @@ import Handler.Caching (cacheText)
 import Handler.Utils
 
 getPackageHoogleR :: PathPackageName -> PathVersion -> Handler LT.Text
-getPackageHoogleR (PathPackageName pkgName) (PathVersion version) = 
+getPackageHoogleR (PathPackageName pkgName) (PathVersion version) =
   cacheText $ findPackage pkgName version (return . packageAsHoogle)
 
 generateDatabase :: Handler Hoogle.Database
@@ -84,8 +84,8 @@ extractDeclDetails url =
     >>> bracketOperators
 
   bracketOperators str
-    | any (not . isAlphaNum) str = "(" ++ str ++ ")"
-    | otherwise = str
+    | any isAlphaNum str = str
+    | otherwise = "(" ++ str ++ ")"
 
 -- | Takes an anchor id (created by haddock-api:Haddock.Utils.makeAnchorId) and
 -- returns the string that produced it.
