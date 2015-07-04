@@ -3,6 +3,7 @@ module Handler.Hoogle
   ( getPackageHoogleR
   , getSearchR
   , generateDatabase
+  , getDatabase
   , searchDatabase
   , HoogleResult(..)
   ) where
@@ -10,12 +11,14 @@ module Handler.Hoogle
 import Import
 import Control.Category ((>>>))
 import Control.Monad.Trans.Except (ExceptT, runExceptT, throwE)
+import Control.Concurrent (forkIO)
 import qualified Data.Text.Lazy as LT
 import Data.Char (chr, isAlphaNum)
 import Data.Version (Version)
 import qualified Hoogle
 import qualified Language.PureScript.Docs as D
 import qualified Web.Bower.PackageMeta as Bower
+import System.Directory (removeDirectoryRecursive)
 
 import Model.DocsAsHoogle (packageAsHoogle)
 import Model.DocsAsHtml (makeFragment)
@@ -24,6 +27,7 @@ import Handler.Packages (findPackage)
 import Handler.Caching (cacheText)
 import Handler.Utils
 import TemplateHelpers (tagStrToHtml, getFragmentRender)
+import TimeUtils (oneDay, getElapsedTimeSince)
 
 getPackageHoogleR :: PathPackageName -> PathVersion -> Handler LT.Text
 getPackageHoogleR (PathPackageName pkgName) (PathVersion version) =
@@ -35,12 +39,34 @@ getSearchR = do
   case mquery of
     Nothing -> redirect HomeR
     Just query -> do
-      db <- generateDatabase
+      db <- getDatabase
       results <- runExceptT $ searchDatabase db query
       fr <- getFragmentRender
       defaultLayout $(widgetFile "search")
 
-generateDatabase :: Handler Hoogle.Database
+getDatabase :: Handler Hoogle.Database
+getDatabase = do
+  foundation <- getYesod
+  let dbVar = appHoogleDatabase foundation
+  (lastGenTime, db) <- readVar dbVar
+  age <- liftIO $ getElapsedTimeSince lastGenTime
+  let maxAge = appHoogleDatabaseMaxAge $ appSettings foundation
+  if (age < maxAge)
+    then return db
+    else do
+      $logInfo "Regenerating Hoogle database..."
+      runInnerHandler <- handlerToIO
+      _ <- liftIO $ forkIO $ runInnerHandler regenerateDatabase
+      -- For now, return the old db. We don't want to be too slow.
+      return db
+  where
+  readVar = liftIO . readTVarIO
+
+regenerateDatabase :: Handler ()
+regenerateDatabase = do
+  generateDatabase >>= maybe (return ()) storeNewDatabase
+
+generateDatabase :: Handler (Maybe Hoogle.Database)
 generateDatabase = do
   packages <- getAllPackages
   let inputs = map (unpack . packageAsHoogle) packages
@@ -51,6 +77,13 @@ generateDatabase = do
   writeFileWithParents outputFile ("<test>" :: Text)
 
   createDatabase inputData outputFile
+
+-- | Given a freshly generated database, store it in the foundation.
+storeNewDatabase :: Hoogle.Database -> Handler ()
+storeNewDatabase db = do
+  now <- liftIO getCurrentTime
+  dbVar <- appHoogleDatabase <$> getYesod
+  liftIO $ atomically $ writeTVar dbVar (now, db)
 
 -- | Gets the directory used as a working directory for database generation.
 getWorkingDirectory :: Handler FilePath
@@ -195,26 +228,51 @@ searchDatabase db query = do
 createDatabase ::
   String -- ^ Hoogle input data
   -> FilePath -- ^ Output file name
-  -> Handler Hoogle.Database
+  -> Handler (Maybe Hoogle.Database)
 createDatabase inputData outputFile = do
   (db, errs) <- liftIO $ do
     errs <- Hoogle.createDatabase dummyHackageUrl Hoogle.Haskell [] inputData outputFile
     db <- Hoogle.loadDatabase outputFile
     return (db, errs)
 
-  unless (null errs) $ do
-    errorsFile <- getFilename "errors.txt"
-    writeFile errorsFile (unlines $ map tshow errs)
+  maxErrors <- appMaxHoogleParseErrors . appSettings <$> getYesod
+  handleErrors db errs maxErrors
 
-    inputFile  <- getFilename "input.txt"
-    writeFile inputFile inputData
-
-    $logWarn ("Hoogle database regeneration produced " <>
-              tshow (length errs) <> " warnings, see " <> pack errorsFile <>
-              " for details.")
-
-  return db
   where
+  handleErrors db errs maxErrors = do
+    let countErrors = length errs
+    workDir <- getWorkingDirectory
+    if countErrors == 0
+      then do
+        $logInfo ("Hoogle database regeneration complete, no errors.")
+        -- Clean up
+        liftIO $ removeDirectoryRecursive workDir
+        return (Just db)
+
+      else do
+        -- Clean up older files
+        deleteFilesOlderThan oneDay workDir
+
+        -- Log errors and input, for diagnostic purposes
+        errorsFile <- getFilename "errors.txt"
+        writeFile errorsFile (unlines $ map tshow errs)
+
+        inputFile  <- getFilename "input.txt"
+        writeFile inputFile inputData
+
+        let msg = logMsg countErrors errorsFile
+        if (countErrors < maxErrors)
+          then do
+            $logWarn msg
+            return (Just db)
+          else do
+            $logError msg
+            return Nothing
+
+  logMsg countErrors errorsFile =
+    "Hoogle database regeneration produced " <> tshow countErrors <> " errors,"
+    <> " see " <> pack errorsFile <> " for details."
+
   getFilename suffix = (++) <$> getWorkingDirectory
                             <*> getTimestampedFilename suffix
 

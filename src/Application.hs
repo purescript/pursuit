@@ -25,6 +25,7 @@ import Network.Wai.Middleware.RequestLogger (Destination (Logger),
 import System.Log.FastLogger                (defaultBufSize, newStdoutLoggerSet,
                                              toLogStr)
 import Crypto.Random
+import qualified Yesod.Core.Unsafe as Unsafe
 
 -- Import all relevant handler modules here.
 -- Don't forget to add new modules to your cabal file!
@@ -56,8 +57,27 @@ makeFoundation appSettings = do
 
     appCPRNG <- (cprgCreate <$> createEntropyPool) >>= newTVarIO
 
-    -- Return the foundation
-    return App {..}
+    now <- liftIO getCurrentTime
+    appHoogleDatabase <- newTVarIO (now, mempty)
+
+    let foundation = App{..}
+
+    generateInitialDatabase now foundation
+
+    return foundation
+
+    where
+    generateInitialDatabase now foundation = do
+        let emptySessionMap = mempty :: SessionMap
+        mdb <- Unsafe.runFakeHandler emptySessionMap
+                                     appLogger
+                                     foundation
+                                     generateDatabase
+        case mdb of
+          Right (Just db) -> do
+            atomically $ writeTVar (appHoogleDatabase foundation) (now, db)
+          err ->
+            fail ("Failed to generate Hoogle database: " ++ show err)
 
 -- | Convert our foundation to a WAI Application by calling @toWaiAppPlain@ and
 -- applyng some additional middlewares.

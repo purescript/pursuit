@@ -33,6 +33,7 @@ library
                      TemplateHelpers
                      GithubAPI
                      Css
+                     TimeUtils
 
     other-modules:   Paths_pursuit
 

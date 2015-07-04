@@ -11,6 +11,7 @@ import Yesod.Core.Types            (Logger)
 import Yesod.Default.Util          (addStaticContentExternal)
 import qualified Yesod.Core.Unsafe as Unsafe
 import Crypto.Random
+import qualified Hoogle
 
 import Web.Bower.PackageMeta (PackageName, parsePackageName, runPackageName)
 import Data.Version
@@ -55,11 +56,15 @@ instance PathPiece VerificationKey where
 -- starts running, such as database connections. Every handler will have
 -- access to the data present here.
 data App = App
-    { appSettings    :: AppSettings
-    , appStatic      :: Static -- ^ Settings for static file serving.
-    , appHttpManager :: Manager
-    , appLogger      :: Logger
-    , appCPRNG       :: TVar SystemRNG -- ^ Random number generator, used for OAuth
+    { appSettings       :: AppSettings
+    , appStatic         :: Static
+    -- ^ Settings for static file serving.
+    , appHttpManager    :: Manager
+    , appLogger         :: Logger
+    , appCPRNG          :: TVar SystemRNG
+    -- ^ Random number generator, used for OAuth
+    , appHoogleDatabase :: TVar (UTCTime, Hoogle.Database)
+    -- ^ Hoogle database, with generation time.
     }
 
 instance HasHttpManager App where
