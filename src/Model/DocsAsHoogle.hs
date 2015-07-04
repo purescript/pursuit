@@ -67,8 +67,8 @@ qualifyConstructor ctx ctor' containMn =
       ctor
     LocalModule _ otherMn ctor ->
       show otherMn ++ "." ++ ctor
-    DepsModule _ otherPkg _ otherMn ctor ->
-      Bower.runPackageName otherPkg ++ ":" ++ show otherMn ++ "." ++ ctor
+    DepsModule _ _ _ otherMn ctor ->
+      show otherMn ++ "." ++ ctor
 
 declAsHoogle :: LinksContext' -> D.Declaration -> LT.Text
 declAsHoogle ctx d@D.Declaration{..} =
