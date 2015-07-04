@@ -39,6 +39,9 @@ withV f (HSV (h, s, v)) = HSV (h, s, clamp (0, 1) (f v))
 lighten :: Double -> HSV -> HSV
 lighten amt = withV (\v -> v + amt)
 
+lighten5 :: HSV -> HSV
+lighten5 = lighten 0.05
+
 lighten10 :: HSV -> HSV
 lighten10 = lighten 0.1
 
@@ -83,3 +86,9 @@ successBackgroundColor = fromRGB 150 240 150
 
 notAvailableBackgroundColor :: HSV
 notAvailableBackgroundColor = fromRGB 240 240 150
+
+codeForeground :: HSV
+codeForeground = fromRGB 25 74 91
+
+codeBackground :: HSV
+codeBackground = fromRGB 241 245 249
