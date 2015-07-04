@@ -95,3 +95,9 @@ tagStrToHtml tagStr = case tagStr of
   Hoogle.TagEmph tag -> strong (tagStrToHtml tag)
   Hoogle.TagLink _ tag -> tagStrToHtml tag -- Ignore urls
   Hoogle.TagColor _ tag -> tagStrToHtml tag -- Ignore colours for now
+
+-- | Render a URL together with a fragment (possibly).
+getFragmentRender :: Handler ((Route App, Maybe Text) -> Text)
+getFragmentRender = do
+  render <- getUrlRender
+  return $ \(route, fragment) -> render route ++ maybe "" ("#" ++) fragment

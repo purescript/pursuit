@@ -23,7 +23,7 @@ import Handler.Database
 import Handler.Packages (findPackage)
 import Handler.Caching (cacheText)
 import Handler.Utils
-import TemplateHelpers (tagStrToHtml)
+import TemplateHelpers (tagStrToHtml, getFragmentRender)
 
 getPackageHoogleR :: PathPackageName -> PathVersion -> Handler LT.Text
 getPackageHoogleR (PathPackageName pkgName) (PathVersion version) =
@@ -37,6 +37,7 @@ getSearchR = do
     Just query -> do
       db <- generateDatabase
       results <- runExceptT $ searchDatabase db query
+      fr <- getFragmentRender
       defaultLayout $(widgetFile "search")
 
 generateDatabase :: Handler Hoogle.Database
@@ -116,7 +117,11 @@ extractHoogleResult tagStr url = do
     justOr' ("Unable to extract module name: " ++ url') $
       extractModule' url'
 
-  extractTitle =
+  extractTitle url'
+    | '#' `onotElem` url = Nothing
+    | otherwise = Just $ extractTitle' url'
+
+  extractTitle' =
     reverse
     >>> takeWhile (/= '#')
     >>> reverse
@@ -146,18 +151,21 @@ decodeAnchorId = go []
       Nothing   -> go (xs ++ ['-']) ys
   go xs (y:ys) = go (xs ++ [y]) ys
 
+-- | A single result from a Hoogle query. The title is a Maybe String because
+-- Hoogle results can refer to packages or modules, in which case there is no
+-- specific declaration whose title can be used.
 data HoogleResult = HoogleResult
   { hrPkgName    :: Bower.PackageName
   , hrPkgVersion :: Version
   , hrModule     :: String
-  , hrTitle      :: String
+  , hrTitle      :: Maybe String
   , hrTagStr     :: Hoogle.TagStr
   }
   deriving (Show, Eq)
 
-routeResult :: HoogleResult -> (Route App, Text)
+routeResult :: HoogleResult -> ((Route App), Maybe Text)
 routeResult HoogleResult{..} = do
-  (route, pack (makeFragment hrTitle))
+  (route, map (pack . drop 1 . makeFragment) hrTitle)
   where
   route = PackageVersionModuleDocsR (PathPackageName hrPkgName)
                                     (PathVersion hrPkgVersion)

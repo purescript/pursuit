@@ -6,7 +6,6 @@ $case results
     $if null results'
       <p>No results for "#{query}", sorry.
     $forall r <- results'
-      $with (route, fragment) <- routeResult r
-        <a .search-result href=@{route}#{fragment}>
-          <p>#{tagStrToHtml $ hrTagStr r}
-          <p>#{hrModule r} (#{Bower.runPackageName $ hrPkgName r})
+      <a .search-result href=#{fr $ routeResult r}>
+        <p>#{tagStrToHtml $ hrTagStr r}
+        <p>#{hrModule r} (#{Bower.runPackageName $ hrPkgName r})
