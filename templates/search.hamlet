@@ -1,8 +1,10 @@
 <h2>Search results: #{query}
 $case results
-  $of Left parseError
-    <div .message .error>Parse error: #{parseError}
+  $of Left err
+    <div .message .error>#{err}
   $of Right results'
+    $if null results'
+      <p>No results for "#{query}", sorry.
     $forall r <- results'
       <div .result>
         <p>

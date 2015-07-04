@@ -166,7 +166,7 @@ searchDatabase db query =
       Nothing  -> return Nothing
       Just url -> extractHoogleResult tagStr url
     return $ case mresult of
-      Nothing     -> Left "Internal error (no versions found for a package)"
+      Nothing     -> Left $ "Internal error (no versions found for a package): " ++ show r
       Just result -> Right result
 
   resultUrl r =
