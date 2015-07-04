@@ -9,6 +9,7 @@ module Handler.Hoogle
 
 import Import
 import Control.Category ((>>>))
+import Control.Monad.Trans.Except (ExceptT, runExceptT, throwE)
 import qualified Data.Text.Lazy as LT
 import Data.Char (chr, isAlphaNum)
 import Data.Version (Version)
@@ -35,7 +36,7 @@ getSearchR = do
     Nothing -> redirect HomeR
     Just query -> do
       db <- generateDatabase
-      results <- searchDatabase db query
+      results <- runExceptT $ searchDatabase db query
       defaultLayout $(widgetFile "search")
 
 generateDatabase :: Handler Hoogle.Database
@@ -71,23 +72,23 @@ dummyHackageUrl = "dummy.hackage.url/"
 --   * the title of the declaration.
 --
 -- This is quite horrible. Sorry.
-extractHoogleResult :: Hoogle.TagStr -> String -> Handler (Maybe HoogleResult)
+extractHoogleResult :: Hoogle.TagStr -> String -> ExceptT String Handler HoogleResult
 extractHoogleResult tagStr url = do
   let mpkgName = extractPackage url
-  case mpkgName of
-    Nothing -> return Nothing
-    Just pkgName -> do
-      mversion <- getLatestVersionFor pkgName
-      case mversion of
-        Nothing -> return Nothing
-        Just version ->
-          return $
-            HoogleResult <$> pure pkgName
-                         <*> pure version
-                         <*> extractModule url
-                         <*> pure (extractTitle url)
-                         <*> pure tagStr
+  pkgName <- justOr' ("Unable to determine package name: " ++ url) mpkgName
+
+  version <- lift (getLatestVersionFor pkgName)
+                >>= justOr' ("Unable to get latest version for " ++
+                             Bower.runPackageName pkgName)
+
+  HoogleResult <$> pure pkgName
+               <*> pure version
+               <*> extractModule url
+               <*> pure (extractTitle url)
+               <*> pure tagStr
   where
+  justOr' msg = justOr $ "extractHoogleResult: " ++ msg
+
   extractPackage =
     stripPrefix (dummyHackageUrl ++ "package/")
     >>> map (takeWhile (/= '/'))
@@ -96,12 +97,18 @@ extractHoogleResult tagStr url = do
   rightMay (Right x) = Just x
   rightMay _         = Nothing
 
-  extractModule =
+  extractModule' :: String -> Maybe String
+  extractModule' =
     reverse
     >>> dropWhile (/= '#')
     >>> drop 1
     >>> stripPrefix (reverse ".html")
     >>> map (takeWhile (/= '/') >>> reverse >>> map minusToDot)
+
+  extractModule :: String -> ExceptT String Handler String
+  extractModule url' =
+    justOr' ("Unable to extract module name: " ++ url') $
+      extractModule' url'
 
   minusToDot '-' = '.'
   minusToDot x = x
@@ -117,6 +124,9 @@ extractHoogleResult tagStr url = do
   bracketOperators str
     | any isAlphaNum str = str
     | otherwise = "(" ++ str ++ ")"
+
+justOr :: (Monad m) => e -> Maybe a -> ExceptT e m a
+justOr err = maybe (throwE err) return
 
 -- | Takes an anchor id (created by haddock-api:Haddock.Utils.makeAnchorId) and
 -- returns the string that produced it.
@@ -150,29 +160,26 @@ routeResult HoogleResult{..} = do
                                     (PathVersion hrPkgVersion)
                                     hrModule
 
-searchDatabase :: Hoogle.Database -> String -> Handler (Either String [HoogleResult])
-searchDatabase db query =
-  case Hoogle.parseQuery Hoogle.Haskell query of
-    Left err ->
-      return $ Left $ show err
-    Right q ->
-      let results = Hoogle.search db q
-      in  map sequence $ traverse munge results
+searchDatabase :: Hoogle.Database -> String -> ExceptT String Handler [HoogleResult]
+searchDatabase db query = do
+  q <- either (throwE . show) return $ parse query
+  let results = Hoogle.search db q
+  traverse munge results
   where
+  parse = Hoogle.parseQuery Hoogle.Haskell
+
   munge r' = do
     let r = snd r'
     let tagStr = Hoogle.self r
-    mresult <- case resultUrl r of
-      Nothing  -> return Nothing
-      Just url -> extractHoogleResult tagStr url
-    return $ case mresult of
-      Nothing     -> Left $ "Internal error (no versions found for a package): " ++ show r
-      Just result -> Right result
+    url <- justOr' "unable to extract result url" $ resultUrl r
+    extractHoogleResult tagStr url
 
   resultUrl r =
     case Hoogle.locations r of
       [(x, _)] -> Just x
       _        -> Nothing
+
+  justOr' msg = justOr $ "searchDatabase: " ++ msg
 
 createDatabase ::
   String -- ^ Hoogle input data
