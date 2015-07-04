@@ -8,7 +8,8 @@
 
 module Model.DocsAsHtml (
   HtmlOutput(..),
-  packageAsHtml
+  packageAsHtml,
+  makeFragment
 ) where
 
 import Prelude

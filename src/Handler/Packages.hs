@@ -20,16 +20,10 @@ getHomeR = do
 
 getPackageR :: PathPackageName -> Handler Html
 getPackageR ppkgName@(PathPackageName pkgName) = do
-  v <- getLatestVersion pkgName
+  v <- getLatestVersionFor pkgName
   case v of
     Nothing -> packageNotFound pkgName
     Just v' -> redirect (PackageVersionR ppkgName (PathVersion v'))
-
-getLatestVersion :: PackageName -> Handler (Maybe Version)
-getLatestVersion pkgName = do
-  vs  <- availableVersionsFor pkgName
-  let vs' = toMinLen vs :: Maybe (MinLen One [Version])
-  return $ map maximum vs'
 
 getPackageAvailableVersionsR :: PathPackageName -> Handler Value
 getPackageAvailableVersionsR (PathPackageName pkgName) =

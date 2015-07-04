@@ -9,7 +9,7 @@ import qualified Text.Blaze.Svg11 as S
 import qualified Text.Blaze.Svg11.Attributes as A
 import Text.Blaze.Svg.Renderer.Text (renderSvg)
 
-import Handler.Packages (getLatestVersion)
+import Handler.Database (getLatestVersionFor)
 import Handler.Caching (cacheSvg)
 
 newtype ContentSvg = ContentSvg { runContentSvg :: S.Svg }
@@ -23,7 +23,7 @@ instance ToTypedContent ContentSvg where
 getPackageBadgeR :: PathPackageName -> Handler ContentSvg
 getPackageBadgeR (PathPackageName pkgName) =
   map ContentSvg $ cacheSvg $ do
-    msvg <- (map . map) renderBadge (getLatestVersion pkgName)
+    msvg <- (map . map) renderBadge (getLatestVersionFor pkgName)
     case msvg of
       Just svg -> return svg
       Nothing  -> notFound

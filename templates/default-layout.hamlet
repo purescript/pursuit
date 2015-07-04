@@ -3,7 +3,7 @@
     <div .banner-item .pursuit>
       <a .pursuit href=@{HomeR}>Pursuit
 
-    <form .banner-item role="search" action="search" method="get">
+    <form .banner-item role="search" action=@{SearchR} method="get">
       <label .sr-only for="q">Search for packages, types, and functions
       <input .form-control type="text" name="q" placeholder="Search for packages, types, functions...">
 

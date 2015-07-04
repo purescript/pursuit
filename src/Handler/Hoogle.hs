@@ -1,23 +1,42 @@
 
-module Handler.Hoogle where
+module Handler.Hoogle
+  ( getPackageHoogleR
+  , getSearchR
+  , generateDatabase
+  , searchDatabase
+  , HoogleResult(..)
+  ) where
 
 import Import
 import Control.Category ((>>>))
 import qualified Data.Text.Lazy as LT
 import Data.Char (chr, isAlphaNum)
+import Data.Version (Version)
 import qualified Hoogle
 import qualified Language.PureScript.Docs as D
 import qualified Web.Bower.PackageMeta as Bower
 
 import Model.DocsAsHoogle (packageAsHoogle)
+import Model.DocsAsHtml (makeFragment)
 import Handler.Database
-import Handler.Packages (findPackage, getLatestVersion)
+import Handler.Packages (findPackage)
 import Handler.Caching (cacheText)
 import Handler.Utils
+import TemplateHelpers (tagStrToHtml)
 
 getPackageHoogleR :: PathPackageName -> PathVersion -> Handler LT.Text
 getPackageHoogleR (PathPackageName pkgName) (PathVersion version) =
   cacheText $ findPackage pkgName version (return . packageAsHoogle)
+
+getSearchR :: Handler Html
+getSearchR = do
+  mquery <- (map . map) unpack $ lookupGetParam "q"
+  case mquery of
+    Nothing -> redirect HomeR
+    Just query -> do
+      db <- generateDatabase
+      results <- searchDatabase db query
+      defaultLayout $(widgetFile "search")
 
 generateDatabase :: Handler Hoogle.Database
 generateDatabase = do
@@ -45,17 +64,29 @@ getTimestampedFilename suffix = do
 dummyHackageUrl :: String
 dummyHackageUrl = "dummy.hackage.url/"
 
--- | Given a Hoogle result url, try to extract:
+-- | Given a Hoogle result 'self' TagStr, a package version, and result url,
+-- try to extract a HoogleResult.  The url is the source of:
 --   * the name of the package,
 --   * the module that the declaration is in,
 --   * the title of the declaration.
 --
 -- This is quite horrible. Sorry.
-extractDeclDetails :: String -> Maybe (Bower.PackageName, String, String)
-extractDeclDetails url =
-  (,,) <$> extractPackage url
-       <*> extractModule url
-       <*> pure (extractTitle url)
+extractHoogleResult :: Hoogle.TagStr -> String -> Handler (Maybe HoogleResult)
+extractHoogleResult tagStr url = do
+  let mpkgName = extractPackage url
+  case mpkgName of
+    Nothing -> return Nothing
+    Just pkgName -> do
+      mversion <- getLatestVersionFor pkgName
+      case mversion of
+        Nothing -> return Nothing
+        Just version ->
+          return $
+            HoogleResult <$> pure pkgName
+                         <*> pure version
+                         <*> extractModule url
+                         <*> pure (extractTitle url)
+                         <*> pure tagStr
   where
   extractPackage =
     stripPrefix (dummyHackageUrl ++ "package/")
@@ -102,17 +133,41 @@ decodeAnchorId = go []
       Nothing   -> go (xs ++ ['-']) ys
   go xs (y:ys) = go (xs ++ [y]) ys
 
-searchDatabase :: Hoogle.Database -> String -> Handler [(Bower.PackageName, String, String)]
+data HoogleResult = HoogleResult
+  { hrPkgName    :: Bower.PackageName
+  , hrPkgVersion :: Version
+  , hrModule     :: String
+  , hrTitle      :: String
+  , hrTagStr     :: Hoogle.TagStr
+  }
+  deriving (Show, Eq)
+
+routeResult :: HoogleResult -> (Route App, Text)
+routeResult HoogleResult{..} = do
+  (route, pack (makeFragment hrTitle))
+  where
+  route = PackageVersionModuleDocsR (PathPackageName hrPkgName)
+                                    (PathVersion hrPkgVersion)
+                                    hrModule
+
+searchDatabase :: Hoogle.Database -> String -> Handler (Either String [HoogleResult])
 searchDatabase db query =
   case Hoogle.parseQuery Hoogle.Haskell query of
     Left err ->
-      fail $ show err
+      return $ Left $ show err
     Right q ->
       let results = Hoogle.search db q
-      in  return $ mapMaybe munge results
+      in  map sequence $ traverse munge results
   where
-  munge =
-    extractDeclDetails <=< resultUrl . snd
+  munge r' = do
+    let r = snd r'
+    let tagStr = Hoogle.self r
+    mresult <- case resultUrl r of
+      Nothing  -> return Nothing
+      Just url -> extractHoogleResult tagStr url
+    return $ case mresult of
+      Nothing     -> Left "Internal error (no versions found for a package)"
+      Just result -> Right result
 
   resultUrl r =
     case Hoogle.locations r of
@@ -152,4 +207,4 @@ getAllPackages = do
   pkgNamesAndVersions <- catMaybes <$> traverse withVersion pkgNames
   catMaybes <$> traverse (uncurry lookupPackage) pkgNamesAndVersions
   where
-  withVersion name = (map . map) (name,) (getLatestVersion name)
+  withVersion name = (map . map) (name,) (getLatestVersionFor name)

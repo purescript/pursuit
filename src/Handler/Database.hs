@@ -3,6 +3,7 @@ module Handler.Database
   ( getAllPackageNames
   , lookupPackage
   , availableVersionsFor
+  , getLatestVersionFor
   , insertPackage
   ) where
 
@@ -40,6 +41,12 @@ availableVersionsFor pkgName = do
     files <- getDirectoryContents dir
     return $ mapMaybe (stripSuffix ".json" >=> D.parseVersion') files
   return $ fromMaybe [] mresult
+
+getLatestVersionFor :: PackageName -> Handler (Maybe Version)
+getLatestVersionFor pkgName = do
+  vs  <- availableVersionsFor pkgName
+  let vs' = toMinLen vs :: Maybe (MinLen One [Version])
+  return $ map maximum vs'
 
 -- | Insert a package at a specific version into the database.
 insertPackage :: D.VerifiedPackage -> Handler ()

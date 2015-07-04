@@ -1,0 +1,14 @@
+<h2>Search results: #{query}
+$case results
+  $of Left parseError
+    <div .message .error>Parse error: #{parseError}
+  $of Right results'
+    $forall r <- results'
+      <div .result>
+        <p>
+          $with (route, fragment) <- routeResult r
+            <a href=@{route}#{fragment}>
+              #{tagStrToHtml (hrTagStr r)}
+        <p>#{hrModule r} (#
+          <a href=@{PackageR (PathPackageName (hrPkgName r))}>#{Bower.runPackageName (hrPkgName r)}#
+          \)
