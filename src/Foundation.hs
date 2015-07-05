@@ -98,6 +98,7 @@ instance Yesod App where
     defaultLayout widget = do
         master <- getYesod
         mmsg <- getMessage
+        isSearch <- testCurrentRoute (== SearchR)
 
         -- We break up the default layout into two components:
         -- default-layout is the contents of the body tag, and
@@ -199,3 +200,7 @@ generateBytes len = do
     let (bytes, gen') = cprgGenerate len gen
     writeTVar genVar gen'
     return bytes
+
+-- | Check whether the current route satisfies a predicate
+testCurrentRoute :: (Route App -> Bool) -> Handler Bool
+testCurrentRoute p = map (maybe False p) getCurrentRoute
