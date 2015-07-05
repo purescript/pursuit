@@ -112,11 +112,12 @@ uploadPackageForm :: Html -> MForm Handler (FormResult FileInfo, Widget)
 uploadPackageForm = renderDivs $ areq fileField "" Nothing
 
 renderUploadPackageForm :: Widget -> Enctype -> Maybe [Text] -> Handler Html
-renderUploadPackageForm widget enctype merror =
+renderUploadPackageForm widget enctype merror = do
+  fr <- getFragmentRender
   defaultLayout $(widgetFile "uploadPackage")
 
 getUploadPackageR :: Handler Html
-getUploadPackageR =
+getUploadPackageR = do
   requireAuthentication $ \_ -> do
     (widget, enctype) <- generateFormPost uploadPackageForm
     renderUploadPackageForm widget enctype Nothing

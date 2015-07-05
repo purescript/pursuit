@@ -34,7 +34,7 @@ import Handler.Packages
 import Handler.Hoogle
 import Handler.PackageBadges
 import Handler.GithubOAuth
-import Handler.Guides
+import Handler.Help
 
 -- This line actually creates our YesodDispatch instance. It is the second half
 -- of the call to mkYesodData which occurs in Foundation.hs. Please see the

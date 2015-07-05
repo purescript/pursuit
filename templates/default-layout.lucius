@@ -210,6 +210,15 @@ a.search-result:focus {
   outline: none;
 }
 
+/* Help paragraphs */
+div.help {
+  padding: 1em;
+}
+
+.help h3 {
+  margin-top: 0.5em;
+}
+
 /* Everything else */
 .decl {
     margin-top: 2em;

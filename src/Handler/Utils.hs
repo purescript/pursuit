@@ -41,10 +41,8 @@ deleteFilesOlderThan :: forall m.
   (MonadIO m, MonadLogger m, MonadBaseControl IO m) =>
   NominalDiffTime -> FilePath -> m ()
 deleteFilesOlderThan maxAge dir = do
-  filesWithTimes <- liftIO $ do
-    files <- map (dir ++) <$> getDirectoryContents dir
-    traverse (\f -> (f,) <$> getAge f) files
-
+  files <- getDirectoryContents' dir
+  filesWithTimes <- liftIO $ traverse (\f -> (f,) <$> getAge f) files
   otraverse_ (\(f, age) -> when (age > maxAge) (tryRemoveFile f)) filesWithTimes
   where
   getAge f = getModificationTime f >>= getElapsedTimeSince
@@ -53,3 +51,13 @@ deleteFilesOlderThan maxAge dir = do
 
   logIOException :: IOException -> m ()
   logIOException e = $logError (tshow e)
+
+-- | Like getDirectoryContents, except that:
+--  * It includes the directory that you supplied, so that you can safely pass
+--    the results to readFile etc
+--  * It removes "." and ".." from the results
+--  * It works for any MonadIO
+getDirectoryContents' :: forall m. MonadIO m => FilePath -> m [FilePath]
+getDirectoryContents' dir =
+  liftIO $
+    map (dir ++) . filter (`onotElem` [".", ".."]) <$> getDirectoryContents dir

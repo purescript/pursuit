@@ -19,4 +19,4 @@
 /upload                                                UploadPackageR              GET POST
 /oauth/callback                                        OAuthCallbackR              GET
 
-/guides/uploading-packages GuidePackageUploadR GET
+/help HelpR GET

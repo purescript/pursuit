@@ -6,25 +6,6 @@ search for code (by names or types) as well.
 There is currently a pre-alpha version deployed at
 <http://new-pursuit.purescript.org>.
 
-## Information for package authors
-
-### Package badges
-
-Pursuit can generate SVG badges for your packages, which you can put on your
-project's homepage, or perhaps its GitHub readme.
-
-The suggested markup for a badge is:
-
-```
-<a href="http://pursuit.purescript.org/packages/$PACKAGE_NAME">
-  <img src="http://pursuit.purescript.org/packages/$PACKAGE_NAME/badge"
-       alt="$PACKAGE_NAME on Pursuit">
-  </img>
-</a>
-```
-
-## Information for contributors
-
 ### Database structure
 
 Pursuit currently uses the filesystem as a database, since it requires no setup

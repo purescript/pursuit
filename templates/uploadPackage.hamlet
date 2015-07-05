@@ -4,7 +4,7 @@
   You can upload the files produced by
   <code>psc-publish
   here in order to put your packages on Pursuit. See also the
-  <a href=@{GuidePackageUploadR}>package uploading guide#
+  <a href=#{fr (HelpR, Just "submitting-packages")}>package uploading guide#
   \.
 
 $maybe err <- merror
