@@ -1,12 +1,15 @@
 # Pursuit
 
-Pursuit is the home of PureScript documentation, and will soon become a tool to
-search for code (by names or types) as well.
+Pursuit is a web application which hosts documentation for PureScript packages,
+and lets you search for code by names or types, via Hoogle.
 
-There is currently a pre-alpha version deployed at
+There is currently an alpha version deployed at
 <http://new-pursuit.purescript.org>.
 
-### Database structure
+Information for package authors can be found at
+<http://new-pursuit.purescript.org/help>.
+
+## Database structure
 
 Pursuit currently uses the filesystem as a database, since it requires no setup
 and it makes it easy to use Git and GitHub for backing up. The data directory
@@ -44,7 +47,7 @@ details about these types.
 The backup process simply involves rsyncing everything in the `verified/`
 directory into a git repository, making a commit, and pushing it to GitHub.
 
-### Configuration
+## Configuration
 
 All configuration is done at startup via environment variables. The relevant
 code is in the Settings module.
