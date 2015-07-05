@@ -215,6 +215,10 @@ div.help {
   padding: 1em;
 }
 
+.help h2 {
+  margin-top: 0;
+}
+
 .help h3 {
   margin-top: 0.5em;
 }
