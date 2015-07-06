@@ -9,6 +9,7 @@ $doctype 5
     <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,700" type="text/css" rel="stylesheet">
     <link href="/static/css/normalize.css" type="text/css" rel="stylesheet">
     <script type="text/javascript" src="/static/js/js.cookie.js">
+    <script type="text/javascript" src="/static/js/Markup.js">
     ^{pageHead pc}
     
     \<!--[if lt IE 9]>

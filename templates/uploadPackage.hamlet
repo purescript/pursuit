@@ -22,4 +22,6 @@ $maybe err <- merror
 
 <form method="post" action=@{UploadPackageR} enctype=#{enctype}>
   ^{widget}
-  <button>Submit
+  <button type="submit">Submit
+
+<div #upload-form-status>
