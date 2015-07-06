@@ -11,6 +11,7 @@ import qualified Data.Aeson.BetterErrors as A
 import Handler.Database
 import Handler.Caching
 import Handler.GithubOAuth
+import Handler.Utils
 import TemplateHelpers
 
 getHomeR :: Handler Html
@@ -133,6 +134,7 @@ postUploadPackageR =
           Right pkg -> do
             let pkg' = D.verifyPackage user pkg
             insertPackage pkg'
+            setCookieMessage "Your package was uploaded successfully."
             redirect (packageRoute pkg')
           Left err -> renderUploadPackageForm widget enctype
                         (Just $ displayJsonError err)

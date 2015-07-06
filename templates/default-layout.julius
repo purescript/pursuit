@@ -33,3 +33,15 @@ searchInput.addEventListener('blur', function() {
 if (document.activeElement === searchInput) {
   searchInput.setAttribute('placeholder', focusPlaceholder)
 }
+
+
+// Render messages (if any)
+var message = Cookies.get('message')
+if (message) {
+  var el = document.createElement('div')
+  el.setAttribute('class', 'message success')
+  var text = document.createTextNode(message)
+  el.appendChild(text)
+  document.getElementById('message-container').appendChild(el)
+  Cookies.remove('message')
+}

@@ -96,16 +96,14 @@ instance Yesod App where
         "config/client_session_key.aes"
 
     defaultLayout widget = do
-        master <- getYesod
-        mmsg <- getMessage
-        isSearch <- testCurrentRoute (== SearchR)
-
         -- We break up the default layout into two components:
         -- default-layout is the contents of the body tag, and
         -- default-layout-wrapper is the entire page. Since the final
         -- value passed to hamletToRepHtml cannot be a widget, this allows
         -- you to use normal widget features in default-layout.
 
+        manalytics <- appAnalytics . appSettings <$> getYesod
+        isSearch <- testCurrentRoute (== SearchR)
         pc <- widgetToPageContent $(widgetFile "default-layout")
 
         let pageTitle' =

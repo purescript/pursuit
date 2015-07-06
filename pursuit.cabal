@@ -116,6 +116,7 @@ library
                  , exceptions
                  , hoogle >= 4.2.41 && < 5
                  , transformers
+                 , cookie
 
     if flag(dev)
       build-depends: foreign-store

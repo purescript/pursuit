@@ -11,7 +11,5 @@
       <a href=@{UploadPackageR}>Upload
 
 <main .container role="main">
-  $maybe msg <- mmsg
-    <div .message .success>#{msg}
-
+  <div #message-container>
   ^{widget}

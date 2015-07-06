@@ -3,6 +3,7 @@ module Handler.Utils where
 
 import Import
 import TimeUtils
+import Web.Cookie (setCookieName, setCookieValue, setCookieMaxAge)
 import System.Directory (createDirectoryIfMissing, removeFile,
                         getDirectoryContents, getModificationTime)
 import System.FilePath (takeDirectory)
@@ -61,3 +62,12 @@ getDirectoryContents' :: forall m. MonadIO m => FilePath -> m [FilePath]
 getDirectoryContents' dir =
   liftIO $
     map (dir ++) . filter (`onotElem` [".", ".."]) <$> getDirectoryContents dir
+
+-- | Sets a message which is displayed just once, at the next time the user's
+-- browser renders a page.
+setCookieMessage :: ByteString -> Handler ()
+setCookieMessage msg =
+  setCookie def { setCookieName = "message"
+                , setCookieValue = msg
+                , setCookieMaxAge = Just $ secondsToDiffTime 3600
+                }
