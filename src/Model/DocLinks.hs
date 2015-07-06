@@ -4,6 +4,9 @@ module Model.DocLinks where
 import Prelude
 import Data.List (find)
 import Data.Version
+import Data.Maybe (fromJust)
+import qualified Data.Map as M
+import Control.Arrow (second)
 
 import Web.Bower.PackageMeta hiding (Version)
 
@@ -61,8 +64,22 @@ getLinksContext :: Package a -> LinksContext
 getLinksContext Package{..} =
   LinksContext
     { ctxGithub               = pkgGithub
-    , ctxBookmarks            = pkgBookmarks
-    , ctxResolvedDependencies = pkgResolvedDependencies
+    , ctxBookmarks            = primBookmarks ++ pkgBookmarks
+    , ctxResolvedDependencies = primDependency : pkgResolvedDependencies
     , ctxPackageName          = bowerName pkgMeta
     , ctxVersion              = pkgVersion
     }
+
+primPackageName :: PackageName
+primPackageName = x
+  where
+  Right x = parsePackageName "purescript-prim"
+
+primBookmarks :: [Bookmark]
+primBookmarks =
+  map (FromDep primPackageName . second show . toPair . fst) $ M.toList P.primTypes
+  where
+  toPair (P.Qualified mn x) = (fromJust mn, x)
+
+primDependency :: (PackageName, Version)
+primDependency = (primPackageName, Version [0,7,0] []) -- hardcoded for now
