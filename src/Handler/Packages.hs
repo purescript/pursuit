@@ -77,13 +77,22 @@ findPackage ::
 findPackage pkgName version cont = do
   pkg' <- lookupPackage pkgName version
   case pkg' of
-    Just pkg -> cont pkg
-    Nothing -> packageNotFound pkgName
+    Right pkg -> cont pkg
+    Left NoSuchPackage -> packageNotFound pkgName
+    Left NoSuchPackageVersion -> packageVersionNotFound pkgName version
 
 packageNotFound :: PackageName -> Handler a
 packageNotFound pkgName = do
-  content <- defaultLayout $(widgetFile "packageNotFound")
-  sendResponseStatus notFound404 content
+  defaultLayout404 $(widgetFile "packageNotFound")
+
+packageVersionNotFound :: PackageName -> Version -> Handler a
+packageVersionNotFound pkgName version = do
+  availableVersions <- availableVersionsFor pkgName
+  defaultLayout404 $(widgetFile "packageVersionNotFound")
+
+defaultLayout404 :: Widget -> Handler a
+defaultLayout404 widget =
+  defaultLayout widget >>= sendResponseStatus notFound404
 
 versionSelector :: PackageName -> Version -> WidgetT App IO ()
 versionSelector pkgName version = do

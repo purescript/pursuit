@@ -281,6 +281,7 @@ getAllPackages :: Handler [D.VerifiedPackage]
 getAllPackages = do
   pkgNames <- getAllPackageNames
   pkgNamesAndVersions <- catMaybes <$> traverse withVersion pkgNames
-  catMaybes <$> traverse (uncurry lookupPackage) pkgNamesAndVersions
+  catMaybes <$> traverse lookupPackageMay pkgNamesAndVersions
   where
   withVersion name = (map . map) (name,) (getLatestVersionFor name)
+  lookupPackageMay = map (either (const Nothing) Just) . uncurry lookupPackage

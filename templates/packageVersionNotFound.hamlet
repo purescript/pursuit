@@ -1,0 +1,22 @@
+<h2>
+  No such version
+<p>
+  It seems that the version
+  <strong>
+    #{showVersion version}
+  of the package
+  <strong>
+    #{runPackageName pkgName}
+  does not exist, or has not yet been uploaded to Pursuit. You may be
+  interested in one of its other versions instead:
+
+<ul>
+  $forall v <- availableVersions
+    <li>
+      <a href=@{PackageVersionR (PathPackageName pkgName) (PathVersion v)}>
+        #{showVersion v}
+  
+<p>
+  If you think this is an error, please let us know by
+  <a href="https://github.com/purescript/pursuit/issues">opening an issue#
+  \, or visiting us on #purescript IRC on Freenode.

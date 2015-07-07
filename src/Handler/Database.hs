@@ -5,6 +5,7 @@ module Handler.Database
   , availableVersionsFor
   , getLatestVersionFor
   , insertPackage
+  , SomethingMissing(..)
   ) where
 
 import Import
@@ -12,7 +13,7 @@ import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Text as T
 import Data.Version (Version, showVersion)
-import System.Directory (getDirectoryContents)
+import System.Directory (getDirectoryContents, doesDirectoryExist)
 
 import Web.Bower.PackageMeta (PackageName, mkPackageName, runPackageName)
 import qualified Language.PureScript.Docs as D
@@ -26,13 +27,22 @@ getAllPackageNames = do
   contents <- liftIO $ getDirectoryContents (dir ++ "/verified/")
   return $ rights $ map mkPackageName contents
 
-lookupPackage :: PackageName -> Version -> Handler (Maybe D.VerifiedPackage)
+data SomethingMissing
+  = NoSuchPackage
+  | NoSuchPackageVersion
+
+lookupPackage :: PackageName -> Version -> Handler (Either SomethingMissing D.VerifiedPackage)
 lookupPackage pkgName version = do
   file <- packageVersionFileFor pkgName version
   mcontents <- liftIO (readFileMay file)
   case mcontents of
-    Nothing       -> return Nothing
-    Just contents -> Just <$> decodeVerifiedPackageFile file contents
+    Just contents ->
+      Right <$> decodeVerifiedPackageFile file contents
+    Nothing -> do
+      -- Work out whether there's no such package or just no such version
+      dir <- packageDirFor pkgName
+      exists <- liftIO $ doesDirectoryExist dir
+      return $ Left $ if exists then NoSuchPackageVersion else NoSuchPackage
 
 availableVersionsFor :: PackageName -> Handler [Version]
 availableVersionsFor pkgName = do
