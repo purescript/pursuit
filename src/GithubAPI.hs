@@ -10,7 +10,7 @@ import qualified Control.Monad.Catch as Catch
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Aeson as A
 import qualified Data.HashMap.Strict as HashMap
-import Text.XML.HXT.Core
+import Text.XML.HXT.Core as HXT
 import Data.CaseInsensitive (CI)
 import qualified Language.PureScript.Docs as D
 
@@ -25,7 +25,24 @@ getReadme ::
 getReadme mauth user repo ref =
   (liftM . liftM) go (getReadme' mauth user repo ref)
   where
-  go = preEscapedToHtml . stripH1 . unpack . decodeUtf8
+  go =
+    decodeUtf8
+    >>> unpack
+    >>> runXmlArrow arrow
+    >>> preEscapedToHtml
+
+  arrow =
+    stripH1
+    >>> makeRelativeLinksAbsolute "a" "href" (buildGithubURL user repo ref)
+    >>> makeRelativeLinksAbsolute "img" "src" (buildRawGithubURL user repo ref)
+
+buildGithubURL :: D.GithubUser -> D.GithubRepo -> String -> String
+buildGithubURL (D.GithubUser user) (D.GithubRepo repo) ref =
+    concat ["https://github.com/", user, "/", repo, "/blob/", ref, "/"]
+
+buildRawGithubURL :: D.GithubUser -> D.GithubRepo -> String -> String
+buildRawGithubURL (D.GithubUser user) (D.GithubRepo repo) ref =
+    concat ["https://raw.githubusercontent.com/", user, "/", repo, "/", ref, "/"]
 
 getReadme' ::
   (MonadCatch m, MonadIO m, HasHttpManager env, MonadReader env m) =>
@@ -34,9 +51,9 @@ getReadme' ::
   D.GithubRepo ->
   String -> -- ^ ref: commit, branch, etc.
   m (Either HttpException BL.ByteString)
-getReadme' mauth (D.GithubUser user) (D.GithubRepo repo) _ =
-  let query = "" -- TODO: this will do for now; should really be ("ref=" ++ ref)
-      headers = [("Accept", mediaTypeHtml)] ++ authHeader mauth
+getReadme' mauth (D.GithubUser user) (D.GithubRepo repo) ref =
+  let query = "ref=" ++ ref
+      headers = ("Accept", mediaTypeHtml) : authHeader mauth
   in githubAPI ["repos", user, repo, "readme"] query headers
 
 -- | Get the currently logged in user.
@@ -59,7 +76,7 @@ getUser' ::
   (MonadCatch m, MonadIO m, HasHttpManager env, MonadReader env m) =>
   GithubAuthToken -> m (Either HttpException BL.ByteString)
 getUser' auth =
-  let headers = [("Accept", "application/json")] ++ authHeader (Just auth)
+  let headers = ("Accept", "application/json") : authHeader (Just auth)
   in githubAPI ["user"] "" headers
 
 githubAPI ::
@@ -81,13 +98,27 @@ authHeader mauth =
          (\t -> [("Authorization", "bearer " <> runGithubAuthToken t)])
          mauth
 
-stripH1 :: String -> String
-stripH1 = unsafeHead . runLA stripH1Arrow
+runXmlArrow :: LA XmlTree XmlTree -> String -> String
+runXmlArrow arrow =
+  unsafeHead . runLA (hread >>> arrow >>> writeDocumentToString [])
+
+stripH1 :: LA XmlTree XmlTree
+stripH1 =
+  processTopDown (neg (hasName "h1") `guards` this)
+
+-- | Make all relative links into absolute links by providing a base URL.
+makeRelativeLinksAbsolute ::
+  String    -- ^ Tag name to modify
+  -> String -- ^ Attribute name to modify
+  -> String -- ^ Base URL to use for relative links
+  -> LA XmlTree XmlTree
+makeRelativeLinksAbsolute tagName attrName base =
+  processTopDown $
+    processAttrl (changeAttrValue (mkAbs base) `HXT.when` hasName attrName)
+      `HXT.when` (isElem >>> hasName tagName)
+
   where
-  stripH1Arrow =
-    hread >>>
-      processTopDown (neg (hasName "h1") `guards` this) >>>
-      writeDocumentToString []
+  mkAbs base' url = fromMaybe url $ expandURIString url $ base'
 
 mediaTypeHtml :: ByteString
 mediaTypeHtml = "application/vnd.github.v3.html"
