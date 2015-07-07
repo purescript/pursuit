@@ -130,7 +130,8 @@ postUploadPackageR =
     case result of
       FormSuccess file -> do
         bytes <- runResourceT $ fileSource file $$ sinkLazy
-        case D.parseUploadedPackage bytes of
+        minVersion <- appMinimumCompilerVersion . appSettings <$> getYesod
+        case D.parseUploadedPackage minVersion bytes of
           Right pkg -> do
             let pkg' = D.verifyPackage user pkg
             insertPackage pkg'

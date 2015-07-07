@@ -7,6 +7,8 @@ module Settings where
 
 import ClassyPrelude.Yesod
 import System.Environment (lookupEnv)
+import Data.Version
+import Language.PureScript.Docs (parseVersion')
 import Language.Haskell.TH.Syntax (Exp, Name, Q)
 import Network.Wai.Handler.Warp (HostPreference)
 import Yesod.Default.Util (WidgetFileSettings, widgetFileNoReload,
@@ -55,12 +57,14 @@ data AppSettings = AppSettings
     -- ^ GitHub OAuth client ID
     , appGithubClientSecret     :: ByteString
     -- ^ GitHub OAuth client secret
-
     , appMaxHoogleParseErrors   :: Int
     -- ^ The maximum allowable number of Hoogle parse errors before a Hoogle
     -- database regeneration is considered a failure.
-    , appHoogleDatabaseMaxAge :: NominalDiffTime
+    , appHoogleDatabaseMaxAge   :: NominalDiffTime
     -- ^ The minimum amount of time between hoogle database regenerations.
+    , appMinimumCompilerVersion :: Version
+    -- ^ The minimum version of the compiler that may be used to generate data
+    -- to be uploaded.
     }
 
 isDevelopment :: Bool
@@ -94,31 +98,35 @@ getAppSettings = do
   appMaxHoogleParseErrors <- env "MAX_HOOGLE_PARSE_ERRORS" .!= 250
   appHoogleDatabaseMaxAge <- (map fromInteger <$> env "HOOGLE_DATABASE_MAX_AGE_SECONDS") .!= oneHour
 
+  appMinimumCompilerVersion <- envP parseVersion' "MINIMUM_COMPILER_VERSION" .!= Version [0,0,0,0] []
+
   return AppSettings {..}
 
   where
-  env  = lookupEnvironment . ("PURSUIT_" ++)
-  env' = getEnvironment    . ("PURSUIT_" ++)
+  env  = lookupEnvironment hackyRead . ("PURSUIT_" ++)
+  env' = getEnvironment    hackyRead . ("PURSUIT_" ++)
+
+  envP p = lookupEnvironment p . ("PURSUIT_" ++)
+
+  -- sorry about this
+  hackyRead str = readMay str <|> readMay ("\"" ++ str ++ "\"")
 
   (.!=) :: (Functor f) => f (Maybe a) -> a -> f a
   x .!= def' = fromMaybe def' <$> x
 
-lookupEnvironment :: (Read a) => String -> IO (Maybe a)
-lookupEnvironment var = do
+lookupEnvironment :: (String -> Maybe a) -> String -> IO (Maybe a)
+lookupEnvironment parse var = do
   mstr <- lookupEnv var
   case mstr of
     Nothing -> return Nothing
-    Just str -> case hackyRead str of
+    Just str -> case parse str of
       Just val -> return (Just val)
       Nothing -> error $ "Failed to parse environment variable" ++
                           " \"" ++ var ++ "\": \"" ++ str ++ "\""
-  where
-  -- sorry about this
-  hackyRead str = readMay str <|> readMay ("\"" ++ str ++ "\"")
 
-getEnvironment :: (Read a) => String -> IO a
-getEnvironment var = do
-  r <- lookupEnvironment var
+getEnvironment :: (String -> Maybe a) -> String -> IO a
+getEnvironment parse var = do
+  r <- lookupEnvironment parse var
   case r of
     Just r' -> return r'
     Nothing -> error $ "Required environment variable \"" ++ var ++ "\" " ++
