@@ -8,4 +8,10 @@ $case results
     $forall r <- results'
       <a .search-result href=#{fr $ routeResult r}>
         <p>#{tagStrToHtml $ hrTagStr r}
-        <p>#{hrModule r} (#{Bower.runPackageName $ hrPkgName r})
+        $case hrInfo r
+          $of PackageResult
+            <p>
+          $of ModuleResult _
+            <p>#{Bower.runPackageName $ hrPkgName r}
+          $of DeclarationResult modName _
+            <p>#{modName} (#{Bower.runPackageName $ hrPkgName r})

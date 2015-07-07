@@ -11,6 +11,7 @@ module Handler.Hoogle
 import Import
 import Control.Category ((>>>))
 import Control.Monad.Trans.Except (ExceptT, runExceptT, throwE)
+import Control.Monad.Trans.Maybe (MaybeT(..), runMaybeT)
 import Control.Concurrent (forkIO)
 import qualified Data.Text.Lazy as LT
 import Data.Char (chr, isAlphaNum)
@@ -115,13 +116,19 @@ extractHoogleResult tagStr url = do
                 >>= justOr' ("Unable to get latest version for " ++
                              Bower.runPackageName pkgName)
 
-  HoogleResult <$> pure pkgName
-               <*> pure version
-               <*> extractModule url
-               <*> pure (extractTitle url)
-               <*> pure tagStr
+  return $
+    HoogleResult pkgName
+                 version
+                 tagStr
+                 (extractInfo url)
   where
   justOr' msg = justOr $ "extractHoogleResult: " ++ msg
+
+  extractInfo u =
+    case (extractModule u, extractTitle u) of
+      (Nothing,      _         ) -> PackageResult
+      (Just modName, Nothing   ) -> ModuleResult modName
+      (Just modName, Just title) -> DeclarationResult modName title
 
   extractPackage =
     stripPrefix (dummyHackageUrl ++ "package/")
@@ -131,8 +138,8 @@ extractHoogleResult tagStr url = do
   rightMay (Right x) = Just x
   rightMay _         = Nothing
 
-  extractModule' :: String -> Maybe String
-  extractModule' =
+  extractModule :: String -> Maybe String
+  extractModule =
     reverse
     >>> if' ('#' `elem`) (dropWhile (/= '#') >>> drop 1)
     >>> stripPrefix (reverse ".html")
@@ -145,22 +152,15 @@ extractHoogleResult tagStr url = do
   minusToDot '-' = '.'
   minusToDot x = x
 
-  extractModule :: String -> ExceptT String Handler String
-  extractModule url' =
-    justOr' ("Unable to extract module name: " ++ url') $
-      extractModule' url'
-
-  extractTitle url'
-    | '#' `onotElem` url = Nothing
-    | otherwise = Just $ extractTitle' url'
-
-  extractTitle' =
-    reverse
-    >>> takeWhile (/= '#')
-    >>> reverse
-    >>> drop 2
-    >>> decodeAnchorId
-    >>> bracketOperators
+  extractTitle u =
+    guard ('#' `elem` u) >> Just (go u)
+    where
+    go = reverse
+         >>> takeWhile (/= '#')
+         >>> reverse
+         >>> drop 2
+         >>> decodeAnchorId
+         >>> bracketOperators
 
   bracketOperators str
     | any isAlphaNum str = str
@@ -184,31 +184,48 @@ decodeAnchorId = go []
       Nothing   -> go (xs ++ ['-']) ys
   go xs (y:ys) = go (xs ++ [y]) ys
 
--- | A single result from a Hoogle query. The title is a Maybe String because
--- Hoogle results can refer to packages or modules, in which case there is no
--- specific declaration whose title can be used.
+-- | A single result from a Hoogle query.
 data HoogleResult = HoogleResult
   { hrPkgName    :: Bower.PackageName
   , hrPkgVersion :: Version
-  , hrModule     :: String
-  , hrTitle      :: Maybe String
   , hrTagStr     :: Hoogle.TagStr
+  , hrInfo       :: HoogleResultInfo
   }
   deriving (Show, Eq)
 
+data HoogleResultInfo
+  = PackageResult
+  | ModuleResult      String -- ^ Module name
+  | DeclarationResult String String -- ^ Module name & declaration title
+  deriving (Show, Eq)
+
 routeResult :: HoogleResult -> ((Route App), Maybe Text)
-routeResult HoogleResult{..} = do
-  (route, map (pack . drop 1 . makeFragment) hrTitle)
+routeResult HoogleResult{..} =
+  case hrInfo of
+    PackageResult ->
+      ( PackageR ppkgName
+      , Nothing
+      )
+    ModuleResult modName ->
+      ( PackageVersionModuleDocsR ppkgName pversion modName
+      , Nothing
+      )
+    DeclarationResult modName declTitle ->
+      ( PackageVersionModuleDocsR ppkgName pversion modName
+      , Just $ pack $ drop 1 $ makeFragment declTitle
+      )
   where
-  route = PackageVersionModuleDocsR (PathPackageName hrPkgName)
-                                    (PathVersion hrPkgVersion)
-                                    hrModule
+  ppkgName = PathPackageName hrPkgName
+  pversion = PathVersion hrPkgVersion
 
 searchDatabase :: Hoogle.Database -> String -> ExceptT String Handler [HoogleResult]
 searchDatabase db query = do
   q <- either (throwE . show) return $ parse query
   let results = Hoogle.search db q
-  traverse munge results
+  actuals <- traverse munge results
+  extras <- lift $ searchForPackage query
+  return $ extras ++ actuals
+
   where
   parse = Hoogle.parseQuery Hoogle.Haskell
 
@@ -224,6 +241,32 @@ searchDatabase db query = do
       _        -> Nothing
 
   justOr' msg = justOr $ "searchDatabase: " ++ msg
+
+-- | Search the package database for a particular package manually, and
+-- construct a HoogleResult (as if Hoogle had performed the search). For some
+-- reason, package searching with Hoogle isn't working right now, so this will
+-- do in the meantime.
+searchForPackage :: String -> Handler [HoogleResult]
+searchForPackage (toLower -> query) = do
+  (++) <$> go query <*> go ("purescript-" ++ query)
+  where
+  go q = map maybeToList $ runMaybeT $ do
+    pkgName <- MaybeT $ return $ either (const Nothing) Just $ Bower.parsePackageName q
+    version <- MaybeT $ getLatestVersionFor pkgName
+    return $
+      HoogleResult pkgName
+                   version
+                   (packageTagStr pkgName)
+                   PackageResult
+
+  packageTagStr pkgName =
+    mconcat
+      [ Hoogle.TagEmph (s "package")
+      , s " "
+      , Hoogle.TagBold $ Hoogle.TagEmph $ s $ Bower.runPackageName pkgName
+      ]
+    where
+    s = Hoogle.Str
 
 createDatabase ::
   String -- ^ Hoogle input data
