@@ -11,6 +11,7 @@ import qualified Data.ByteString.Lazy as BL
 import qualified Data.Aeson as A
 import qualified Data.HashMap.Strict as HashMap
 import Text.XML.HXT.Core as HXT
+import Text.HTML.SanitizeXSS (sanitize)
 import Data.CaseInsensitive (CI)
 import qualified Language.PureScript.Docs as D
 
@@ -29,6 +30,8 @@ getReadme mauth user repo ref =
     decodeUtf8
     >>> unpack
     >>> runXmlArrow arrow
+    >>> pack
+    >>> sanitize
     >>> preEscapedToHtml
 
   arrow =

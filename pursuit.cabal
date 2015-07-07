@@ -117,6 +117,7 @@ library
                  , hoogle >= 4.2.41 && < 5
                  , transformers
                  , cookie
+                 , xss-sanitize
 
     if flag(dev)
       build-depends: foreign-store
