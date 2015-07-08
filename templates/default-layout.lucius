@@ -263,3 +263,7 @@ ul.documentation-contents li {
 hr {
   border: 1px solid #{Css.darken20 Css.backgroundColor};
 }
+
+.center {
+  text-align: center;
+}
