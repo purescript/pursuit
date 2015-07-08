@@ -91,7 +91,13 @@ getAppSettings = do
   appAnalytics <- env "GOOGLE_ANALYTICS_CODE"
   appDataDir   <- env "DATA_DIR" .!= "./data"
 
-  appGithubAuthToken    <- map (GithubAuthToken . fromString) <$> env "GITHUB_AUTH_TOKEN"
+  appGithubAuthToken <- map (GithubAuthToken . fromString) <$> env "GITHUB_AUTH_TOKEN"
+  when (isNothing appGithubAuthToken) $
+    hPutStrLn stderr $
+      "[Warn] No GitHub auth token configured. Requests to the GitHub API will"
+      <> " be performed with no authentication, which will often result in rate"
+      <> (" limiting." :: Text)
+
   appGithubClientID     <- fromString <$> env' "GITHUB_CLIENT_ID"
   appGithubClientSecret <- fromString <$> env' "GITHUB_CLIENT_SECRET"
 
