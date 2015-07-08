@@ -37,8 +37,8 @@ cache toLbs basename action = action >>= (\body -> write body $> body)
       Nothing -> return ()
       Just route -> do
         dir <- getRouteCacheDir route
-        let path = dir ++ "/" ++ basename
-        $logDebug ("writing response to disk for caching: /" ++ pack path)
+        let path = dir ++ basename
+        $logDebug ("writing response to disk for caching: " ++ pack path)
         writeFileWithParents path (toLbs body)
 
 cacheHtml :: Handler Html -> Handler Html
@@ -75,4 +75,5 @@ getRouteCacheDir route = go <$> getCacheDir <*> pure route
     >>> fst
     >>> intercalate "/"
     >>> unpack
-    >>> ((cacheDir ++ "/") ++)
+    >>> (cacheDir ++)
+    >>> (++ "/")
