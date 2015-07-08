@@ -13,7 +13,7 @@ $doctype 5
     ^{pageHead pc}
     
     \<!--[if lt IE 9]>
-    \<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    \<script type="text/javascript" src="/static/js/html5shiv.js"></script>
     \<![endif]-->
   
   <body>
