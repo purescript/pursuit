@@ -7,6 +7,7 @@ import qualified Data.Text.Lazy as LT
 import qualified Text.Blaze.Html.Renderer.Text as Blaze
 import Text.Hamlet                 (hamletFile)
 import Text.Jasmine                (minifym)
+import Text.Julius                 (rawJS)
 import Yesod.Core.Types            (Logger)
 import Yesod.Default.Util          (addStaticContentExternal)
 import qualified Yesod.Core.Unsafe as Unsafe
@@ -104,7 +105,11 @@ instance Yesod App where
 
         manalytics <- appAnalytics . appSettings <$> getYesod
         isSearch <- testCurrentRoute (== SearchR)
-        pc <- widgetToPageContent $(widgetFile "default-layout")
+        pc <- widgetToPageContent $ do
+          $(widgetFile "default-layout")
+          case manalytics of
+            Just analytics -> $(widgetFile "analytics")
+            _ -> return ()
 
         let pageTitle' =
               let renderedTitle = Blaze.renderHtml (pageTitle pc)
