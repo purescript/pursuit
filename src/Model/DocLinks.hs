@@ -21,6 +21,7 @@ data LinksContext = LinksContext
   , ctxResolvedDependencies :: [(PackageName, Version)]
   , ctxPackageName          :: PackageName
   , ctxVersion              :: Version
+  , ctxVersionTag           :: String
   }
   deriving (Show, Eq, Ord)
 
@@ -68,6 +69,7 @@ getLinksContext Package{..} =
     , ctxResolvedDependencies = primDependency : pkgResolvedDependencies
     , ctxPackageName          = bowerName pkgMeta
     , ctxVersion              = pkgVersion
+    , ctxVersionTag           = pkgVersionTag
     }
 
 primPackageName :: PackageName

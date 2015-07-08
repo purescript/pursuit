@@ -167,7 +167,9 @@ linkToSource :: LinksContext' -> P.SourceSpan -> Html ()
 linkToSource (LinksContext{..}, _) (P.SourceSpan name start end) =
   p_ (linkTo (T.pack $ concat
                [ githubBaseUrl
-               , "/tree/master/"
+               , "/blob/"
+               , ctxVersionTag
+               , "/"
                , relativeToBase name
                , "#", fragment
                ])
