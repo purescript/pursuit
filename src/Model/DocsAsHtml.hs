@@ -146,7 +146,17 @@ codeAsHtml r ctx = outputWith elemAsHtml
   elemAsHtml Space       = text " "
 
 renderLink :: DocLinkRenderer -> LinksContext' -> DocLink -> Html () -> Html ()
-renderLink r ctx link = linkTo (r ctx link <> T.pack (fragmentFor link))
+renderLink r ctx link inner =
+  a_ [ href_ (r ctx link <> T.pack (fragmentFor link))
+     , title_ (T.pack fullyQualifiedName)
+     ] inner
+  where
+  fullyQualifiedName = case link of
+    SameModule title               -> fq (snd ctx) title
+    LocalModule _ modName title    -> fq modName title
+    DepsModule _ _ _ modName title -> fq modName title
+
+  fq mn str = show mn ++ "." ++ str
 
 -- TODO: escaping?
 makeFragment :: String -> String
