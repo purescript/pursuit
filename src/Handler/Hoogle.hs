@@ -14,8 +14,9 @@ import Control.Monad.Trans.Except (ExceptT, runExceptT, throwE)
 import Control.Monad.Trans.Maybe (MaybeT(..), runMaybeT)
 import Control.Concurrent (forkIO)
 import qualified Data.Text.Lazy as LT
+import Text.Blaze.Html.Renderer.Text (renderHtml)
 import Data.Char (chr, isAlphaNum)
-import Data.Version (Version)
+import Data.Version (Version, showVersion)
 import qualified Hoogle
 import qualified Language.PureScript.Docs as D
 import qualified Web.Bower.PackageMeta as Bower
@@ -34,7 +35,7 @@ getPackageHoogleR :: PathPackageName -> PathVersion -> Handler LT.Text
 getPackageHoogleR (PathPackageName pkgName) (PathVersion version) =
   cacheText $ findPackage pkgName version (return . packageAsHoogle)
 
-getSearchR :: Handler Html
+getSearchR :: Handler TypedContent
 getSearchR = do
   mquery <- (map . map) unpack $ lookupGetParam "q"
   case mquery of
@@ -42,8 +43,25 @@ getSearchR = do
     Just query -> do
       db <- getDatabase
       results <- runExceptT $ searchDatabase db query
-      fr <- getFragmentRender
-      defaultLayout $(widgetFile "search")
+      selectRep $ do
+        provideRep (htmlOutput query results)
+        provideRep (jsonOutput results)
+
+  where
+  htmlOutput :: String -> Either String [HoogleResult] -> Handler Html
+  htmlOutput query results = do
+    fr <- getFragmentRender
+    content <- defaultLayout $(widgetFile "search")
+    let status = either (const badRequest400) (const ok200) results
+    sendResponseStatus status content
+
+  jsonOutput results = do
+    case results of
+      Left err ->
+        sendResponseStatus badRequest400 $
+          object [ "error" .= err ]
+      Right rs ->
+        toJSON <$> traverse hoogleResultToJSON rs
 
 getDatabase :: Handler Hoogle.Database
 getDatabase = do
@@ -198,6 +216,33 @@ data HoogleResultInfo
   | ModuleResult      String -- ^ Module name
   | DeclarationResult String String -- ^ Module name & declaration title
   deriving (Show, Eq)
+
+hoogleResultToJSON :: HoogleResult -> Handler Value
+hoogleResultToJSON result@HoogleResult{..} = do
+    url <- getFragmentRender <*> pure (routeResult result)
+    return $
+      object [ "package" .= hrPkgName
+             , "version" .= showVersion hrPkgVersion
+             , "markup" .= renderHtml (tagStrToHtml hrTagStr)
+             , "text" .= Hoogle.showTagText hrTagStr
+             , "info" .= toJSON hrInfo
+             , "url" .= url
+             ]
+
+instance ToJSON HoogleResultInfo where
+  toJSON i = object $ case i of
+    PackageResult ->
+      [ "type" .= ("package" :: Text)
+      ]
+    ModuleResult moduleName ->
+      [ "type" .= ("module" :: Text)
+      , "module" .= moduleName
+      ]
+    DeclarationResult moduleName declTitle ->
+      [ "type" .= ("declaration" :: Text)
+      , "module" .= moduleName
+      , "title" .= declTitle
+      ]
 
 routeResult :: HoogleResult -> ((Route App), Maybe Text)
 routeResult HoogleResult{..} =
