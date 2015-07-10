@@ -119,7 +119,10 @@ documentationPage pkg@D.Package{..} widget =
     |]
 
 uploadPackageForm :: Html -> MForm Handler (FormResult FileInfo, Widget)
-uploadPackageForm = renderDivs $ areq fileField "" Nothing
+uploadPackageForm = renderDivs $ areq fileField settings Nothing
+  where
+  -- This should make the file selection dialog only display json files.
+  settings = (fromString "") { fsAttrs = [("accept", "application/json")] }
 
 renderUploadPackageForm :: Widget -> Enctype -> Maybe [Text] -> Handler Html
 renderUploadPackageForm widget enctype merror = do
