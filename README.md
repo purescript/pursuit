@@ -40,11 +40,10 @@ application, and contains files which do not change and may be served as-is
 without forwarding the request on to the Yesod application. See Handler.Caching
 for more details.
 
-The `verified/` directory stores packages which have been verified, and
-therefore appear on the site. Each package has its own directory, and then
-there is a JSON file for each version. The JSON file contains a serialized
-`Package GithubUser`; see Language.PureScript.Docs.Types in the compiler for
-details about these types.
+The `verified/` directory stores uploaded packages.  Each package has its own
+directory, and then there is a JSON file for each version. These JSON files
+each contain a serialized `Package GithubUser`; see
+Language.PureScript.Docs.Types in the compiler for details about these types.
 
 The backup process simply involves rsyncing everything in the `verified/`
 directory into a git repository, making a commit, and pushing it to GitHub.
