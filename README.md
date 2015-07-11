@@ -1,6 +1,6 @@
 # Pursuit
 
-[![Build Status](https://api.travis-ci.org/purescript/purescript.svg?branch=master)](http://travis-ci.org/purescript/purescript)
+[![Build Status](https://api.travis-ci.org/purescript/pursuit.svg?branch=master)](http://travis-ci.org/purescript/pursuit)
 
 Pursuit is a web application which hosts documentation for PureScript packages,
 and lets you search for code by names or types, via Hoogle.
