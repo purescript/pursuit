@@ -94,7 +94,7 @@ library
                  , containers
                  , vector
                  , time
-                 , purescript >= 0.7
+                 , purescript >= 0.7.1
                  , bower-json >= 0.4
                  , lucid
                  , blaze-builder
