@@ -1,0 +1,13 @@
+<main .container role="main">
+  <h1 .center>
+    <strong>Pursuit
+    is the home of PureScript documentation.
+
+  $if null pkgNames
+    <h2>No packages uploaded yet.
+  $else
+    <h2>Packages:
+    <ul>
+      $forall pkgName <- pkgNames
+        <li>
+          <a href=@{PackageR (PathPackageName pkgName)}>#{runPackageName pkgName}

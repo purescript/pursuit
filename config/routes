@@ -1,0 +1,22 @@
+/static StaticR Static appStatic
+
+/favicon.ico FaviconR GET
+/robots.txt RobotsR GET
+
+/ HomeR GET
+
+/packages                                              PackageIndexR               GET
+/packages/#PathPackageName                             PackageR                    GET
+/packages/#PathPackageName/#PathVersion                PackageVersionR             GET
+/packages/#PathPackageName/#PathVersion/docs           PackageVersionDocsR         GET
+/packages/#PathPackageName/#PathVersion/docs/#String   PackageVersionModuleDocsR   GET
+/packages/#PathPackageName/#PathVersion/hoogle         PackageHoogleR              GET
+!/packages/#PathPackageName/badge                      PackageBadgeR               GET
+!/packages/#PathPackageName/available-versions         PackageAvailableVersionsR   GET
+
+/search                                                SearchR                     GET
+
+/upload                                                UploadPackageR              GET POST
+/oauth/callback                                        OAuthCallbackR              GET
+
+/help HelpR GET

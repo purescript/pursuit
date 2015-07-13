@@ -1,0 +1,47 @@
+var searchInput = document.getElementById('search-input')
+
+// Get the character that the given keyboard event refers to. Case-insensitive.
+function testChar(event, c) {
+  var eventChar = String.fromCharCode(event.keyCode).toUpperCase()
+  return eventChar == c.toUpperCase()
+}
+
+// Focus the search input on "S" keypress
+document.addEventListener('keydown', function(event) {
+  if (document.activeElement.tagName === 'INPUT') {
+    return
+  }
+  if (testChar(event, "S")) {
+    event.preventDefault()
+    document.getElementById('search-input').focus()
+  }
+})
+
+
+// Change the placeholder for the search input based on whether it is focused.
+var normalPlaceholder = 'Search for packages, types, functions... (S to focus)'
+var focusPlaceholder = 'Search for packages, types, functions...'
+
+searchInput.addEventListener('focus', function() {
+  searchInput.setAttribute('placeholder', focusPlaceholder)
+})
+
+searchInput.addEventListener('blur', function() {
+  searchInput.setAttribute('placeholder', normalPlaceholder)
+})
+
+if (document.activeElement === searchInput) {
+  searchInput.setAttribute('placeholder', focusPlaceholder)
+}
+
+
+// Render messages (if any)
+var message = Cookies.get('message')
+if (message) {
+  var el = document.createElement('div')
+  el.setAttribute('class', 'message success')
+  var text = document.createTextNode(message)
+  el.appendChild(text)
+  document.getElementById('message-container').appendChild(el)
+  Cookies.remove('message')
+}

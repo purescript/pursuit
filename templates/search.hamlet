@@ -1,0 +1,17 @@
+<h2>Search results: #{query}
+$case results
+  $of Left err
+    <div .message .error>#{err}
+  $of Right results'
+    $if null results'
+      <p>No results for "#{query}", sorry.
+    $forall r <- results'
+      <a .search-result href=#{fr $ routeResult r}>
+        <p>#{tagStrToHtml $ hrTagStr r}
+        $case hrInfo r
+          $of PackageResult
+            <p>
+          $of ModuleResult _
+            <p>#{Bower.runPackageName $ hrPkgName r}
+          $of DeclarationResult modName _
+            <p>#{modName} (#{Bower.runPackageName $ hrPkgName r})

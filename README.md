@@ -1,35 +1,68 @@
-pursuit
-=======
+# Pursuit
 
-Search engine for PureScript functions
+[![Build Status](https://api.travis-ci.org/purescript/pursuit.svg?branch=master)](http://travis-ci.org/purescript/pursuit)
 
-getting your library included
------------------------------
+Pursuit is a web application which hosts documentation for PureScript packages,
+and lets you search for code by names or types, via Hoogle.
 
-* Release your PureScript library on Bower
-* Make sure your released versions are tagged in git, with a tag like `v0.1.0`
-* Send a pull request modifying `libraries.json`, with a new object for
-  your library. The object should include:
-  * `github`: an object with `user` and `repo` attributes, referencing a GitHub
-    repository with your code in it (if your code's not on GitHub, please open
-    an issue and let us know),
-  * `bowerName`: the name that your library has on the Bower registry.
+There is currently an alpha version deployed at
+<http://new-pursuit.purescript.org>.
 
-The Pursuit data is rebuilt daily by an automated job, so your library should
-appear within 24 hours. Any subsequent releases will automatically be shown on
-Pursuit, as long as you remember to `git tag` them.
+Information for package authors can be found at
+<http://new-pursuit.purescript.org/help>.
 
-running pursuit
----------------
+## Database structure
 
-Pursuit uses the GitHub API for some of the information it needs, which means
-that it may come up against GitHub API rate limiting if no authentication is
-used.
+Pursuit currently uses the filesystem as a database, since it requires no setup
+and it makes it easy to use Git and GitHub for backing up. The data directory
+is set via an environment variable (see [Configuration](#configuration)).
 
-Pursuit supports GitHub API authentication via OAuth tokens; pass the token in
-via the environment variable `GITHUB_AUTH_TOKEN`. For example, if your auth
-token is stored in a file `.oauth_token`:
+The structure is as follows:
 
 ```
-GITHUB_AUTH_TOKEN=`cat .oauth_token` cabal run
+/
+  cache/
+    packages/
+      purescript-prelude/
+        0.1.0/
+          index.html
+          docs/
+            Prelude/
+              index.html
+  verified/
+    purescript-prelude/
+      0.1.0.json
+      0.1.1.json
 ```
+
+The `cache/` directory has files that mirror the URL structure of the web
+application, and contains files which do not change and may be served as-is
+without forwarding the request on to the Yesod application. See Handler.Caching
+for more details.
+
+The `verified/` directory stores uploaded packages.  Each package has its own
+directory, and then there is a JSON file for each version. These JSON files
+each contain a serialized `Package GithubUser`; see
+Language.PureScript.Docs.Types in the compiler for details about these types.
+
+The backup process simply involves rsyncing everything in the `verified/`
+directory into a git repository, making a commit, and pushing it to GitHub.
+
+## Configuration
+
+All configuration is done at startup via environment variables. The relevant
+code is in the Settings module.
+
+All configuration variable names start with `PURSUIT_` (eg,
+`PURSUIT_STATIC_DIR`). Most environment variables are not required, and have
+sensible defaults if not specified. The ones which _are_ required are:
+
+* `PURSUIT_GITHUB_CLIENT_ID`: Github OAuth client id, for signing users in.
+* `PURSUIT_GITHUB_CLIENT_SECRET`: Github OAuth client secret, for signing users
+  in.
+
+See `src/Settings.hs` for more details.
+
+One way to supply the application with environment variables (if you are on a
+system which uses Bash) is to use a script like the one in
+`config/development.env`.

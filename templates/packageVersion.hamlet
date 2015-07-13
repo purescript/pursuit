@@ -1,0 +1,35 @@
+<div .clearfix>
+  <div .col-main>
+    <h1>
+      package
+      <strong>#{runPackageName pkgName}
+
+  ^{versionSelector pkgName pkgVersion}
+
+<div .col-aside>
+  <p>published by #{linkToGithubUser pkgUploader}
+  <hr>
+  <p>#{linkToGithub pkgGithub} on github
+  <hr>
+  $maybe licenses <- joinLicenses (bowerLicence pkgMeta)
+    <p>#{licenses} licensed
+    <hr>
+  <p>
+    $if null dependencies
+      <strong>No dependencies
+    $else
+      <strong>Dependencies
+      $forall (depPkg, versionRange) <- dependencies
+        <li>
+          <a href=@{packageNameRoute depPkg}>#{runPackageName depPkg}
+          #{renderVersionRange versionRange}
+
+<div .col-main>
+  $maybe readme <- mreadme
+    #{readme}
+  $nothing
+    <div .message .not-available>No README available.
+  <hr>
+  <h2>
+    <strong>Modules
+  #{moduleList}

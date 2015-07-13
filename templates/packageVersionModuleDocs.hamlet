@@ -1,0 +1,4 @@
+<h2>
+  module #
+  <strong>#{mnString}
+#{preEscapedToHtml htmlDocs}

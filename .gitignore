@@ -1,8 +1,5 @@
-/tmp/
-/dist/
-/.psci_modules/
-/.psci
-/bower_components/
-/node_modules/
-.cabal-sandbox
-cabal.sandbox.config
+dist/
+yesod-devel/
+config/client_session_key.aes
+data
+static/tmp/

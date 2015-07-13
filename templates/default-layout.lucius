@@ -1,0 +1,269 @@
+html {
+  overflow-y: scroll;
+  box-sizing: border-box;
+}
+
+*, *:before, *:after {
+  box-sizing: inherit;
+}
+
+body {
+  font-family: "Roboto", sans-serif;
+  background-color: #{Css.backgroundColor};
+}
+
+/* Utility classes */
+.clearfix:before,
+.clearfix:after {
+  content: " ";
+  display: table;
+}
+
+.clearfix:after {
+  clear: both;
+}
+
+.sr-only {
+  position: absolute;
+  left: -10000px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+/* Layout */
+.container {
+  max-width: 1060px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.col-main {
+  float: left;
+  width: 70%;
+  padding-right: 2em;
+}
+
+.col-aside {
+  float: right;
+  width: 30%;
+}
+
+.col-aside > *:first-child,
+.col-main > *:first-child {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+main {
+  margin-top: 2em;
+}
+
+/* Links */
+a, a:visited {
+  color: #{Css.linkColor};
+  text-decoration: none;
+  font-weight: bold;
+}
+
+a.weight-normal,
+a.weight-normal:hover {
+  font-weight: normal;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Top banner */
+.top-banner,
+.top-banner a,
+.top-banner a:visited {
+  background-color: #{Css.bannerBackground};
+  color: #{Css.darkForeground};
+  text-decoration: none;
+  font-weight: lighter;
+}
+
+.top-banner a:hover {
+  background-color: #{Css.lighten10 Css.bannerBackground};
+}
+
+.top-banner {
+  line-height: 5em;
+  vertical-align: middle;
+}
+
+.top-banner .pursuit {
+  font-size: 150%;
+  margin-right: 3em;
+}
+
+.top-banner .banner-item {
+  float: left;
+}
+
+.top-banner form {
+  color: #{Css.bannerBackground};
+  width: 50%;
+}
+
+.top-banner input {
+  width: 100%;
+  line-height: 1.5;
+  padding: 0.2em;
+  border-radius: 3px;
+}
+
+.top-banner .banner-item.upload {
+  float: right;
+  font-size: 150%;
+}
+
+/* Sidebar */
+.col-aside ul {
+  margin: 1em 0 1.5em 0;
+  padding-left: 1.5em;
+}
+
+/* Messages */
+.message {
+  border: 5px solid;
+  border-radius: 5px;
+  /* the !important is here to ensure that it overrides the .col-main
+     *:first-child rule */
+  padding: 1em !important;
+  margin-bottom: 2em;
+}
+
+.error {
+  background-color: #{Css.errorBackgroundColor};
+  border-color: #{Css.errorBorderColor};
+}
+
+.success {
+  background-color: #{Css.successBackgroundColor};
+  border-color: #{Css.darken20 Css.successBackgroundColor};
+}
+
+.not-available {
+  background-color: #{Css.notAvailableBackgroundColor};
+  border-color: #{Css.darken20 Css.notAvailableBackgroundColor};
+}
+
+/* Typography */
+h1, h2 {
+  font-weight: normal;
+}
+
+h3 {
+  font-size: 1.4em;
+}
+
+a h2 {
+  margin-top: 0.83em;
+}
+
+/* Version selector */
+select.version-selector {
+  margin-top: 0.4em !important;
+  float: left;
+  width: auto;
+  min-width: 20%;
+}
+
+/* GitHub rendered README */
+article.entry-content p:first-child {
+  margin-top: 0;
+}
+
+/* Search results */
+a.search-result {
+  display: block;
+  background: #{Css.codeBackground};
+  padding: 0.2em 1em;
+  margin-bottom: 1em;
+  color: #000;
+  font-weight: normal;
+  border: 1px solid #{Css.codeBackground};
+  border-radius: 5px;
+}
+
+a.search-result .highlight {
+  color: #{Css.linkColor};
+}
+
+a.search-result p:first-child {
+  margin-bottom: 0.5em;
+}
+
+a.search-result p:nth-child(2) {
+  margin-top: 0.5em;
+}
+
+a.search-result:hover,
+a.search-result:focus {
+  text-decoration: none;
+  background: #{Css.lighten5 Css.codeBackground};
+  border: 1px solid #{Css.codeForeground};
+  outline: none;
+}
+
+/* Help paragraphs */
+div.help {
+  padding: 1em;
+}
+
+.help h2 {
+  margin-top: 0;
+}
+
+.help h3 {
+  margin-top: 0.5em;
+}
+
+/* Everything else */
+.decl {
+    margin-top: 2em;
+    padding: 1em;
+}
+
+.decl h3 {
+    margin-top: 0;
+}
+
+:target {
+    border-radius: 5px;
+    background-color: #{Css.codeBackground};
+}
+
+.decl-inner {
+    padding: 0 1.4em;
+}
+
+.keyword, .syntax {
+    color: #a0a0a0;
+}
+
+code {
+    color: #{Css.codeForeground};
+    background-color: #{Css.codeBackground};
+}
+
+.code-block {
+    display: block;
+    padding: 0.5em 1em;
+}
+
+ul.documentation-contents li {
+    font-size: 1.3em;
+}
+
+hr {
+  border: 1px solid #{Css.darken20 Css.backgroundColor};
+}
+
+.center {
+  text-align: center;
+}
