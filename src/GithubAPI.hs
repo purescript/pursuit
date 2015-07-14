@@ -14,6 +14,7 @@ import Text.XML.HXT.Core as HXT
 import Text.HTML.SanitizeXSS (sanitize)
 import Data.CaseInsensitive (CI)
 import qualified Language.PureScript.Docs as D
+import qualified Network.HTTP.Types as HTTP
 
 -- | Get a repository readme, rendered as HTML.
 getReadme ::
@@ -61,12 +62,12 @@ getReadme' mauth (D.GithubUser user) (D.GithubRepo repo) ref =
 
 -- | Get the currently logged in user.
 getUser ::
-  (MonadCatch m, MonadIO m, HasHttpManager env, MonadReader env m) =>
+  (MonadCatch m, MonadIO m, HasHttpManager env, MonadReader env m, Functor m) =>
   GithubAuthToken -> m (Either HttpException (Maybe D.GithubUser))
 getUser token =
-  (liftM . liftM) go (getUser' token)
+  (map . map) extractUser (getUser' token) >>= catch401
   where
-  go = liftM D.GithubUser . (loginFromJSON <=< A.decode)
+  extractUser = map D.GithubUser . (loginFromJSON <=< A.decode)
   loginFromJSON val =
     case val of
       A.Object obj ->
@@ -75,12 +76,17 @@ getUser token =
           _                 -> Nothing
       _            -> Nothing
 
+  catch401 (Left (StatusCodeException status _ _))
+    | status == HTTP.unauthorized401 = return $ Right Nothing
+  catch401 other = return other
+
 getUser' ::
   (MonadCatch m, MonadIO m, HasHttpManager env, MonadReader env m) =>
   GithubAuthToken -> m (Either HttpException BL.ByteString)
 getUser' auth =
-  let headers = ("Accept", "application/json") : authHeader (Just auth)
-  in githubAPI ["user"] "" headers
+  githubAPI ["user"] "" headers
+  where
+  headers = ("Accept", "application/json") : authHeader (Just auth)
 
 githubAPI ::
   (MonadCatch m, MonadIO m, HasHttpManager env, MonadReader env m) =>

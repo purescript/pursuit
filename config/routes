@@ -5,7 +5,7 @@
 
 / HomeR GET
 
-/packages                                              PackageIndexR               GET
+/packages                                              PackageIndexR               GET POST
 /packages/#PathPackageName                             PackageR                    GET
 /packages/#PathPackageName/#PathVersion                PackageVersionR             GET
 /packages/#PathPackageName/#PathVersion/docs           PackageVersionDocsR         GET

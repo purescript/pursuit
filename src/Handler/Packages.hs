@@ -13,6 +13,7 @@ import Handler.Caching
 import Handler.GithubOAuth
 import Handler.Utils
 import TemplateHelpers
+import qualified GithubAPI
 
 getHomeR :: Handler Html
 getHomeR =
@@ -51,6 +52,32 @@ getPackageVersionR (PathPackageName pkgName) (PathVersion version) =
 
 getPackageIndexR :: Handler Html
 getPackageIndexR = redirect HomeR
+
+postPackageIndexR :: Handler Value
+postPackageIndexR = do
+  package <- requireJsonBody
+  mtoken  <- lookupAuthTokenHeader
+  case mtoken of
+    Nothing -> notAuthenticated
+    Just token -> do
+      emuser <- GithubAPI.getUser token
+      case emuser of
+        Left err -> $logError (tshow err) >> internalServerError
+        Right Nothing -> notAuthenticated
+        Right (Just user) -> do
+           let package' = D.verifyPackage user package
+           insertPackage package'
+           sendResponseCreated $ packageRoute package'
+
+  where
+  lookupAuthTokenHeader = do
+    mheader <- lookupHeader "Authorization"
+    return $ mheader >>= extractToken
+
+  extractToken header =
+    case words (decodeUtf8 header) of
+      ["token", token] -> Just $ GithubAuthToken $ encodeUtf8 token
+      _ -> Nothing
 
 getPackageVersionDocsR :: PathPackageName -> PathVersion -> Handler Html
 getPackageVersionDocsR (PathPackageName pkgName) (PathVersion version) =
