@@ -3,3 +3,4 @@ yesod-devel/
 config/client_session_key.aes
 data
 static/tmp/
+license-generator/tmp/
