@@ -52,7 +52,9 @@ get_license() {
     local hackage="https://hackage.haskell.org/package"
     case "$1" in
         cpphs)
-            get_licence_from_url "$hackage/cpphs/src/LICENCE-LGPL";;
+            get_licence_from_url "http://code.haskell.org/cpphs/COPYRIGHT"
+            echo ""
+            cat "license-generator/gnu-lgpl-2.1.txt";;
         hoogle)
             get_licence_from_url "$hackage/hoogle/docs/LICENSE";;
         monad-loops)

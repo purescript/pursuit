@@ -1761,11 +1761,47 @@ cookie license file:
 
 cpphs license file:
 
+  The cpphs library and command-line tool is written by and copyright to
+      (c) copyright 2004-2015    Malcolm Wallace
+  
+  The cpphs library is licensed under the terms of the GNU Lesser
+  General Public Licence (LGPL), which can be found in the file called
+  LICENCE-LGPL, with the following special exception:
+  
+  ----
+  As a relaxation of clause 6 of the LGPL, the copyright holders of this
+  library give permission to use, copy, link, modify, and distribute,
+  binary-only object-code versions of an executable linked with the
+  original unmodified Library, without requiring the supply of any
+  mechanism to modify or replace the Library and relink (clauses 6a,
+  6b, 6c, 6d, 6e), provided that all the other terms of clause 6 are
+  complied with.
+  ----
+  
+  The command-line tool cpphs is licensed under the terms of the GNU
+  General Public Licence (GPL), which can be found in the file called
+  LICENCE-GPL.
+  
+  This library and toolset is distributed in the hope that it will be
+  useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+  of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  Licences for more details.
+  
+  If you have a commercial use for cpphs and find the terms of the (L)GPL
+  too onerous, you can instead choose to distribute unmodified binaries
+  (not source), under the terms of LICENCE-commercial.
+  
+  If any of these licensing terms are not acceptable to you, please
+  contact me for negotiation.  :-)
+      Malcolm.Wallace@me.com
+  
+  
                     GNU LESSER GENERAL PUBLIC LICENSE
                          Version 2.1, February 1999
   
    Copyright (C) 1991, 1999 Free Software Foundation, Inc.
        51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
+  
    Everyone is permitted to copy and distribute verbatim copies
    of this license document, but changing it is not allowed.
   
@@ -2222,52 +2258,6 @@ cpphs license file:
   DAMAGES.
   
                        END OF TERMS AND CONDITIONS
-  
-  
-             How to Apply These Terms to Your New Libraries
-  
-    If you develop a new library, and you want it to be of the greatest
-  possible use to the public, we recommend making it free software that
-  everyone can redistribute and change.  You can do so by permitting
-  redistribution under these terms (or, alternatively, under the terms of the
-  ordinary General Public License).
-  
-    To apply these terms, attach the following notices to the library.  It is
-  safest to attach them to the start of each source file to most effectively
-  convey the exclusion of warranty; and each file should have at least the
-  "copyright" line and a pointer to where the full notice is found.
-  
-      <one line to give the library's name and a brief idea of what it does.>
-      Copyright (C) <year>  <name of author>
-  
-      This library is free software; you can redistribute it and/or
-      modify it under the terms of the GNU Lesser General Public
-      License as published by the Free Software Foundation; either
-      version 2.1 of the License, or (at your option) any later version.
-  
-      This library is distributed in the hope that it will be useful,
-      but WITHOUT ANY WARRANTY; without even the implied warranty of
-      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-      Lesser General Public License for more details.
-  
-      You should have received a copy of the GNU Lesser General Public
-      License along with this library; if not, write to the Free Software
-      Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-  
-  Also add information on how to contact you by electronic and paper mail.
-  
-  You should also get your employer (if you work as a programmer) or your
-  school, if any, to sign a "copyright disclaimer" for the library, if
-  necessary.  Here is a sample; alter the names:
-  
-    Yoyodyne, Inc., hereby disclaims all copyright interest in the
-    library `Frob' (a library for tweaking knobs) written by James Random Hacker.
-  
-    <signature of Ty Coon>, 1 April 1990
-    Ty Coon, President of Vice
-  
-  That's all there is to it!
-  
 
 cprng-aes license file:
 
@@ -9375,5 +9365,4 @@ zlib license file:
   CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
   POSSIBILITY OF SUCH DAMAGE.
-
 
