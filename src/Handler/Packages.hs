@@ -4,6 +4,7 @@ import Import
 import Text.Blaze.Html (preEscapedToHtml)
 import Text.Julius (rawJS)
 import Data.Version
+import qualified Data.ByteString.Lazy as BL
 import qualified Language.PureScript.Docs as D
 import Web.Bower.PackageMeta (PackageName, runPackageName, bowerDependencies, bowerLicence)
 import qualified Data.Aeson.BetterErrors as A
@@ -55,21 +56,40 @@ getPackageIndexR = redirect HomeR
 
 postPackageIndexR :: Handler Value
 postPackageIndexR = do
-  package <- requireJsonBody
+  package <- getUploadedPackageFromBody
   mtoken  <- lookupAuthTokenHeader
   case mtoken of
     Nothing -> notAuthenticated
     Just token -> do
-      emuser <- GithubAPI.getUser token
-      case emuser of
-        Left err -> $logError (tshow err) >> internalServerError
-        Right Nothing -> notAuthenticated
-        Right (Just user) -> do
-           let package' = D.verifyPackage user package
-           insertPackage package'
-           sendResponseCreated $ packageRoute package'
+      user <- getUserOrNotAuthenticated token
+      let package' = D.verifyPackage user package
+      insertPackage package'
+      sendResponseCreated $ packageRoute package'
 
   where
+  getUploadedPackageFromBody = do
+    body     <- getRequestBody
+    epackage <- parseUploadedPackage body
+    case epackage of
+      Left err ->
+        let display = A.displayError D.displayPackageError
+        in sendResponseStatus badRequest400 $ object [ "error" .= display err ]
+      Right package ->
+        return package
+
+  getRequestBody =
+    rawRequestBody $$ sinkLazy
+
+  getUserOrNotAuthenticated token = do
+    euser <- GithubAPI.getUser token
+    case euser of
+      Left err ->
+        $logError (tshow err) >> internalServerError
+      Right Nothing ->
+        notAuthenticated
+      Right (Just user) ->
+        return user
+
   lookupAuthTokenHeader = do
     mheader <- lookupHeader "Authorization"
     return $ mheader >>= extractToken
@@ -169,8 +189,8 @@ postUploadPackageR =
     case result of
       FormSuccess file -> do
         bytes <- runResourceT $ fileSource file $$ sinkLazy
-        minVersion <- appMinimumCompilerVersion . appSettings <$> getYesod
-        case D.parseUploadedPackage minVersion bytes of
+        eresult <- parseUploadedPackage bytes
+        case eresult of
           Right pkg -> do
             let pkg' = D.verifyPackage user pkg
             insertPackage pkg'
@@ -179,6 +199,14 @@ postUploadPackageR =
           Left err -> renderUploadPackageForm widget enctype
                         (Just $ displayJsonError err)
       _ -> renderUploadPackageForm widget enctype Nothing
+
+-- | Try to parse a D.UploadedPackage from a ByteString containing JSON.
+parseUploadedPackage ::
+  BL.ByteString ->
+  Handler (Either (A.ParseError D.PackageError) D.UploadedPackage)
+parseUploadedPackage bytes = do
+  minVersion <- appMinimumCompilerVersion . appSettings <$> getYesod
+  return $ D.parseUploadedPackage minVersion bytes
 
 displayJsonError :: A.ParseError D.PackageError -> [Text]
 displayJsonError e = case e of
