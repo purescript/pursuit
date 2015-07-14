@@ -204,7 +204,9 @@ renderFixity (P.Fixity associativity precedence) =
 
 -- TODO: use GitHub API instead?
 renderComments :: String -> Html ()
-renderComments = toHtmlRaw . H.renderHtml . H.toHtml . Cheapskate.markdown def . T.pack
+renderComments = toHtmlRaw . H.renderHtml . H.toHtml . Cheapskate.markdown opts . T.pack
+  where
+  opts = def { Cheapskate.allowRawHtml = False }
 
 -- | if `to` and `from` are both files in the current package, generate a
 -- FilePath for `to` relative to `from`.
