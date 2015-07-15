@@ -267,25 +267,17 @@ searchDatabase :: Hoogle.Database -> String -> ExceptT String Handler [HoogleRes
 searchDatabase db query = do
   q <- either (throwE . show) return $ parse query
   let results = Hoogle.search db q
-  actuals <- traverse munge results
+  actuals <- concat <$> traverse (munge . snd) results
   extras <- lift $ searchForPackage query
   return $ extras ++ actuals
 
   where
   parse = Hoogle.parseQuery Hoogle.Haskell
 
-  munge r' = do
-    let r = snd r'
-    let tagStr = Hoogle.self r
-    url <- justOr' "unable to extract result url" $ resultUrl r
-    extractHoogleResult tagStr url
-
-  resultUrl r =
-    case Hoogle.locations r of
-      [(x, _)] -> Just x
-      _        -> Nothing
-
-  justOr' msg = justOr $ "searchDatabase: " ++ msg
+  munge result = do
+    let tagStr    = Hoogle.self result
+    let locations = Hoogle.locations result
+    traverse (extractHoogleResult tagStr) (map fst locations)
 
 -- | Search the package database for a particular package manually, and
 -- construct a HoogleResult (as if Hoogle had performed the search). For some
