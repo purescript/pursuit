@@ -12,13 +12,13 @@ install:
   - cabal install --only-dependencies --enable-tests --enable-benchmarks
 script:
   - cabal build
-after_script:
+notifications:
+  email: true
+before_deploy:
   - mkdir bundle
   - cp dist/build/pursuit/pursuit bundle/
   - cp LICENSE bundle/
   - tar czf pursuit.tar.gz -C bundle/ .
-notifications:
-  email: true
 deploy:
   provider: releases
   api_key: $RELEASE_KEY
