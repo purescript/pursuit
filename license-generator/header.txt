@@ -19,5 +19,22 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+---
+
+Relinking with modified versions of LGPL v2.1 libraries
+
+Pursuit depends on some Haskell libraries which are LGPL v2.1 licensed. As per
+the terms of that license, we explain here how to compile a version of Pursuit
+using modified versions of these libraries.
+
+* Obtain the Pursuit source code: https://github.com/purescript/pursuit
+* Obtain the source code for the LGPL component, which is available from
+  Hackage, and make your desired modifications
+* Create a cabal sandbox
+* Use `cabal sandbox add-source` to use your modified version of the LGPL
+  component rather than the Hackage version.
+
+---
+
 Pursuit makes use of a number of libraries from Hackage. These libraries and
 their licenses are listed below:
