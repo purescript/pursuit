@@ -1,7 +1,10 @@
 
 module Handler.Caching
-  ( cache
+  ( OkToCache(..)
+  , cache
+  , cacheConditional
   , cacheHtml
+  , cacheHtmlConditional
   , cacheSvg
   , cacheJSON
   , cacheText
@@ -23,13 +26,27 @@ import Data.Aeson (encode)
 
 import Handler.Utils
 
+data OkToCache
+  = OkToCache
+  | NotOkToCache
+  deriving (Show, Eq, Ord)
+
 -- | This function allows an upstream server (such as nginx) to cache a
 -- response, by writing the response body to a file before sending it to the
 -- client. Afterwards, the upstream server can respond to requests for the same
 -- path without having to proxy to the Yesod application, and any caching
 -- mechanisms that the upstream server supports can additionally be used.
-cache :: (a -> LB.ByteString) -> String -> Handler a -> Handler a
-cache toLbs basename action = action >>= (\body -> write body $> body)
+--
+-- We use Yesod's short-circuiting behaviour here to ensure that this code is
+-- never reached if the inner handler generates an internal server error (in
+-- which case the response should certainly not be cached).
+cacheConditional :: (a -> LB.ByteString) -> String -> Handler (OkToCache, a) -> Handler a
+cacheConditional toLbs basename action = do
+  (status, body) <- action
+  case status of
+    OkToCache    -> write body
+    NotOkToCache -> $logDebug "response is not cacheable, writing skipped"
+  return body
   where
   write body = do
     mroute <- getCurrentRoute
@@ -41,8 +58,17 @@ cache toLbs basename action = action >>= (\body -> write body $> body)
         $logDebug ("writing response to disk for caching: " ++ pack path)
         writeFileWithParents path (toLbs body)
 
+-- | A variant of cache' to be used when the response is always cacheable
+-- (assuming the inner handler completes and returns a value).
+cache :: (a -> LB.ByteString) -> String -> Handler a -> Handler a
+cache toLbs basename action =
+  cacheConditional toLbs basename ((OkToCache,) <$> action)
+
 cacheHtml :: Handler Html -> Handler Html
 cacheHtml = cache renderHtml "index.html"
+
+cacheHtmlConditional :: Handler (OkToCache, Html) -> Handler Html
+cacheHtmlConditional = cacheConditional renderHtml "index.html"
 
 cacheSvg :: Handler Svg -> Handler Svg
 cacheSvg = cache renderSvg "index.svg"
