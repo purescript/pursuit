@@ -38,8 +38,9 @@ data OkToCache
 -- mechanisms that the upstream server supports can additionally be used.
 --
 -- We use Yesod's short-circuiting behaviour here to ensure that this code is
--- never reached if the inner handler generates an internal server error (in
--- which case the response should certainly not be cached).
+-- never reached if the inner handler generates an internal server error, or a
+-- client error such as a 404 (in which case the response should not be
+-- cached).
 cacheConditional :: (a -> LB.ByteString) -> String -> Handler (OkToCache, a) -> Handler a
 cacheConditional toLbs basename action = do
   (status, body) <- action
