@@ -9,8 +9,20 @@ install:
   - cabal install --only-dependencies --enable-tests --enable-benchmarks
 script:
   - cabal build
+after_script:
+  - mkdir bundle
+  - cp dist/build/pursuit/pursuit bundle/
+  - cp LICENSE bundle/
+  - tar czf pursuit.tar.gz -C bundle/ .
 notifications:
   email: true
+deploy:
+  provider: releases
+  api_key: $RELEASE_KEY
+  file: pursuit.tar.gz
+  skip_cleanup: true
+  on:
+    tags: true
 addons:
   apt:
     sources:
