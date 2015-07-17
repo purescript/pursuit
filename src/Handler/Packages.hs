@@ -43,13 +43,16 @@ getPackageAvailableVersionsR (PathPackageName pkgName) =
 
 getPackageVersionR :: PathPackageName -> PathVersion -> Handler Html
 getPackageVersionR (PathPackageName pkgName) (PathVersion version) =
-  cacheHtml $ findPackage pkgName version $ \pkg@D.Package{..} -> do
-    moduleList <- renderModuleList pkg
-    mreadme    <- tryGetReadme pkg
-    defaultLayout $ do
-      setTitle (toHtml (runPackageName pkgName))
-      let dependencies = bowerDependencies pkgMeta
-      $(widgetFile "packageVersion")
+  cacheHtmlConditional $
+    findPackage pkgName version $ \pkg@D.Package{..} -> do
+      moduleList <- renderModuleList pkg
+      mreadme    <- tryGetReadme pkg
+      let cacheStatus = maybe NotOkToCache (const OkToCache) mreadme
+      content <- defaultLayout $ do
+        setTitle (toHtml (runPackageName pkgName))
+        let dependencies = bowerDependencies pkgMeta
+        $(widgetFile "packageVersion")
+      return (cacheStatus, content)
 
 getPackageIndexR :: Handler Html
 getPackageIndexR = redirect HomeR
