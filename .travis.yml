@@ -1,16 +1,32 @@
 sudo: false
 before_install:
-  - export PATH="/opt/ghc/7.8.4/bin:/opt/cabal/1.22/bin:$HOME/.cabal/bin:$PATH"
+  - export PATH="/opt/ghc/7.8.4/bin:$PATH"
+  - export PATH="/opt/cabal/1.22/bin:$PATH"
+  - export PATH="$HOME/.cabal/bin:$PATH"
+  - export PATH="/opt/alex/3.1.4/bin:$PATH"
+  - export PATH="/opt/happy/1.19.5/bin:$PATH"
 install:
   - cabal --version
   - echo "$(ghc --version) [$(ghc --print-project-git-commit-id 2> /dev/null || echo '?')]"
   - travis_retry cabal update
-  - cabal install alex happy
-  - cabal install --only-dependencies --enable-tests --enable-benchmarks
+  - cabal sandbox init
+  - cabal install --only-dependencies --enable-tests
 script:
   - cabal build
 notifications:
   email: true
+before_deploy:
+  - mkdir bundle
+  - cp dist/build/pursuit/pursuit bundle/
+  - cp LICENSE bundle/
+  - tar czf pursuit.tar.gz -C bundle/ .
+deploy:
+  provider: releases
+  api_key: $RELEASE_KEY
+  file: pursuit.tar.gz
+  skip_cleanup: true
+  on:
+    tags: true
 addons:
   apt:
     sources:
@@ -18,3 +34,8 @@ addons:
     packages:
       - cabal-install-1.22
       - ghc-7.8.4
+      - alex-3.1.4
+      - happy-1.19.5
+cache:
+  directories:
+    - .cabal-sandbox
