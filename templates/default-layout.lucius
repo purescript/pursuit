@@ -277,6 +277,7 @@ code, pre {
     color: #{Css.codeForeground};
     background-color: #{Css.codeBackground};
     white-space: pre-wrap;
+    word-wrap: break-word;
 }
 
 .code-block {
