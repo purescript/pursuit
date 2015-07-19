@@ -171,6 +171,10 @@ a h2 {
   margin-top: 0.83em;
 }
 
+ul, ol {
+  padding-left: 25px;
+}
+
 /* Version selector */
 select.version-selector {
 //  margin-top: 0.4em !important;
