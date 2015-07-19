@@ -47,6 +47,9 @@ mkYesodDispatch "App" resourcesApp
 -- migrations handled by Yesod.
 makeFoundation :: AppSettings -> IO App
 makeFoundation appSettings = do
+    let mode = if isDevelopment then "development" else "production"
+    putStrLn $ "Starting in " <> mode <> " mode"
+
     -- Some basic initializations: HTTP connection manager, logger, and static
     -- subsite.
     appHttpManager <- newManager
