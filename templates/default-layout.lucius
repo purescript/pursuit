@@ -37,27 +37,32 @@ body {
   max-width: 1060px;
   margin-left: auto;
   margin-right: auto;
+  padding: 7px;
 }
 
-.col-main {
-  float: left;
-  width: 70%;
-  padding-right: 2em;
+.col h1,
+.col h2,
+.col h3,
+.col h4,
+.col h5,
+.col h6,
+.col p,
+.col ul,
+.col ol,
+.col pre,
+.col .version-selector.container,
+.col form,
+.col {
+  padding: 0 10px;
 }
 
-.col-aside {
-  float: right;
-  width: 30%;
+.col ul,
+.col ol {
+  padding-left: 25px;
 }
 
-.col-aside > *:first-child,
-.col-main > *:first-child {
-  margin-top: 0;
-  padding-top: 0;
-}
-
-main {
-  margin-top: 2em;
+.top-banner .banner-item {
+  padding: 0 17px;
 }
 
 /* Links */
@@ -84,6 +89,7 @@ a:hover {
   color: #{Css.darkForeground};
   text-decoration: none;
   font-weight: lighter;
+  padding: 5px 0;
 }
 
 .top-banner a:hover {
@@ -91,50 +97,34 @@ a:hover {
 }
 
 .top-banner {
-  line-height: 5em;
+  line-height: 3.5em;
   vertical-align: middle;
 }
 
 .top-banner .pursuit {
   font-size: 150%;
-  margin-right: 3em;
-}
-
-.top-banner .banner-item {
-  float: left;
 }
 
 .top-banner form {
   color: #{Css.bannerBackground};
-  width: 50%;
 }
 
 .top-banner input {
   width: 100%;
-  line-height: 1.5;
+  line-height: 1.5em;
   padding: 0.2em;
   border-radius: 3px;
 }
 
 .top-banner .banner-item.upload {
-  float: right;
+  /* float: right; */
   font-size: 150%;
-}
-
-/* Sidebar */
-.col-aside ul {
-  margin: 1em 0 1.5em 0;
-  padding-left: 1.5em;
 }
 
 /* Messages */
 .message {
   border: 5px solid;
   border-radius: 5px;
-  /* the !important is here to ensure that it overrides the .col-main
-     *:first-child rule */
-  padding: 1em !important;
-  margin-bottom: 2em;
 }
 
 .error {
@@ -167,7 +157,6 @@ a h2 {
 
 /* Version selector */
 select.version-selector {
-  margin-top: 0.4em !important;
   float: left;
   width: auto;
   min-width: 20%;
@@ -211,26 +200,21 @@ a.search-result:focus {
 }
 
 /* Help paragraphs */
-div.help {
-  padding: 1em;
-}
-
-.help h2 {
-  margin-top: 0;
+.help {
+  padding: 5px 0;
 }
 
 .help h3 {
-  margin-top: 0.5em;
+  margin-top: 16px;
 }
 
 /* Everything else */
 .decl {
     margin-top: 2em;
-    padding: 1em;
 }
 
 .decl h3 {
-    margin-top: 0;
+    padding-top: 0.4em;
 }
 
 :target {
@@ -239,16 +223,18 @@ div.help {
 }
 
 .decl-inner {
-    padding: 0 1.4em;
+    padding: 0 0.9em;
 }
 
 .keyword, .syntax {
     color: #a0a0a0;
 }
 
-code {
+code, pre {
     color: #{Css.codeForeground};
     background-color: #{Css.codeBackground};
+    white-space: pre-wrap;
+    word-wrap: break-word;
 }
 
 .code-block {
@@ -266,4 +252,42 @@ hr {
 
 .center {
   text-align: center;
+}
+
+/* media queries */
+@media (min-width: 50em) {
+  .col {
+    width: 70%
+  }
+
+  .top-banner .banner-item {
+    float: left;
+  }
+
+  .top-banner .banner-item.pursuit {
+    margin-right: 3em;
+  }
+
+  .top-banner form.banner-item {
+    width: 50%;
+  }
+
+  .top-banner .banner-item.upload {
+    float: right;
+  }
+}
+
+@media (min-width: 70em) {
+  .col.col-main {
+    float: left;
+  }
+
+  .col.col-aside {
+    width: 30%;
+    float: right;
+  }
+
+  select.version-selector {
+    margin-top: 1em;
+  }
 }

@@ -19,8 +19,8 @@ document.addEventListener('keydown', function(event) {
 
 
 // Change the placeholder for the search input based on whether it is focused.
-var normalPlaceholder = 'Search for packages, types, functions... (S to focus)'
-var focusPlaceholder = 'Search for packages, types, functions...'
+var normalPlaceholder = searchInput.getAttribute('data-normal-placeholder')
+var focusPlaceholder  = searchInput.getAttribute('data-focus-placeholder')
 
 searchInput.addEventListener('focus', function() {
   searchInput.setAttribute('placeholder', focusPlaceholder)
