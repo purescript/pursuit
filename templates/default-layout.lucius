@@ -37,7 +37,31 @@ body {
   max-width: 1060px;
   margin-left: auto;
   margin-right: auto;
-  padding: 1em;
+  padding: 7px;
+}
+
+.col h1,
+.col h2,
+.col h3,
+.col h4,
+.col h5,
+.col h6,
+.col p,
+.col ul,
+.col ol,
+.col pre,
+.col .version-selector.container,
+.col {
+  padding: 0 10px;
+}
+
+.col ul,
+.col ol {
+  padding-left: 25px;
+}
+
+.top-banner .banner-item {
+  padding: 0 17px;
 }
 
 /* .col-main {
@@ -128,10 +152,12 @@ a:hover {
 }
 
 /* Sidebar */
+/*
 .col-aside ul {
   margin: 1em 0 1.5em 0;
   padding-left: 1.5em;
 }
+*/
 
 /* Messages */
 .message {
@@ -140,7 +166,6 @@ a:hover {
   /* the !important is here to ensure that it overrides the .col-main
      *:first-child rule */
   padding: 1em !important;
-  /* margin-bottom: 2em; */
 }
 
 .error {
@@ -171,22 +196,18 @@ a h2 {
   margin-top: 0.83em;
 }
 
-ul, ol {
-  padding-left: 25px;
-}
-
 /* Version selector */
 select.version-selector {
-//  margin-top: 0.4em !important;
+/*  margin-top: 0.4em !important; */
   float: left;
   width: auto;
   min-width: 20%;
 }
 
 /* GitHub rendered README */
-// article.entry-content p:first-child {
-//   margin-top: 0;
-// }
+article.entry-content p:first-child {
+  margin-top: 0;
+}
 
 /* Search results */
 a.search-result {
@@ -233,12 +254,10 @@ a.search-result:focus {
 /* Everything else */
 .decl {
     margin-top: 2em;
-    /* padding: 1em; */
 }
 
 .decl h3 {
     padding-top: 0.4em;
-    padding-left: 0.3em;
 }
 
 :target {
@@ -248,7 +267,6 @@ a.search-result:focus {
 
 .decl-inner {
     padding: 0 0.9em;
-    /* padding: 0 1.4em; */
 }
 
 .keyword, .syntax {
