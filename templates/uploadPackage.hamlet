@@ -1,29 +1,30 @@
-<h2>Upload a package
+<div .col.col-main>
+  <h2>Upload a package
 
-<p>
-  You can upload the files produced by
-  <code>psc-publish
-  here in order to put your packages on Pursuit. See also the
-  <a href=#{fr (HelpR, Just "submitting-packages")}>package uploading guide#
-  \.
+  <p>
+    You can upload the files produced by
+    <code>psc-publish
+    here in order to put your packages on Pursuit. See also the
+    <a href=#{fr (HelpR, Just "submitting-packages")}>package uploading guide#
+    \.
 
-$maybe err <- merror
-  <div .message .error>
-    <p>
-      An error occurred, and your package could not be uploaded.
-    <p>
-      Detailed information:<br>
-      $forall line <- err
-        #{line}
-        <br>
-    <p>
-      If you think this is a bug, please
-      <a href="https://github.com/purescript/pursuit/issues/new">open an issue
-      or let us know in #purescript IRC on Freenode.
+  $maybe err <- merror
+    <div .message .error>
+      <p>
+        An error occurred, and your package could not be uploaded.
+      <p>
+        Detailed information:<br>
+        $forall line <- err
+          #{line}
+          <br>
+      <p>
+        If you think this is a bug, please
+        <a href="https://github.com/purescript/pursuit/issues/new">open an issue
+        or let us know in #purescript IRC on Freenode.
 
 
-<form method="post" action=@{UploadPackageR} enctype=#{enctype}>
-  ^{widget}
-  <button type="submit">Submit
+  <form method="post" action=@{UploadPackageR} enctype=#{enctype}>
+    ^{widget}
+    <button type="submit">Submit
 
-<div #upload-form-status>
+  <div #upload-form-status>
