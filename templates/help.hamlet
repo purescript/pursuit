@@ -1,81 +1,82 @@
-<div .help>
-  <h2>Help!
-  <p>
-    This page contains various information for package authors. If anything is
-    missing or confusing, please
-    <a href="https://github.com/purescript/pursuit/issues/new">let us know#
-    \.
-  <h3>Contents
-  <ul>
-    <li>
-      <a href="#submitting-packages">How to submit packages
-    <li>
-      <a href="#submit-automated">Submitting packages from a script
-    <li>
-      <a href="#package-badges">Package badges
+<div .col-main>
+  <div .help>
+    <h2>Help!
+    <p>
+      This page contains various information for package authors. If anything is
+      missing or confusing, please
+      <a href="https://github.com/purescript/pursuit/issues/new">let us know#
+      \.
+    <h3>Contents
+    <ul>
+      <li>
+        <a href="#submitting-packages">How to submit packages
+      <li>
+        <a href="#submit-automated">Submitting packages from a script
+      <li>
+        <a href="#package-badges">Package badges
 
-<div #submitting-packages .help>
-  <h3>How to submit packages
-  <ol>
-    <li>
-      Put the code up on GitHub. (Currently, GitHub is the only supported hosting
-      method. If you'd rather host your code somewhere else, please open an issue
-      and let us know).
+  <div #submitting-packages .help>
+    <h3>How to submit packages
+    <ol>
+      <li>
+        Put the code up on GitHub. (Currently, GitHub is the only supported hosting
+        method. If you'd rather host your code somewhere else, please open an issue
+        and let us know).
 
-    <li>
-      Release your package on Bower, by using
-      <code>bower register#
-      \, creating a git tag, and pushing the tag to GitHub.
+      <li>
+        Release your package on Bower, by using
+        <code>bower register#
+        \, creating a git tag, and pushing the tag to GitHub.
 
-    <li>
-      Ensure that the tagged version is checked out, change to your project
-      directory, and run
-      <code>psc-publish > pursuit.json#
-      \. This will go through your bower.json file and all of your code,
-      collecting all of the information necessary to host your package on
-      Pursuit, and dump that data to a new file called pursuit.json.
+      <li>
+        Ensure that the tagged version is checked out, change to your project
+        directory, and run
+        <code>psc-publish > pursuit.json#
+        \. This will go through your bower.json file and all of your code,
+        collecting all of the information necessary to host your package on
+        Pursuit, and dump that data to a new file called pursuit.json.
 
-    <li>
-      Go to
-      <a href=@{UploadPackageR}>the upload page
-      and submit the pursuit.json file you just created.
-  <p>
-    Your package, together with documentation, should now appear in Pursuit.
+      <li>
+        Go to
+        <a href=@{UploadPackageR}>the upload page
+        and submit the pursuit.json file you just created.
+    <p>
+      Your package, together with documentation, should now appear in Pursuit.
 
-<div #submit-automated .help>
-  <h3>Submitting packages from a script
-  <p>
-    Make a POST request to @{PackageIndexR}, with the JSON output produced
-    by <code>psc-publish</code> in the request body, and with a Github API
-    token in the Authorization header, in the form <code>Authorization: token {token}</code>.
-    You can generate a Github API token for yourself by visiting <a
-    href="https://github.com/settings/tokens/new">https://github.com/settings/tokens/new</a>.
-    No scopes are required, since the token is only used for authentication.
-  <p>
-    For example, using curl:
-  <pre>
-    <code>
-      curl -X POST \
-      \  @{PackageIndexR} \
-      \  -d @pursuit.json \
-      \  -H 'Accept: application/json' \
-      \  -H "Authorization: token $(cat my-oauth-token.txt)" \
-      \  -v
-  <p>
-    If your submission is successful, Pursuit will return a 201 Created
-    response, and the URL for your newly uploaded package will be in the
-    Location header.
-  <p>
-    This feature can be used to automatically upload documentation to Pursuit
-    from Travis after tagging a release.
+  <div #submit-automated .help>
+    <h3>Submitting packages from a script
+    <p>
+      Make a POST request to @{PackageIndexR}, with the JSON output produced
+      by <code>psc-publish</code> in the request body, and with a Github API
+      token in the Authorization header, in the form <code>Authorization: token {token}</code>.
+      You can generate a Github API token for yourself by visiting <a
+      href="https://github.com/settings/tokens/new">https://github.com/settings/tokens/new</a>.
+      No scopes are required, since the token is only used for authentication.
+    <p>
+      For example, using curl:
+    <pre>
+      <code>
+        curl -X POST \
+        \  @{PackageIndexR} \
+        \  -d @pursuit.json \
+        \  -H 'Accept: application/json' \
+        \  -H "Authorization: token $(cat my-oauth-token.txt)" \
+        \  -v
+    <p>
+      If your submission is successful, Pursuit will return a 201 Created
+      response, and the URL for your newly uploaded package will be in the
+      Location header.
+    <p>
+      This feature can be used to automatically upload documentation to Pursuit
+      from Travis after tagging a release.
 
-<div #package-badges .help>
-  <h3>Package badges
-  <p>
-    Pursuit can generate SVG badges for your packages, which you can put on your
-    project's homepage, or perhaps its GitHub readme.
-  <p>
-    The suggested markup for a badge is:
-  <pre>
-    <code>
-      #{suggestedBadgeMarkup}
+  <div #package-badges .help>
+    <h3>Package badges
+    <p>
+      Pursuit can generate SVG badges for your packages, which you can put on your
+      project's homepage, or perhaps its GitHub readme.
+    <p>
+      The suggested markup for a badge is:
+    <pre>
+      <code>
+        #{suggestedBadgeMarkup}
