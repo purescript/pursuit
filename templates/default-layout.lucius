@@ -263,10 +263,6 @@ hr {
     width: 70%
   }
 
-  .top-banner {
-    line-height: 5em;
-  }
-
   .top-banner .banner-item {
     float: left;
   }
