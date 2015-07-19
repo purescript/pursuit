@@ -64,28 +64,6 @@ body {
   padding: 0 17px;
 }
 
-/* .col-main {
-/*   float: left;
-/*   width: 70%;
-/*   padding-right: 2em;
-/* }
-/* 
-/* .col-aside {
-/*   float: right;
-/*   width: 30%;
-/* }
-/* 
-/* .col-aside > *:first-child,
-/* .col-main > *:first-child {
-/*   margin-top: 0;
-/*   padding-top: 0;
-/* }
-
-/* main {
-/*   margin-top: 2em;
-/* }
-*/
-
 /* Links */
 a, a:visited {
   color: #{Css.linkColor};
@@ -143,20 +121,11 @@ a:hover {
 }
 
 /* Sidebar */
-/*
-.col-aside ul {
-  margin: 1em 0 1.5em 0;
-  padding-left: 1.5em;
-}
-*/
 
 /* Messages */
 .message {
   border: 5px solid;
   border-radius: 5px;
-  /* the !important is here to ensure that it overrides the .col-main
-     *:first-child rule */
-  padding: 1em !important;
 }
 
 .error {
@@ -189,7 +158,6 @@ a h2 {
 
 /* Version selector */
 select.version-selector {
-/*  margin-top: 0.4em !important; */
   float: left;
   width: auto;
   min-width: 20%;
@@ -290,7 +258,7 @@ hr {
 
 /* media queries */
 @media (min-width: 50em) {
-  .col-main, .col-aside {
+  .col {
     width: 70%
   }
 
@@ -312,5 +280,20 @@ hr {
 
   .top-banner .banner-item.upload {
     float: right;
+  }
+}
+
+@media (min-width: 70em) {
+  .col.col-main {
+    float: left;
+  }
+
+  .col.col-aside {
+    width: 30%;
+    float: right;
+  }
+
+  select.version-selector {
+    margin-top: 1em;
   }
 }
