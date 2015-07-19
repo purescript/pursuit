@@ -19,10 +19,12 @@
       <strong>No dependencies
     $else
       <strong>Dependencies
-      $forall (depPkg, versionRange) <- dependencies
-        <li>
-          <a href=@{packageNameRoute depPkg}>#{runPackageName depPkg}
-          #{renderVersionRange versionRange}
+      <ul>
+        $forall (depPkg, versionRange) <- dependencies
+          <li>
+            <a href=@{packageNameRoute depPkg}>#{runPackageName depPkg}
+            #{renderVersionRange versionRange}
+    <hr>
 
 <div .col-main>
   $maybe readme <- mreadme

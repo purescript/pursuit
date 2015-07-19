@@ -37,28 +37,30 @@ body {
   max-width: 1060px;
   margin-left: auto;
   margin-right: auto;
+  padding: 1em;
 }
 
-.col-main {
-  float: left;
-  width: 70%;
-  padding-right: 2em;
-}
+/* .col-main {
+/*   float: left;
+/*   width: 70%;
+/*   padding-right: 2em;
+/* }
+/* 
+/* .col-aside {
+/*   float: right;
+/*   width: 30%;
+/* }
+/* 
+/* .col-aside > *:first-child,
+/* .col-main > *:first-child {
+/*   margin-top: 0;
+/*   padding-top: 0;
+/* }
 
-.col-aside {
-  float: right;
-  width: 30%;
-}
-
-.col-aside > *:first-child,
-.col-main > *:first-child {
-  margin-top: 0;
-  padding-top: 0;
-}
-
-main {
-  margin-top: 2em;
-}
+/* main {
+/*   margin-top: 2em;
+/* }
+*/
 
 /* Links */
 a, a:visited {
@@ -84,6 +86,7 @@ a:hover {
   color: #{Css.darkForeground};
   text-decoration: none;
   font-weight: lighter;
+  padding: 5px 0;
 }
 
 .top-banner a:hover {
@@ -91,33 +94,36 @@ a:hover {
 }
 
 .top-banner {
-  line-height: 5em;
+  /* line-height: 5em; */
+  line-height: 3.5em;
   vertical-align: middle;
 }
 
 .top-banner .pursuit {
   font-size: 150%;
-  margin-right: 3em;
+  /* margin-right: 3em; */
 }
 
+/*
 .top-banner .banner-item {
   float: left;
 }
+*/
 
 .top-banner form {
   color: #{Css.bannerBackground};
-  width: 50%;
+  /* width: 50%; */
 }
 
 .top-banner input {
   width: 100%;
-  line-height: 1.5;
+  line-height: 1.5em;
   padding: 0.2em;
   border-radius: 3px;
 }
 
 .top-banner .banner-item.upload {
-  float: right;
+  /* float: right; */
   font-size: 150%;
 }
 
@@ -133,7 +139,7 @@ a:hover {
   border-radius: 5px;
   /* the !important is here to ensure that it overrides the .col-main
      *:first-child rule */
-  padding: 1em !important;
+//  padding: 1em !important;
   margin-bottom: 2em;
 }
 
@@ -167,16 +173,16 @@ a h2 {
 
 /* Version selector */
 select.version-selector {
-  margin-top: 0.4em !important;
+//  margin-top: 0.4em !important;
   float: left;
   width: auto;
   min-width: 20%;
 }
 
 /* GitHub rendered README */
-article.entry-content p:first-child {
-  margin-top: 0;
-}
+// article.entry-content p:first-child {
+//   margin-top: 0;
+// }
 
 /* Search results */
 a.search-result {
@@ -211,6 +217,7 @@ a.search-result:focus {
 }
 
 /* Help paragraphs */
+/*
 div.help {
   padding: 1em;
 }
@@ -218,19 +225,21 @@ div.help {
 .help h2 {
   margin-top: 0;
 }
+*/
 
 .help h3 {
-  margin-top: 0.5em;
+  padding-top: 0.5em;
 }
 
 /* Everything else */
 .decl {
     margin-top: 2em;
-    padding: 1em;
+    /* padding: 1em; */
 }
 
 .decl h3 {
-    margin-top: 0;
+    padding-top: 0.4em;
+    padding-left: 0.3em;
 }
 
 :target {
@@ -239,7 +248,8 @@ div.help {
 }
 
 .decl-inner {
-    padding: 0 1.4em;
+    padding: 0 0.9em;
+    /* padding: 0 1.4em; */
 }
 
 .keyword, .syntax {
