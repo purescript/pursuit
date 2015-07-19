@@ -121,8 +121,6 @@ a:hover {
   font-size: 150%;
 }
 
-/* Sidebar */
-
 /* Messages */
 .message {
   border: 5px solid;
@@ -202,7 +200,6 @@ a.search-result:focus {
 }
 
 /* Help paragraphs */
-
 .help {
   padding: 5px 0;
 }
