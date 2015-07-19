@@ -125,6 +125,7 @@ a:hover {
 .message {
   border: 5px solid;
   border-radius: 5px;
+  padding: 1em;
 }
 
 .error {
