@@ -118,25 +118,16 @@ a:hover {
 }
 
 .top-banner {
-  /* line-height: 5em; */
   line-height: 3.5em;
   vertical-align: middle;
 }
 
 .top-banner .pursuit {
   font-size: 150%;
-  /* margin-right: 3em; */
 }
-
-/*
-.top-banner .banner-item {
-  float: left;
-}
-*/
 
 .top-banner form {
   color: #{Css.bannerBackground};
-  /* width: 50%; */
 }
 
 .top-banner input {
@@ -295,4 +286,31 @@ hr {
 
 .center {
   text-align: center;
+}
+
+/* media queries */
+@media (min-width: 50em) {
+  .col-main, .col-aside {
+    width: 70%
+  }
+
+  .top-banner {
+    line-height: 5em;
+  }
+
+  .top-banner .banner-item {
+    float: left;
+  }
+
+  .top-banner .banner-item.pursuit {
+    margin-right: 3em;
+  }
+
+  .top-banner form.banner-item {
+    width: 50%;
+  }
+
+  .top-banner .banner-item.upload {
+    float: right;
+  }
 }
