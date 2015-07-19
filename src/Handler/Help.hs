@@ -14,7 +14,7 @@ getSuggestedBadgeMarkup :: Handler Text
 getSuggestedBadgeMarkup = do
   root <- appRoot . appSettings <$> getYesod
   let url = (root <>)
-  return $ unlines
+  return $ intercalate "\n"
     [ "<a href=\"" <> url "/packages/$PACKAGE_NAME" <> "\">"
     , "  <img src=\"" <> url "/packages/$PACKAGE_NAME/badge" <> "\""
     , "       alt=\"$PACKAGE_NAME on Pursuit\">"
