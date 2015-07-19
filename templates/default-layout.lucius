@@ -51,6 +51,7 @@ body {
 .col ol,
 .col pre,
 .col .version-selector.container,
+.col form,
 .col {
   padding: 0 10px;
 }
