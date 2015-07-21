@@ -10,6 +10,7 @@ $doctype 5
     <link href="/static/css/normalize.css" type="text/css" rel="stylesheet">
     <script type="text/javascript" src="/static/js/js.cookie.js">
     <script type="text/javascript" src="/static/js/Markup.js">
+    <script type="text/javascript" src="/static/js/Pursuit.js">
     ^{pageHead pc}
     
     \<!--[if lt IE 9]>
