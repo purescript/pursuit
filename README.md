@@ -6,10 +6,10 @@ Pursuit is a web application which hosts documentation for PureScript packages,
 and lets you search for code by names or types, via Hoogle.
 
 There is currently an alpha version deployed at
-<http://new-pursuit.purescript.org>.
+<http://pursuit.purescript.org>.
 
 Information for package authors can be found at
-<http://new-pursuit.purescript.org/help>.
+<http://pursuit.purescript.org/help>.
 
 ## Database structure
 
