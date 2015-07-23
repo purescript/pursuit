@@ -183,6 +183,10 @@ a h2 {
   margin-top: 0.83em;
 }
 
+.big {
+  font-size: 140%;
+}
+
 /* Tables */
 table {
   /* Seemingly necessary for the ".col table" rule above to work */
@@ -319,10 +323,6 @@ hr {
   border: 1px solid #{Css.darken20 Css.backgroundColor};
 }
 
-.center {
-  text-align: center;
-}
-
 /* media queries */
 @media (min-width: 50em) {
   .col {
@@ -330,7 +330,7 @@ hr {
   }
 
   .col-single {
-    width: 80%;
+    width: 100%;
     margin-right: auto;
     margin-left: auto;
   }
