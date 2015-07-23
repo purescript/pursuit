@@ -52,6 +52,7 @@ body {
 .col pre,
 .col .version-selector.container,
 .col form,
+.col table,
 .col {
   padding: 0 10px;
 }
@@ -180,6 +181,20 @@ h3 {
 
 a h2 {
   margin-top: 0.83em;
+}
+
+/* Tables */
+table {
+  /* Seemingly necessary for the ".col table" rule above to work */
+  display: block;
+}
+
+td, th {
+  padding: 0.4em;
+}
+
+tbody tr:nth-child(odd) {
+  background-color: #eee;
 }
 
 /* Version selector */
