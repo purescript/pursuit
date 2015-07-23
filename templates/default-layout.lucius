@@ -255,6 +255,44 @@ a.search-result:focus {
   margin-top: 16px;
 }
 
+/* Code */
+code, pre {
+  color: #{Css.codeForeground};
+  background-color: #{Css.codeBackground};
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.code-block {
+  display: block;
+  padding: 0.5em 1em;
+}
+
+/* Code highlighting */
+.keyword, .syntax, .pl-k {
+  color: #a0a0a0;
+}
+
+.pl-c1, .pl-en {
+  /* Not really sure what this is */
+  color: #39d;
+}
+
+.pl-s {
+  /* String literals */
+  color: #1a1;
+}
+
+.pl-cce {
+  /* String literal escape sequences */
+  color: #921;
+}
+
+.pl-smi {
+  /* type variables? */
+  color: #62b;
+}
+
 /* Everything else */
 .decl {
     margin-top: 2em;
@@ -271,22 +309,6 @@ a.search-result:focus {
 
 .decl-inner {
     padding: 0 0.9em;
-}
-
-.keyword, .syntax {
-    color: #a0a0a0;
-}
-
-code, pre {
-    color: #{Css.codeForeground};
-    background-color: #{Css.codeBackground};
-    white-space: pre-wrap;
-    word-wrap: break-word;
-}
-
-.code-block {
-    display: block;
-    padding: 0.5em 1em;
 }
 
 ul.documentation-contents li {
