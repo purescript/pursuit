@@ -197,6 +197,11 @@ tbody tr:nth-child(odd) {
   background-color: #eee;
 }
 
+/* Images */
+img {
+  max-width: 100%;
+}
+
 /* Version selector */
 select.version-selector {
   float: left;
