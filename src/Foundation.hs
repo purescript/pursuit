@@ -18,6 +18,7 @@ import Web.Bower.PackageMeta (PackageName, parsePackageName, runPackageName)
 import Data.Version
 import qualified Css
 import qualified Language.PureScript.Docs as D
+import qualified Paths_pursuit as Paths
 
 newtype PathPackageName =
   PathPackageName { runPathPackageName :: PackageName }
@@ -105,6 +106,7 @@ instance Yesod App where
 
         manalytics <- appAnalytics . appSettings <$> getYesod
         isSearch <- testCurrentRoute (== SearchR)
+        let pursuitVersion = showVersion Paths.version
         pc <- widgetToPageContent $ do
           $(widgetFile "default-layout")
           case manalytics of

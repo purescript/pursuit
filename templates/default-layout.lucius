@@ -117,8 +117,34 @@ a:hover {
 }
 
 .top-banner .banner-item.upload {
-  /* float: right; */
   font-size: 150%;
+}
+
+/* footer
+ * Based on http://www.lwis.net/journal/2008/02/08/pure-css-sticky-footer/
+ * Except we don't support IE6
+ */
+html, body {
+  height: 100%;
+}
+
+.everything-except-footer {
+  min-height: 100%;
+  padding-bottom: 3em;
+}
+
+.footer {
+  position: relative;
+  height: 3em;
+  margin-top: -3em;
+  width: 100%;
+  text-align: center;
+  background-color: #{Css.bannerBackground};
+  color: #{Css.darkForeground};
+}
+
+.footer * {
+  margin-bottom: 0;
 }
 
 /* Messages */
