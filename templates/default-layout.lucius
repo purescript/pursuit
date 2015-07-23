@@ -183,10 +183,6 @@ a h2 {
   margin-top: 0.83em;
 }
 
-.big {
-  font-size: 140%;
-}
-
 /* Tables */
 table {
   /* Seemingly necessary for the ".col table" rule above to work */
