@@ -329,6 +329,12 @@ hr {
     width: 70%
   }
 
+  .col-single {
+    width: 80%;
+    margin-right: auto;
+    margin-left: auto;
+  }
+
   .top-banner .banner-item {
     float: left;
   }
