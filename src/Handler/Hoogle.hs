@@ -24,6 +24,7 @@ import System.Directory (removeDirectoryRecursive)
 
 import Model.DocsAsHoogle (packageAsHoogle)
 import Model.DocsAsHtml (makeFragment)
+import Model.DocLinks (TypeOrValue(..))
 import Handler.Database
 import Handler.Packages (findPackage)
 import Handler.Caching (cacheText)
@@ -144,9 +145,12 @@ extractHoogleResult tagStr url = do
 
   extractInfo u =
     case (extractModule u, extractTitle u) of
-      (Nothing,      _         ) -> PackageResult
-      (Just modName, Nothing   ) -> ModuleResult modName
-      (Just modName, Just title) -> DeclarationResult modName title
+      (Nothing,      _) ->
+        PackageResult
+      (Just modName, Nothing) ->
+        ModuleResult modName
+      (Just modName, Just (typeOrValue, title)) ->
+        DeclarationResult typeOrValue modName title
 
   extractPackage =
     stripPrefix (dummyHackageUrl ++ "package/")
@@ -171,14 +175,15 @@ extractHoogleResult tagStr url = do
   minusToDot x = x
 
   extractTitle u =
-    guard ('#' `elem` u) >> Just (go u)
+    guard ('#' `elem` u) >> go u
     where
     go = reverse
          >>> takeWhile (/= '#')
          >>> reverse
-         >>> drop 2
-         >>> decodeAnchorId
-         >>> bracketOperators
+         >>> splitAt 2
+         >>> first parseTypeOrValue
+         >>> second ((decodeAnchorId >>> bracketOperators) >> Just)
+         >>> uncurry (liftA2 (,))
 
   bracketOperators str
     | any isAlphaNum str = str
@@ -214,8 +219,14 @@ data HoogleResult = HoogleResult
 data HoogleResultInfo
   = PackageResult
   | ModuleResult      String -- ^ Module name
-  | DeclarationResult String String -- ^ Module name & declaration title
+  | DeclarationResult TypeOrValue String String -- ^ Module name & declaration title
   deriving (Show, Eq)
+
+parseTypeOrValue :: String -> Maybe TypeOrValue
+parseTypeOrValue s = case s of
+  "t:" -> Just Type
+  "v:" -> Just Value
+  _    -> Nothing
 
 hoogleResultToJSON :: HoogleResult -> Handler Value
 hoogleResultToJSON result@HoogleResult{..} = do
@@ -238,8 +249,9 @@ instance ToJSON HoogleResultInfo where
       [ "type" .= ("module" :: Text)
       , "module" .= moduleName
       ]
-    DeclarationResult moduleName declTitle ->
+    DeclarationResult typeOrValue moduleName declTitle ->
       [ "type" .= ("declaration" :: Text)
+      , "typeOrValue" .= show typeOrValue
       , "module" .= moduleName
       , "title" .= declTitle
       ]
@@ -255,9 +267,9 @@ routeResult HoogleResult{..} =
       ( PackageVersionModuleDocsR ppkgName pversion modName
       , Nothing
       )
-    DeclarationResult modName declTitle ->
+    DeclarationResult typeOrValue modName declTitle ->
       ( PackageVersionModuleDocsR ppkgName pversion modName
-      , Just $ pack $ drop 1 $ makeFragment declTitle
+      , Just $ pack $ drop 1 $ makeFragment typeOrValue declTitle
       )
   where
   ppkgName = PathPackageName hrPkgName

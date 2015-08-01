@@ -62,13 +62,13 @@ qualifyConstructor :: LinksContext' -> String -> D.ContainingModule -> LT.Text
 qualifyConstructor ctx ctor' containMn =
   maybe (LT.pack ctor') render (getLink ctx ctor' containMn)
   where
-  render docLink = LT.pack $ case docLink of
-    SameModule ctor ->
-      ctor
-    LocalModule _ otherMn ctor ->
-      show otherMn ++ "." ++ ctor
-    DepsModule _ _ _ otherMn ctor ->
-      show otherMn ++ "." ++ ctor
+  render DocLink{..} = LT.pack $ case linkLocation of
+    SameModule ->
+      linkTitle
+    LocalModule _ otherMn ->
+      show otherMn ++ "." ++ linkTitle
+    DepsModule _ _ _ otherMn ->
+      show otherMn ++ "." ++ linkTitle
 
 declAsHoogle :: LinksContext' -> D.Declaration -> LT.Text
 declAsHoogle ctx d@D.Declaration{..} =

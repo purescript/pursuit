@@ -8,6 +8,7 @@
 
 module Model.DocsAsHtml (
   HtmlOutput(..),
+  declTypeOrValue,
   packageAsHtml,
   makeFragment
 ) where
@@ -44,6 +45,14 @@ import Language.PureScript.Docs.RenderedCode hiding (sp)
 import qualified Language.PureScript.Docs.Render as Render
 
 import Model.DocLinks
+
+declTypeOrValue :: Declaration -> TypeOrValue
+declTypeOrValue decl = case declInfo decl of
+  ValueDeclaration _         -> Value
+  DataDeclaration _ _        -> Type
+  ExternDataDeclaration _    -> Type
+  TypeSynonymDeclaration _ _ -> Type
+  TypeClassDeclaration _ _   -> Type
 
 data HtmlOutput a = HtmlOutput
   { htmlIndex     :: [(Maybe Char, a)]
@@ -102,7 +111,7 @@ renderIndex LinksContext{..} = go ctxBookmarks
 
 declAsHtml :: DocLinkRenderer -> LinksContext' -> Declaration -> Html ()
 declAsHtml r ctx d@Declaration{..} = do
-  let declFragment = T.pack $ makeFragment declTitle
+  let declFragment = T.pack $ makeFragment (declTypeOrValue d) declTitle
   div_ [class_ "decl", id_ (T.drop 1 declFragment)] $ do
     linkTo declFragment $
       h3_ (text declTitle)
@@ -131,9 +140,17 @@ declAsHtml r ctx d@Declaration{..} = do
 
 renderChildren :: DocLinkRenderer -> LinksContext' -> [ChildDeclaration] -> Html ()
 renderChildren _ _   [] = return ()
-renderChildren r ctx xs = go xs
+renderChildren r ctx xs = ul_ $ mapM_ go xs
   where
-  go = ul_ . mapM_ (li_ . code_ . codeAsHtml r ctx . Render.renderChildDeclaration)
+  go decl = item decl . code_ . codeAsHtml r ctx . Render.renderChildDeclaration $ decl
+  item decl = let fragment = makeFragment (cdeclTypeOrValue decl) (cdeclTitle decl)
+              in  li_ [id_ (T.pack (drop 1 fragment))]
+
+cdeclTypeOrValue :: ChildDeclaration -> TypeOrValue
+cdeclTypeOrValue decl = case cdeclInfo decl of
+  ChildInstance _ _      -> Value
+  ChildDataConstructor _ -> Value
+  ChildTypeClassMember _ -> Value
 
 codeAsHtml :: DocLinkRenderer -> LinksContext' -> RenderedCode -> Html ()
 codeAsHtml r ctx = outputWith elemAsHtml
@@ -146,28 +163,25 @@ codeAsHtml r ctx = outputWith elemAsHtml
   elemAsHtml Space       = text " "
 
 renderLink :: DocLinkRenderer -> LinksContext' -> DocLink -> Html () -> Html ()
-renderLink r ctx link inner =
+renderLink r ctx link@DocLink{..} inner =
   a_ [ href_ (r ctx link <> T.pack (fragmentFor link))
      , title_ (T.pack fullyQualifiedName)
      ] inner
   where
-  fullyQualifiedName = case link of
-    SameModule title               -> fq (snd ctx) title
-    LocalModule _ modName title    -> fq modName title
-    DepsModule _ _ _ modName title -> fq modName title
+  fullyQualifiedName = case linkLocation of
+    SameModule                -> fq (snd ctx) linkTitle
+    LocalModule _ modName     -> fq modName linkTitle
+    DepsModule _ _ _ modName  -> fq modName linkTitle
 
   fq mn str = show mn ++ "." ++ str
 
 -- TODO: escaping?
-makeFragment :: String -> String
-makeFragment = ("#d:" ++)
+makeFragment :: TypeOrValue -> String -> String
+makeFragment Type  = ("#t:" ++)
+makeFragment Value = ("#v:" ++)
 
 fragmentFor :: DocLink -> String
-fragmentFor = makeFragment . title
-  where
-  title (SameModule t) = t
-  title (LocalModule _ _ t) = t
-  title (DepsModule _ _ _ _ t) = t
+fragmentFor l = makeFragment (linkTypeOrValue l) (linkTitle l)
 
 linkToConstructor :: DocLinkRenderer -> LinksContext' -> String -> ContainingModule -> Html () -> Html ()
 linkToConstructor r ctx ctor' containMn =

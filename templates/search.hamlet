@@ -14,5 +14,5 @@
               <p>
             $of ModuleResult _
               <p>#{Bower.runPackageName $ hrPkgName r}
-            $of DeclarationResult modName _
+            $of DeclarationResult _ modName _
               <p>#{modName} (#{Bower.runPackageName $ hrPkgName r})
