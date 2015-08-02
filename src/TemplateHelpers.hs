@@ -68,12 +68,12 @@ renderHtmlDocs pkg mnString = do
 -- | Produce a Route for a given DocLink. Note that we do not include the
 -- fragment; this is the responsibility of the DocsAsHtml module.
 docLinkRoute :: LinksContext' -> DocLink -> Route App
-docLinkRoute (LinksContext{..}, srcModule) link = case link of
-  SameModule _ ->
+docLinkRoute (LinksContext{..}, srcModule) link = case linkLocation link of
+  SameModule ->
     mkRoute ctxPackageName ctxVersion srcModule
-  LocalModule _ otherModule _ ->
+  LocalModule _ otherModule ->
     mkRoute ctxPackageName ctxVersion otherModule
-  DepsModule _ otherPackageName otherVersion otherModule _ ->
+  DepsModule _ otherPackageName otherVersion otherModule ->
     mkRoute otherPackageName otherVersion otherModule
   where
   mkRoute pkgName version modName =
