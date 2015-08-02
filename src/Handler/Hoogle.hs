@@ -145,7 +145,7 @@ extractHoogleResult tagStr url = do
 
   extractInfo u =
     case (extractModule u, extractTitle u) of
-      (Nothing,      _) ->
+      (Nothing, _) ->
         PackageResult
       (Just modName, Nothing) ->
         ModuleResult modName
