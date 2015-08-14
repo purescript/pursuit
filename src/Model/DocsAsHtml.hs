@@ -203,9 +203,17 @@ linkToSource (LinksContext{..}, _) (P.SourceSpan name start end) =
   (P.SourcePos endLine _) = end
   (GithubUser user, GithubRepo repo) = ctxGithub
 
-  relativeToBase = intercalate "/" . dropWhile (/= "src") . splitOn "/"
+  relativeToBase = intercalate "/" . dropWhile (/= "src") . splitOnPathSep
   githubBaseUrl = concat ["https://github.com/", user, "/", repo]
   fragment = "L" ++ show startLine ++ "-L" ++ show endLine
+
+-- | Split a string on either unix-style "/" or Windows-style "\\" path
+-- | separators.
+splitOnPathSep :: String -> [String]
+splitOnPathSep str
+  | '/'  `elem` str = splitOn "/" str
+  | '\\' `elem` str = splitOn "\\" str
+  | otherwise       = [str]
 
 renderFixity :: P.Fixity -> Html ()
 renderFixity (P.Fixity associativity precedence) =
