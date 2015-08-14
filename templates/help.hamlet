@@ -29,7 +29,7 @@
           Ensure that your package is suitable for submission to Pursuit, by running
           the following inside your project directory:
         <pre>
-          <code>$ psc-publish --dry-run</code>
+          <code>$ psc-publish --dry-run
         <p>
           If <code>psc-publish</code> reports any errors, you should fix them before
           continuing.
@@ -43,9 +43,11 @@
       <li>
         <p>
           Ensure that the tagged version is checked out, change to your project
-          directory, and run
-          <code>psc-publish > pursuit.json#
-          \. This will go through your bower.json file and all of your code,
+          directory, and run:
+        <pre>
+          <code>$ psc-publish > pursuit.json
+        <p>
+          This will go through your bower.json file and all of your code,
           collecting all of the information necessary to host your package on
           Pursuit, and dump that data to a new file called pursuit.json.
 
