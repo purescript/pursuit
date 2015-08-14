@@ -19,27 +19,41 @@
     <h3>How to submit packages
     <ol>
       <li>
-        Put the code up on GitHub. (Currently, GitHub is the only supported hosting
-        method. If you'd rather host your code somewhere else, please open an issue
-        and let us know).
+        <p>
+          Put the code up on GitHub. (Currently, GitHub is the only supported hosting
+          method. If you'd rather host your code somewhere else, please open an issue
+          and let us know).
 
       <li>
-        Release your package on Bower, by using
-        <code>bower register#
-        \, creating a git tag, and pushing the tag to GitHub.
+        <p>
+          Ensure that your package is suitable for submission to Pursuit, by running
+          the following inside your project directory:
+        <pre>
+          <code>$ psc-publish --dry-run</code>
+        <p>
+          If <code>psc-publish</code> reports any errors, you should fix them before
+          continuing.
 
       <li>
-        Ensure that the tagged version is checked out, change to your project
-        directory, and run
-        <code>psc-publish > pursuit.json#
-        \. This will go through your bower.json file and all of your code,
-        collecting all of the information necessary to host your package on
-        Pursuit, and dump that data to a new file called pursuit.json.
+        <p>
+          Release your package on Bower, by using
+          <code>bower register#
+          \, creating a git tag, and pushing the tag to GitHub.
 
       <li>
-        Go to
-        <a href=@{UploadPackageR}>the upload page
-        and submit the pursuit.json file you just created.
+        <p>
+          Ensure that the tagged version is checked out, change to your project
+          directory, and run
+          <code>psc-publish > pursuit.json#
+          \. This will go through your bower.json file and all of your code,
+          collecting all of the information necessary to host your package on
+          Pursuit, and dump that data to a new file called pursuit.json.
+
+      <li>
+        <p>
+          Go to
+          <a href=@{UploadPackageR}>the upload page
+          and submit the pursuit.json file you just created.
     <p>
       Your package, together with documentation, should now appear in Pursuit.
 
