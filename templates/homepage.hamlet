@@ -16,7 +16,8 @@
     <h2>No packages uploaded yet.
   $else
     <h2>Packages:
-    <ul>
-      $forall pkgName <- pkgNames
-        <li>
+    $forall group <- groupBy ((==) `on` (toUpper . head . runPackageName)) pkgNames
+      <h3>#{show . toUpper . head . runPackageName . head $ group}
+      <ul> 
+        $forall pkgName <- group
           <a href=@{PackageR (PathPackageName pkgName)}>#{runPackageName pkgName}
