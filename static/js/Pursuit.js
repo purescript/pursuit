@@ -40,7 +40,7 @@ function initializeVersionSelector(args) {
   // Returns an array of <option> elements which should be added to the version
   // selector. Warning: mutates the argument.
   function renderOptions(versions) {
-    versions.sort(function(x, y) { return x[0].localeCompare(y[0]) }).reverse()
+    versions.reverse()
     return versions.map(function(x, index) {
       if (index === 0) {
         return renderOption(function(str) { return "latest (" + str + ")" }, x)

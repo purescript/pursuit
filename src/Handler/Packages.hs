@@ -37,7 +37,7 @@ getPackageAvailableVersionsR (PathPackageName pkgName) =
     let toPair v = [ toJSON $ showVersion v
                    , toJSON $ renderUrl $ alternateVersionUrl v
                    ]
-    return $ toJSON $ map toPair vs
+    return $ toJSON $ map toPair $ sort vs
   where
   alternateVersionUrl v = PackageVersionR (PathPackageName pkgName) (PathVersion v)
 
