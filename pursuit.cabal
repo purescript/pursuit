@@ -134,33 +134,33 @@ executable         pursuit
 
     ghc-options:       -threaded -O2 -rtsopts -with-rtsopts=-N
 
-test-suite test
-    type:              exitcode-stdio-1.0
-    main-is:           Spec.hs
-    hs-source-dirs:    test
-    ghc-options:       -Wall
-
-    extensions: TemplateHaskell
-                QuasiQuotes
-                OverloadedStrings
-                NoImplicitPrelude
-                CPP
-                MultiParamTypeClasses
-                TypeFamilies
-                GADTs
-                GeneralizedNewtypeDeriving
-                FlexibleContexts
-                EmptyDataDecls
-                NoMonomorphismRestriction
-                DeriveDataTypeable
-                ViewPatterns
-                TupleSections
-
-    build-depends: base
-                 , pursuit
-                 , yesod-test >= 1.4.3 && < 1.5
-                 , yesod-core
-                 , yesod
-                 , hspec >= 2.0.0
-                 , classy-prelude
-                 , classy-prelude-yesod
+-- test-suite test
+--     type:              exitcode-stdio-1.0
+--     main-is:           Spec.hs
+--     hs-source-dirs:    test
+--     ghc-options:       -Wall
+--
+--     extensions: TemplateHaskell
+--                 QuasiQuotes
+--                 OverloadedStrings
+--                 NoImplicitPrelude
+--                 CPP
+--                 MultiParamTypeClasses
+--                 TypeFamilies
+--                 GADTs
+--                 GeneralizedNewtypeDeriving
+--                 FlexibleContexts
+--                 EmptyDataDecls
+--                 NoMonomorphismRestriction
+--                 DeriveDataTypeable
+--                 ViewPatterns
+--                 TupleSections
+--
+--     build-depends: base
+--                  , pursuit
+--                  , yesod-test >= 1.4.3 && < 1.5
+--                  , yesod-core
+--                  , yesod
+--                  , hspec >= 2.0.0
+--                  , classy-prelude
+--                  , classy-prelude-yesod
