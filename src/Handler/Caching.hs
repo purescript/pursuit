@@ -82,25 +82,46 @@ cacheText = cache LTE.encodeUtf8 "index.txt"
 
 -- | Clear the whole cache for a particular package at a particular version.
 -- Called whenever a new version of a package is uploaded.
+--
+-- Note that this function is also responsible for clearing cached
+-- resources that are not associated with any particular version, but which
+-- need to be regenerated after a new version is uploaded. This includes the
+-- available-versions JSON object, or the SVG badge.
 clearCache :: PackageName -> Version -> Handler ()
 clearCache pkgName version = do
   $logDebug (pack $ "clearing cache for: " ++ runPackageName pkgName ++
                     ", at version: " ++ showVersion version)
 
-  dir  <- getRouteCacheDir (PackageVersionR (PathPackageName pkgName) (PathVersion version))
-  dir2 <- getRouteCacheDir (PackageAvailableVersionsR (PathPackageName pkgName))
-  forM_ [dir, dir2] (liftIO . void . catchDoesNotExist . removeDirectoryRecursive)
+  let pkgName' = PathPackageName pkgName
+  let routes =
+         [ PackageVersionR pkgName' (PathVersion version)
+         , PackageAvailableVersionsR pkgName'
+         , PackageBadgeR pkgName'
+         ]
+
+  dirs <- getRouteCacheDirs routes
+  forM_ dirs (liftIO . void . catchDoesNotExist . removeDirectoryRecursive)
 
 getCacheDir :: Handler String
 getCacheDir = (++ "/cache/") <$> getDataDir
 
 getRouteCacheDir :: Route App -> Handler String
-getRouteCacheDir route = go <$> getCacheDir <*> pure route
+getRouteCacheDir route =
+  getCacheDir <#> flip cachePathFor route
   where
-  go cacheDir =
-    renderRoute
-    >>> fst
-    >>> intercalate "/"
-    >>> unpack
-    >>> (cacheDir ++)
-    >>> (++ "/")
+  (<#>) = flip (<$>)
+
+getRouteCacheDirs :: [Route App] -> Handler [String]
+getRouteCacheDirs routes =
+  getCacheDir <#> (\dir -> map (cachePathFor dir) routes)
+  where
+  (<#>) = flip (<$>)
+
+cachePathFor :: String -> Route App -> String
+cachePathFor cacheDir =
+  renderRoute
+  >>> fst
+  >>> intercalate "/"
+  >>> unpack
+  >>> (cacheDir ++)
+  >>> (++ "/")
