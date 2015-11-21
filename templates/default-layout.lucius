@@ -1,6 +1,7 @@
 html {
   overflow-y: scroll;
   box-sizing: border-box;
+  color: #000;
 }
 
 *, *:before, *:after {
