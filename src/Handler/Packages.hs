@@ -5,6 +5,7 @@ import Text.Blaze.Html (preEscapedToHtml)
 import Text.Julius (rawJS)
 import Data.Version
 import qualified Data.ByteString.Lazy as BL
+import qualified Data.Text.Lazy as TL
 import qualified Language.PureScript.Docs as D
 import Web.Bower.PackageMeta (PackageName, runPackageName, bowerDependencies, bowerLicence)
 import qualified Data.Aeson.BetterErrors as A
@@ -19,7 +20,7 @@ import qualified GithubAPI
 getHomeR :: Handler Html
 getHomeR =
   cacheHtml $ do
-    pkgNames <- sort <$> getAllPackageNames
+    pkgNames <- getAllPackageNames
     defaultLayout $(widgetFile "homepage")
 
 getPackageR :: PathPackageName -> Handler Html
@@ -54,8 +55,15 @@ getPackageVersionR (PathPackageName pkgName) (PathVersion version) =
         $(widgetFile "packageVersion")
       return (cacheStatus, content)
 
-getPackageIndexR :: Handler Html
-getPackageIndexR = redirect HomeR
+getPackageIndexR :: Handler TypedContent
+getPackageIndexR =
+  selectRep $ do
+    provideRep (redirect HomeR :: Handler Html)
+    provideRep . cacheText . map unlines $ pkgNames
+    provideRep . cacheJSON . map toJSON  $ pkgNames
+  where
+  pkgNames :: Handler [TL.Text]
+  pkgNames = map (pack . runPackageName) <$> getAllPackageNames
 
 postPackageIndexR :: Handler Value
 postPackageIndexR = do
