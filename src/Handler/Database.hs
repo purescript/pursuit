@@ -25,7 +25,7 @@ getAllPackageNames :: Handler [PackageName]
 getAllPackageNames = do
   dir <- getDataDir
   contents <- liftIO $ getDirectoryContents (dir ++ "/verified/")
-  return $ rights $ map mkPackageName contents
+  return . sort . rights $ map mkPackageName contents
 
 data SomethingMissing
   = NoSuchPackage
