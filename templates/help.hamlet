@@ -62,32 +62,8 @@
   <div #updating-packages .help>
     <h3>How to update packages
     <p>
-        Updating a package is much simpler than creating a package.  All that
-        is required is recreating the <code>pursuit.json</code> file and
-        uploading it again.
-    <ol>
-      <li>
-        <p>
-          Ensure that your package is suitable for submission to Pursuit, by
-          running the following inside your project directory:
-        <pre>
-          <code>$ psc-publish --dry-run
-        <p>
-          If <code>psc-publish</code> reports any errors, you should fix them
-          before continuing.
-      <li>
-        <p>
-          Ensure a tagged version is checked out, change to your project
-          directory, and run:
-        <pre>
-          <code>$ psc-publish > pursuit.json
-      <li>
-        <p>
-          Go to
-          <a href=@{UploadPackageR}>the upload page
-          and submit the <code>pursuit.json</code> file you just created.
-    <p>
-      The updated version of your package should now appear in Pursuit.
+        Packages are updated the same way they are created.  Except that
+        you don't need to run <code>bower register</code> again.
 
   <div #submit-automated .help>
     <h3>Submitting packages from a script
