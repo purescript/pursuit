@@ -59,6 +59,12 @@
     <p>
       Your package, together with documentation, should now appear in Pursuit.
 
+  <div #updating-packages .help>
+    <h3>How to update packages
+    <p>
+        Packages are updated the same way they are created.  Except that
+        you don't need to run <code>bower register</code> again.
+
   <div #submit-automated .help>
     <h3>Submitting packages from a script
     <p>
