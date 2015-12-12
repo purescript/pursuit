@@ -184,6 +184,15 @@ a h2 {
   margin-top: 0.83em;
 }
 
+/*
+  Useful for narrow screens, such as mobiles. Documentation often contains URLs
+  which would otherwise force the page to become wider, and force creation of
+  horizontal scrollbars. Yuck.
+*/
+p {
+  word-wrap: break-word;
+}
+
 /* Tables */
 table {
   /* Seemingly necessary for the ".col table" rule above to work */
