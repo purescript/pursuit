@@ -2,6 +2,7 @@
 module TemplateHelpers where
 
 import Import hiding (span)
+import Data.List.Split (splitOn)
 import Text.Blaze.Html5 as H hiding (map, link)
 import Text.Blaze.Html5.Attributes as A hiding (span)
 import qualified Web.Bower.PackageMeta as Bower
@@ -36,14 +37,24 @@ renderModuleList :: D.VerifiedPackage -> Handler Html
 renderModuleList pkg = do
   docLinkRenderer <- getDocLinkRenderer
   let docsOutput = packageAsHtml docLinkRenderer pkg
-      moduleNames = sort $ map (P.runModuleName . fst) $ htmlModules docsOutput
+      moduleNames = sort . map fst $ htmlModules docsOutput
 
   withUrlRenderer [hamlet|
     <ul .documentation-contents>
       $forall name <- moduleNames
         <li>
-          <a href=@{moduleDocsRoute pkg name}>#{name}
+          <a href=@{moduleDocsRoute pkg (P.runModuleName name)}>#{insertBreaks name}
     |]
+
+-- | Insert <wbr> elements in between elements of a module name, in order to
+-- prevent awkward line breaks or overflowing (and generating horizontal
+-- scrollbars).
+insertBreaks :: P.ModuleName -> Html
+insertBreaks =
+  P.runModuleName
+   >>> splitOn "."
+   >>> map toHtml
+   >>> intercalate (toHtml ("." :: Text) *> wbr)
 
 tryGetReadme :: D.VerifiedPackage -> Handler (Maybe Html)
 tryGetReadme D.Package{..} = do

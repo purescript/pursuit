@@ -9,6 +9,7 @@ import qualified Data.Text.Lazy as TL
 import qualified Language.PureScript.Docs as D
 import Web.Bower.PackageMeta (PackageName, runPackageName, bowerDependencies, bowerLicence)
 import qualified Data.Aeson.BetterErrors as A
+import qualified Language.PureScript as P
 
 import Handler.Database
 import Handler.Caching
@@ -123,6 +124,7 @@ getPackageVersionModuleDocsR (PathPackageName pkgName) (PathVersion version) mnS
       Nothing -> notFound
       Just htmlDocs ->
         defaultLayout $ do
+          let mn = P.moduleNameFromString mnString
           setTitle (toHtml (mnString <> " - " <> runPackageName pkgName))
           documentationPage pkg $
             $(widgetFile "packageVersionModuleDocs")

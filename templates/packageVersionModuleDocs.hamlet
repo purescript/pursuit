@@ -1,4 +1,4 @@
 <h2>
   module #
-  <strong>#{mnString}
+  <strong>#{insertBreaks mn}
 #{preEscapedToHtml htmlDocs}
