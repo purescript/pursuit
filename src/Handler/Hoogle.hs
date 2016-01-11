@@ -9,7 +9,6 @@ module Handler.Hoogle
   ) where
 
 import Import
-import Control.Category ((>>>))
 import Control.Monad.Trans.Except (ExceptT, runExceptT, throwE)
 import Control.Monad.Trans.Maybe (MaybeT(..), runMaybeT)
 import Control.Concurrent (forkIO)

@@ -12,7 +12,6 @@ module Handler.Caching
   ) where
 
 import Import
-import Control.Category ((>>>))
 import Data.Version (Version, showVersion)
 import qualified Data.ByteString.Lazy as LB
 import qualified Data.Text.Lazy as LT
