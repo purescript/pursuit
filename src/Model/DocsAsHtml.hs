@@ -48,11 +48,12 @@ import Model.DocLinks
 
 declTypeOrValue :: Declaration -> TypeOrValue
 declTypeOrValue decl = case declInfo decl of
-  ValueDeclaration _         -> Value
-  DataDeclaration _ _        -> Type
-  ExternDataDeclaration _    -> Type
-  TypeSynonymDeclaration _ _ -> Type
-  TypeClassDeclaration _ _   -> Type
+  ValueDeclaration{}       -> Value
+  AliasDeclaration{}       -> Value
+  DataDeclaration{}        -> Type
+  ExternDataDeclaration{}  -> Type
+  TypeSynonymDeclaration{} -> Type
+  TypeClassDeclaration{}   -> Type
 
 data HtmlOutput a = HtmlOutput
   { htmlIndex     :: [(Maybe Char, a)]
