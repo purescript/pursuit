@@ -1,3 +1,4 @@
+{-# LANGUAGE PackageImports #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Application
     ( getApplicationDev
@@ -11,7 +12,7 @@ module Application
     , handler
     ) where
 
-import Control.Monad.Logger                 (liftLoc)
+import "monad-logger" Control.Monad.Logger (liftLoc)
 import Import
 import Language.Haskell.TH.Syntax           (qLocation)
 import Network.Wai.Handler.Warp             (Settings, defaultSettings,
