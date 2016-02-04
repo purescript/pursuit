@@ -30,6 +30,7 @@ getAllPackageNames = do
 data SomethingMissing
   = NoSuchPackage
   | NoSuchPackageVersion
+  deriving (Show, Eq, Ord)
 
 lookupPackage :: PackageName -> Version -> Handler (Either SomethingMissing D.VerifiedPackage)
 lookupPackage pkgName version = do
