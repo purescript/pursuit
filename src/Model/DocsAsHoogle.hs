@@ -66,9 +66,9 @@ qualifyConstructor ctx ctor' containMn =
     SameModule ->
       linkTitle
     LocalModule _ otherMn ->
-      show otherMn ++ "." ++ linkTitle
+      P.runModuleName otherMn ++ "." ++ linkTitle
     DepsModule _ _ _ otherMn ->
-      show otherMn ++ "." ++ linkTitle
+      P.runModuleName otherMn ++ "." ++ linkTitle
 
 declAsHoogle :: LinksContext' -> D.Declaration -> LT.Text
 declAsHoogle ctx d@D.Declaration{..} =
