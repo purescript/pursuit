@@ -102,4 +102,4 @@ primBookmarks =
   toPair (P.Qualified mn x) = (fromJust mn, x)
 
 primDependency :: (PackageName, Version)
-primDependency = (primPackageName, Version [0,7,0] []) -- hardcoded for now
+primDependency = (primPackageName, Version [0,8,0] []) -- hardcoded for now
