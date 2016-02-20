@@ -12,19 +12,21 @@ module Application
     , handler
     ) where
 
-import "monad-logger" Control.Monad.Logger (liftLoc)
 import Import
-import Language.Haskell.TH.Syntax           (qLocation)
-import Network.Wai.Handler.Warp             (Settings, defaultSettings,
-                                             defaultShouldDisplayException,
-                                             runSettings, setHost,
-                                             setOnException, setPort, getPort)
-import Network.Wai.Middleware.RequestLogger (Destination (Logger),
-                                             IPAddrSource (..),
-                                             OutputFormat (..), destination,
-                                             mkRequestLogger, outputFormat)
-import System.Log.FastLogger                (defaultBufSize, newStdoutLoggerSet,
-                                             toLogStr)
+import "monad-logger" Control.Monad.Logger
+  (liftLoc)
+import Language.Haskell.TH.Syntax
+  (qLocation)
+import Network.Wai.Handler.Warp
+  (Settings, defaultSettings, defaultShouldDisplayException, runSettings,
+  setHost, setOnException, setPort, getPort)
+import Network.Wai.Middleware.RequestLogger
+  (Destination (Logger), IPAddrSource (..), OutputFormat (..), destination,
+  mkRequestLogger, outputFormat)
+import Network.Wai.Middleware.Gunzip
+  (gunzip)
+import System.Log.FastLogger
+  (defaultBufSize, newStdoutLoggerSet, toLogStr)
 import Crypto.Random
 import qualified Yesod.Core.Unsafe as Unsafe
 
@@ -100,7 +102,7 @@ makeApplication foundation = do
 
     -- Create the WAI application and apply middlewares
     appPlain <- toWaiAppPlain foundation
-    return $ logWare $ defaultMiddlewaresNoLogging appPlain
+    return $ gunzip $ logWare $ defaultMiddlewaresNoLogging appPlain
 
 -- | Warp settings for the given foundation value.
 warpSettings :: App -> Settings

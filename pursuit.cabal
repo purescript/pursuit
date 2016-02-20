@@ -120,6 +120,7 @@ library
                  , transformers
                  , cookie
                  , xss-sanitize
+                 , wai-middleware-gunzip
 
     if flag(dev)
       build-depends: foreign-store

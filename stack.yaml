@@ -3,3 +3,4 @@ packages:
 - '.'
 extra-deps:
 - purescript-0.8.0.0
+- wai-middleware-gunzip-0.0.2
