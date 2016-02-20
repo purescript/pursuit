@@ -11,7 +11,6 @@ module Model.DocsAsHoogle
 
 import Prelude
 import Control.Arrow (first, second)
-import Data.Foldable (foldMap)
 import Data.Maybe (fromMaybe)
 import Data.List (intersperse)
 import Data.Monoid

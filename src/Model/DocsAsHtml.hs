@@ -19,7 +19,7 @@ import Control.Category ((>>>))
 import Control.Monad (when)
 import Data.Char (toUpper)
 import Data.Ord (comparing)
-import Data.Monoid (mconcat, (<>))
+import Data.Monoid ((<>))
 import Data.Foldable (for_)
 import Data.List (intercalate, sortBy)
 import qualified Data.DList as DList
