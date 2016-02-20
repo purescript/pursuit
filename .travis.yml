@@ -30,7 +30,7 @@ notifications:
 
 before_deploy:
   - mkdir bundle
-  - cp dist/build/pursuit/pursuit bundle/
+  - cp `stack path --dist-dir`/build/pursuit/pursuit bundle/
   - cp LICENSE bundle/
   - tar czf pursuit.tar.gz -C bundle/ .
 
