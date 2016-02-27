@@ -25,10 +25,10 @@ before_install:
 
 install:
   - echo "$(ghc --version) [$(ghc --print-project-git-commit-id 2> /dev/null || echo '?')]"
-  - stack --no-terminal --install-ghc build --only-dependencies
+  - stack --no-terminal -j1 --install-ghc build --only-dependencies
 
 script:
-  - stack --no-terminal build
+  - stack --no-terminal -j1 build
 
 notifications:
   email: true
