@@ -10,6 +10,28 @@ Pursuit is currently deployed at <http://pursuit.purescript.org>.
 Information for package authors can be found at
 <http://pursuit.purescript.org/help>.
 
+## Development
+
+It's recommended to use `stack`: <http://docs.haskellstack.org>.
+
+To build in development mode:
+
+```
+$ stack build --flag pursuit:dev
+```
+
+To run the server:
+
+```
+$ stack exec pursuit
+```
+
+To build in production mode:
+
+```
+$ stack build
+```
+
 ## Database structure
 
 Pursuit currently uses the filesystem as a database, since it requires no setup
