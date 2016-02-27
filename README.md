@@ -17,7 +17,7 @@ It's recommended to use `stack`: <http://docs.haskellstack.org>.
 To build in development mode:
 
 ```
-$ stack build --flag pursuit:dev
+$ stack build
 ```
 
 To run the server:
@@ -29,7 +29,7 @@ $ stack exec pursuit
 To build in production mode:
 
 ```
-$ stack build
+$ stack build --flag pursuit:-dev
 ```
 
 ## Database structure
