@@ -58,6 +58,11 @@
           and submit the pursuit.json file you just created.
     <p>
       Your package, together with documentation, should now appear in Pursuit.
+    <p>
+      Unfortunately, the pursuit.json file ends up being too large sometimes,
+      and the uploading will fail with a 'Request entity too large' error. If
+      this happens, you can work around this by following the 'Submitting
+      packages from a script' steps below.
 
   <div #updating-packages .help>
     <h3>How to update packages
@@ -67,20 +72,27 @@
 
   <div #submit-automated .help>
     <h3>Submitting packages from a script
-    <p>
-      Make a POST request to @{PackageIndexR}, with the JSON output produced
-      by <code>psc-publish</code> in the request body, and with a Github API
-      token in the Authorization header, in the form <code>Authorization: token {token}</code>.
-      You can generate a Github API token for yourself by visiting <a
-      href="https://github.com/settings/tokens/new">https://github.com/settings/tokens/new</a>.
-      No scopes are required, since the token is only used for authentication.
+    <ul>
+      <li>
+        Gzip the JSON output produced by psc-publish and save it to a file.
+      <li>
+        If you don't already have one, get a GitHub API token by visiting <a
+        href="https://github.com/settings/tokens/new">https://github.com/settings/tokens/new</a>.
+        No scopes are required, since the token is only used for
+        authentication.
+      <li>
+        Make a POST request to @{PackageIndexR}, with gzipped JSON as the
+        request body, including a <code>Content-Encoding: gzip</code> header,
+        and with your GitHub token in the Authorization header, like this:
+        <code>Authorization: token {token}</code>.
     <p>
       For example, using curl:
     <pre>
       <code>
         curl -X POST \
         \  @{PackageIndexR} \
-        \  -d @pursuit.json \
+        \  --data-binary @pursuit.json.gz \
+        \  -H 'Content-Encoding: gzip' \
         \  -H 'Accept: application/json' \
         \  -H "Authorization: token $(cat my-oauth-token.txt)" \
         \  -v
