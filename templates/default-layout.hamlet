@@ -8,8 +8,8 @@
         <label .sr-only for="q">Search for packages, types, and functions
         <input .form-control #search-input type="text" name="q" :isSearch:autofocus
           data-focus-placeholder="Search for packages, types, functions..."
-          data-normal-placeholder="Search for packages, types, functions... (S to focus)"
-          placeholder="Search for packages, types, functions... (S to focus)">
+          data-normal-placeholder="Search for packages, types, functions... (S or / to focus)"
+          placeholder="Search for packages, types, functions... (S or / to focus)">
 
       <div .banner-item .upload>
         <a href=@{UploadPackageR}>Upload
