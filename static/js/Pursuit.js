@@ -164,12 +164,12 @@ function initializeSearchForm() {
     return eventChar == c.toUpperCase()
   }
 
-  // Focus the search input on "S" keypress
+  // Focus the search input on "S" or "/" keypresses
   document.addEventListener('keydown', function(event) {
     if (document.activeElement.tagName === 'INPUT') {
       return
     }
-    if (testChar(event, "S")) {
+    if (testChar(event, 'S') || testChar(event, '/')) {
       event.preventDefault()
       document.getElementById('search-input').focus()
     }
