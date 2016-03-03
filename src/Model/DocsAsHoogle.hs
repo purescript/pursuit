@@ -45,7 +45,7 @@ packageAsHoogle pkg@D.Package{..} = preamble <> modules
   versionToText = LT.pack . showVersion
   ctx = getLinksContext pkg
   modules = foldMap renderModule pkgModules
-  renderModule m = moduleAsHoogle (ctx, P.moduleNameFromString (D.modName m)) m
+  renderModule m = moduleAsHoogle (ctx, D.modName m) m
 
 codeAsHoogle :: LinksContext' -> D.RenderedCode -> LT.Text
 codeAsHoogle ctx = D.outputWith elemAsText
@@ -84,7 +84,7 @@ childDeclAsHoogle ctx parent d@D.ChildDeclaration{..} =
 moduleAsHoogle :: LinksContext' -> D.Module -> LT.Text
 moduleAsHoogle ctx D.Module{..} =
   commentsAsHoogle modComments
-    <> "module " <> LT.pack modName <> "\n\n"
+    <> "module " <> LT.pack (P.runModuleName modName) <> "\n\n"
     <> foldMap ((<> "\n\n") . declAsHoogle ctx) modDeclarations
 
 commentsAsHoogle :: Maybe String -> LT.Text

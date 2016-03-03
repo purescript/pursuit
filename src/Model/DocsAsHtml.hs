@@ -73,10 +73,9 @@ packageAsHtml r pkg@Package{..} =
   htmlAsText = map (second renderText)
 
 moduleAsHtml :: DocLinkRenderer -> LinksContext -> Module -> (P.ModuleName, Html ())
-moduleAsHtml r ctx Module{..} = (mn, html)
+moduleAsHtml r ctx Module{..} = (modName, html)
   where
-  mn = P.moduleNameFromString modName
-  ctx' = (ctx, mn)
+  ctx' = (ctx, modName)
   html = do
     for_ modComments renderComments
     for_ modDeclarations (declAsHtml r ctx')

@@ -2,7 +2,7 @@ resolver: lts-5.3
 packages:
 - '.'
 extra-deps:
-- purescript-0.8.0.0
+- purescript-0.8.2.0
 - wai-middleware-gunzip-0.0.2
 flags:
   pursuit:
