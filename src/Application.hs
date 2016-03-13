@@ -80,10 +80,10 @@ makeFoundation appSettings = do
                                      foundation
                                      generateDatabase
         case mdb of
-          Right (Just db) -> do
+          Right (Just db) ->
             atomically $ writeTVar (appHoogleDatabase foundation) (now, db)
-          err ->
-            fail ("Failed to generate Hoogle database: " ++ show err)
+          _ ->
+            return ()
 
 -- | Convert our foundation to a WAI Application by calling @toWaiAppPlain@ and
 -- applyng some additional middlewares.
