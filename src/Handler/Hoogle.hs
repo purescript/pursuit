@@ -181,7 +181,7 @@ extractHoogleResult tagStr url = do
          >>> reverse
          >>> splitAt 2
          >>> first parseTypeOrValue
-         >>> second ((decodeAnchorId >>> bracketOperators) >> Just)
+         >>> second (decodeAnchorId >>> bracketOperators >>> Just)
          >>> uncurry (liftA2 (,))
 
   bracketOperators str
