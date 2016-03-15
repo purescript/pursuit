@@ -35,12 +35,19 @@ getPackageHoogleR :: PathPackageName -> PathVersion -> Handler LT.Text
 getPackageHoogleR (PathPackageName pkgName) (PathVersion version) =
   cacheText $ findPackage pkgName version (return . packageAsHoogle)
 
+bracketOperators :: String -> String
+bracketOperators str
+  | any isAlphaNum str = str
+  | "(" `isPrefixOf` str || ")" `isSuffixOf` str = str
+  | otherwise = "(" ++ str ++ ")"
+
 getSearchR :: Handler TypedContent
 getSearchR = do
   mquery <- (map . map) unpack $ lookupGetParam "q"
   case mquery of
     Nothing -> redirect HomeR
-    Just query -> do
+    Just rawQuery -> do
+      let query = bracketOperators rawQuery
       db <- getDatabase
       results <- runExceptT $ searchDatabase db query
       selectRep $ do
@@ -183,10 +190,6 @@ extractHoogleResult tagStr url = do
          >>> first parseTypeOrValue
          >>> second (decodeAnchorId >>> bracketOperators >>> Just)
          >>> uncurry (liftA2 (,))
-
-  bracketOperators str
-    | any isAlphaNum str = str
-    | otherwise = "(" ++ str ++ ")"
 
 justOr :: (Monad m) => e -> Maybe a -> ExceptT e m a
 justOr err = maybe (throwE err) return
