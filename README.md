@@ -69,6 +69,15 @@ Language.PureScript.Docs.Types in the compiler for details about these types.
 The backup process simply involves rsyncing everything in the `verified/`
 directory into a git repository, making a commit, and pushing it to GitHub.
 
+## Database setup
+
+If you need some sample packages to work with, you can clone the
+[pursuit-backups][pursuit-backups] repo and copy the packages you want to the
+`verified/` directory. This is more convenient than manually uploading each
+package.
+
+[pursuit-backups]: https://github.com/purescript/pursuit-backups
+
 ## Configuration
 
 All configuration is done at startup via environment variables. The relevant
