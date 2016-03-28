@@ -106,6 +106,7 @@ instance Yesod App where
 
         manalytics <- appAnalytics . appSettings <$> getYesod
         isSearch <- testCurrentRoute (== SearchR)
+        searchText <- map (fromMaybe "") (lookupGetParam "q")
         let pursuitVersion = showVersion Paths.version
         pc <- widgetToPageContent $ do
           $(widgetFile "default-layout")

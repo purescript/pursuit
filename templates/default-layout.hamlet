@@ -9,7 +9,8 @@
         <input .form-control #search-input type="text" name="q" :isSearch:autofocus
           data-focus-placeholder="Search for packages, types, functions..."
           data-normal-placeholder="Search for packages, types, functions... (S to focus)"
-          placeholder="Search for packages, types, functions... (S to focus)">
+          placeholder="Search for packages, types, functions... (S to focus)"
+          value=#{searchText}>
 
       <div .banner-item .upload>
         <a href=@{UploadPackageR}>Upload
