@@ -173,7 +173,7 @@ renderLink r ctx link@DocLink{..} inner =
     LocalModule _ modName     -> fq modName linkTitle
     DepsModule _ _ _ modName  -> fq modName linkTitle
 
-  fq mn str = show mn ++ "." ++ str
+  fq mn str = P.runModuleName mn ++ "." ++ str
 
 -- TODO: escaping?
 makeFragment :: TypeOrValue -> String -> String
