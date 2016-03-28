@@ -26,6 +26,12 @@ To run the server:
 $ stack exec pursuit
 ```
 
+If you have content in your data directory
+(see [Database structure](#database-structure)) then the Hoogle database will
+be regenerated before the server starts listening - this can take a short time
+depending on how much data you have.  The site should then be available at
+`http://localhost:3000`.
+
 To build in production mode:
 
 ```
