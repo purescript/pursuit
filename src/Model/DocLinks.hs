@@ -97,7 +97,7 @@ primPackageName = x
 
 primBookmarks :: [Bookmark]
 primBookmarks =
-  map (FromDep primPackageName . second show . toPair . fst) $ M.toList P.primTypes
+  map (FromDep primPackageName . second P.runProperName . toPair . fst) $ M.toList P.primTypes
   where
   toPair (P.Qualified mn x) = (fromJust mn, x)
 
