@@ -4,6 +4,8 @@ cabal-version:     >= 1.8
 build-type:        Simple
 license:           MIT
 license-file:      LICENSE
+extra-source-files:
+  CHANGELOG.md
 
 Flag dev
     Description:   Turn on development settings, like auto-reload templates.

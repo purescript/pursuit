@@ -7,7 +7,7 @@ import Data.Version
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Text.Lazy as TL
 import qualified Language.PureScript.Docs as D
-import Web.Bower.PackageMeta (PackageName, runPackageName, bowerDependencies, bowerLicence)
+import Web.Bower.PackageMeta (PackageName, runPackageName, bowerDependencies, bowerLicense)
 import qualified Data.Aeson.BetterErrors as A
 import qualified Language.PureScript as P
 

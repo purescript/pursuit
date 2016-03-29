@@ -9,7 +9,7 @@
 <div .col.col-aside>
   <p>#{linkToGithub pkgGithub} on github
   <hr>
-  $maybe licenses <- joinLicenses (bowerLicence pkgMeta)
+  $maybe licenses <- joinLicenses (bowerLicense pkgMeta)
     <p>#{licenses} licensed
     <hr>
   <p>
