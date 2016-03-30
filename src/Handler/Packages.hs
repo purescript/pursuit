@@ -147,7 +147,7 @@ packageNotFound pkgName = do
 
 packageVersionNotFound :: PackageName -> Version -> Handler a
 packageVersionNotFound pkgName version = do
-  availableVersions <- availableVersionsFor pkgName
+  availableVersions <- map sort $ availableVersionsFor pkgName
   defaultLayout404 $(widgetFile "packageVersionNotFound")
 
 defaultLayout404 :: Widget -> Handler a
