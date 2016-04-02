@@ -65,8 +65,7 @@ data App = App
     , appLogger         :: Logger
     , appCPRNG          :: TVar SystemRNG
     -- ^ Random number generator, used for OAuth
-    , appHoogleDatabase :: TVar (UTCTime, Hoogle.Database)
-    -- ^ Hoogle database, with generation time.
+    , appHoogleDatabase :: TVar Hoogle.Database
     }
 
 instance HasHttpManager App where

@@ -17,6 +17,7 @@ import "monad-logger" Control.Monad.Logger
   (liftLoc)
 import Language.Haskell.TH.Syntax
   (qLocation)
+import Control.Concurrent (threadDelay, forkIO)
 import Network.Wai.Handler.Warp
   (Settings, defaultSettings, defaultShouldDisplayException, runSettings,
   setHost, setOnException, setPort, getPort)
@@ -52,38 +53,34 @@ makeFoundation :: AppSettings -> IO App
 makeFoundation appSettings = do
     let mode = if isDevelopment then "development" else "production"
     putStrLn $ "Starting in " <> mode <> " mode"
-
-    -- Some basic initializations: HTTP connection manager, logger, and static
-    -- subsite.
     appHttpManager <- newManager
     appLogger <- newStdoutLoggerSet defaultBufSize >>= makeYesodLogger
     appStatic <-
         (if appMutableStatic appSettings then staticDevel else static)
         (appStaticDir appSettings)
-
     appCPRNG <- (cprgCreate <$> createEntropyPool) >>= newTVarIO
-
-    now <- liftIO getCurrentTime
-    appHoogleDatabase <- newTVarIO (now, mempty)
-
+    appHoogleDatabase <- newTVarIO mempty
     let foundation = App{..}
-
-    generateInitialDatabase now foundation
-
+    void (startRegenThread foundation)
     return foundation
 
     where
-    generateInitialDatabase now foundation = do
-        let emptySessionMap = mempty :: SessionMap
-        mdb <- Unsafe.runFakeHandler emptySessionMap
-                                     appLogger
-                                     foundation
-                                     generateDatabase
-        case mdb of
-          Right (Just db) ->
-            atomically $ writeTVar (appHoogleDatabase foundation) (now, db)
-          _ ->
-            return ()
+    every interval action =
+        forkIO (forever (action >> threadDelay interval))
+
+    startRegenThread foundation =
+        let hour = 60 * 60 * 1000 * 1000 -- microseconds
+        in every hour $ do
+            let emptySessionMap = mempty :: SessionMap
+            mdb <- Unsafe.runFakeHandler emptySessionMap
+                                         appLogger
+                                         foundation
+                                         generateDatabase
+            case mdb of
+              Right (Just db) ->
+                atomically $ writeTVar (appHoogleDatabase foundation) db
+              _ ->
+                return ()
 
 -- | Convert our foundation to a WAI Application by calling @toWaiAppPlain@ and
 -- applyng some additional middlewares.

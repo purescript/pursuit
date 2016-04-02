@@ -11,7 +11,6 @@ module Handler.Hoogle
 import Import
 import Control.Monad.Trans.Except (ExceptT, runExceptT, throwE)
 import Control.Monad.Trans.Maybe (MaybeT(..), runMaybeT)
-import Control.Concurrent (forkIO)
 import qualified Data.Text.Lazy as LT
 import Text.Blaze.Html.Renderer.Text (renderHtml)
 import Data.Char (chr, isAlphaNum)
@@ -29,7 +28,7 @@ import Handler.Packages (findPackage)
 import Handler.Caching (cacheText)
 import Handler.Utils
 import TemplateHelpers (tagStrToHtml, getFragmentRender)
-import TimeUtils (oneDay, getElapsedTimeSince)
+import TimeUtils (oneDay)
 
 getPackageHoogleR :: PathPackageName -> PathVersion -> Handler LT.Text
 getPackageHoogleR (PathPackageName pkgName) (PathVersion version) =
@@ -71,26 +70,7 @@ getSearchR = do
         toJSON <$> traverse hoogleResultToJSON rs
 
 getDatabase :: Handler Hoogle.Database
-getDatabase = do
-  foundation <- getYesod
-  let dbVar = appHoogleDatabase foundation
-  (lastGenTime, db) <- readVar dbVar
-  age <- liftIO $ getElapsedTimeSince lastGenTime
-  let maxAge = appHoogleDatabaseMaxAge $ appSettings foundation
-  if (age < maxAge)
-    then return db
-    else do
-      $logInfo "Regenerating Hoogle database..."
-      runInnerHandler <- handlerToIO
-      _ <- liftIO $ forkIO $ runInnerHandler regenerateDatabase
-      -- For now, return the old db. We don't want to be too slow.
-      return db
-  where
-  readVar = liftIO . readTVarIO
-
-regenerateDatabase :: Handler ()
-regenerateDatabase = do
-  generateDatabase >>= maybe (return ()) storeNewDatabase
+getDatabase = getYesod >>= liftIO . readTVarIO . appHoogleDatabase
 
 generateDatabase :: Handler (Maybe Hoogle.Database)
 generateDatabase = do
@@ -103,13 +83,6 @@ generateDatabase = do
   writeFileWithParents outputFile ("<test>" :: Text)
 
   createDatabase inputData outputFile
-
--- | Given a freshly generated database, store it in the foundation.
-storeNewDatabase :: Hoogle.Database -> Handler ()
-storeNewDatabase db = do
-  now <- liftIO getCurrentTime
-  dbVar <- appHoogleDatabase <$> getYesod
-  liftIO $ atomically $ writeTVar dbVar (now, db)
 
 -- | Gets the directory used as a working directory for database generation.
 getWorkingDirectory :: Handler FilePath
