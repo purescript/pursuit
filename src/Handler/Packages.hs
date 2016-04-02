@@ -3,6 +3,7 @@ module Handler.Packages where
 import Import
 import Text.Julius (rawJS)
 import Control.Monad.Except (ExceptT(..), runExceptT)
+import Control.Monad.Error.Class (throwError)
 import Data.Version
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Text.Lazy as TL
@@ -206,6 +207,10 @@ postUploadPackageR =
     file <- ExceptT . pure . unpackResult $ result
     bytes <- lift . runResourceT $ fileSource file $$ sinkLazy
     pkg <- ExceptT . fmap (first (Just . displayJsonError)) $ parseUploadedPackage bytes
+
+    when (null (bowerLicense (D.pkgMeta pkg))) $
+      throwError (Just ["No license specified. Packages must specify their " ++
+                        "license in bower.json."])
 
     let pkg' = D.verifyPackage user pkg
     lift $ do
