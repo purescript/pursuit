@@ -3,10 +3,13 @@
 Please see https://github.com/purescript/pursuit/blob/master/CHANGELOG.md for
 the most up-to-date version of this file.
 
-## v0.3.7 (not yet released)
+## v0.3.7
 
+* Re-exported declarations are now included on documentation pages.
 * Fix versions being ordered nonsensically on 'No such version' pages (#201,
   @stefanholzmueller).
+* Improve startup time by not waiting for the Hoogle database generation to
+  complete (#108).
 
 ## v0.3.6
 
