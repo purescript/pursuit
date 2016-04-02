@@ -29,7 +29,7 @@ linkToGithub (user, repo) =
 joinLicenses :: [String] -> Maybe Html
 joinLicenses ls
   | null ls   = Nothing
-  | otherwise = Just (strong (toHtml (intercalate "/" ls)) >> " licensed")
+  | otherwise = Just (strong (toHtml (intercalate "/" ls)))
 
 renderVersionRange :: Bower.VersionRange -> Html
 renderVersionRange = toHtml . Bower.runVersionRange
