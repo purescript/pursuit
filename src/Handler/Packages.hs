@@ -2,6 +2,7 @@ module Handler.Packages where
 
 import Import
 import Text.Julius (rawJS)
+import Control.Monad.Except (ExceptT(..), runExceptT)
 import Data.Version
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Text.Lazy as TL
@@ -198,19 +199,25 @@ postUploadPackageR :: Handler Html
 postUploadPackageR =
   requireAuthentication $ \user -> do
     ((result, widget), enctype) <- runFormPost uploadPackageForm
-    case result of
-      FormSuccess file -> do
-        bytes <- runResourceT $ fileSource file $$ sinkLazy
-        eresult <- parseUploadedPackage bytes
-        case eresult of
-          Right pkg -> do
-            let pkg' = D.verifyPackage user pkg
-            insertPackage pkg'
-            setCookieMessage "Your package was uploaded successfully."
-            redirect (packageRoute pkg')
-          Left err -> renderUploadPackageForm widget enctype
-                        (Just $ displayJsonError err)
-      _ -> renderUploadPackageForm widget enctype Nothing
+    either (renderUploadPackageForm widget enctype) pure =<< handleFormResult user result
+
+  where
+  handleFormResult user result = runExceptT $ do
+    file <- ExceptT . pure . unpackResult $ result
+    bytes <- lift . runResourceT $ fileSource file $$ sinkLazy
+    pkg <- ExceptT . fmap (first (Just . displayJsonError)) $ parseUploadedPackage bytes
+
+    let pkg' = D.verifyPackage user pkg
+    lift $ do
+      insertPackage pkg'
+      setCookieMessage "Your package was uploaded successfully."
+      redirect (packageRoute pkg')
+
+  unpackResult r = case r of
+    FormSuccess file ->
+      Right file
+    _ ->
+      Left Nothing
 
 -- | Try to parse a D.UploadedPackage from a ByteString containing JSON.
 parseUploadedPackage ::
