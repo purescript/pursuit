@@ -3,6 +3,7 @@ module TemplateHelpers where
 
 import Import hiding (span)
 import Data.List.Split (splitOn)
+import qualified Data.Text.Lazy as LT
 import Text.Blaze.Html5 as H hiding (map, link)
 import Text.Blaze.Html5.Attributes as A hiding (span)
 import qualified Web.Bower.PackageMeta as Bower
@@ -10,7 +11,7 @@ import qualified Language.PureScript as P
 import qualified Language.PureScript.Docs as D
 import qualified Hoogle
 
-import Model.DocsAsHtml (packageAsHtml, htmlModules)
+import Model.DocsAsHtml (packageAsHtml, htmlModules, HtmlOutputModule(..))
 import Model.DocLinks
 import qualified GithubAPI
 
@@ -33,17 +34,23 @@ joinLicenses ls
 renderVersionRange :: Bower.VersionRange -> Html
 renderVersionRange = toHtml . Bower.runVersionRange
 
+linkToModule :: D.VerifiedPackage -> P.ModuleName -> Handler Html
+linkToModule pkg mn =
+  withUrlRenderer [hamlet|
+    <a href=@{moduleDocsRoute pkg (P.runModuleName mn)}>#{insertBreaks mn}
+    |]
+
 renderModuleList :: D.VerifiedPackage -> Handler Html
 renderModuleList pkg = do
   docLinkRenderer <- getDocLinkRenderer
   let docsOutput = packageAsHtml docLinkRenderer pkg
       moduleNames = sort . map fst $ htmlModules docsOutput
+  moduleLinks <- traverse (linkToModule pkg) moduleNames
 
   withUrlRenderer [hamlet|
     <ul .documentation-contents>
-      $forall name <- moduleNames
-        <li>
-          <a href=@{moduleDocsRoute pkg (P.runModuleName name)}>#{insertBreaks name}
+      $forall link <- moduleLinks
+        <li>#{link}
     |]
 
 -- | Insert <wbr> elements in between elements of a module name, in order to
@@ -74,7 +81,21 @@ renderHtmlDocs pkg mnString = do
   docLinkRenderer <- getDocLinkRenderer
   let docsOutput = packageAsHtml docLinkRenderer pkg
       mn = P.moduleNameFromString mnString
-  return $ map preEscapedToHtml $ lookup mn (htmlModules docsOutput)
+  traverse render $ lookup mn (htmlModules docsOutput)
+  where
+  render :: HtmlOutputModule LT.Text -> Handler Html
+  render HtmlOutputModule{..} = do
+    let locals = preEscapedToHtml htmlOutputModuleLocals
+    reexports <- traverse renderReExports htmlOutputModuleReExports
+    return (locals *> mconcat reexports)
+
+  renderReExports :: (P.ModuleName, LT.Text) -> Handler Html
+  renderReExports (mn, decls) = do
+    moduleLink <- linkToModule pkg mn
+    pure ((h2 ! class_ "re-exports" $
+            (text "Re-exports from " *> strong moduleLink))
+          *> preEscapedToHtml decls)
+
 
 -- | Produce a Route for a given DocLink. Note that we do not include the
 -- fragment; this is the responsibility of the DocsAsHtml module.

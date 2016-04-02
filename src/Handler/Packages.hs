@@ -1,7 +1,6 @@
 module Handler.Packages where
 
 import Import
-import Text.Blaze.Html (preEscapedToHtml)
 import Text.Julius (rawJS)
 import Data.Version
 import qualified Data.ByteString.Lazy as BL

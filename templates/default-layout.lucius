@@ -67,6 +67,10 @@ body {
   padding: 0 17px;
 }
 
+h2.re-exports {
+  padding-top: 0.5em;
+}
+
 /* Links */
 a, a:visited {
   color: #{Css.linkColor};

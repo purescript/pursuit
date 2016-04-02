@@ -1,6 +1,7 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE ViewPatterns #-}
 
 -- | Functions for rendering generated documentation from PureScript code as
@@ -8,6 +9,7 @@
 
 module Model.DocsAsHtml (
   HtmlOutput(..),
+  HtmlOutputModule(..),
   declTypeOrValue,
   packageAsHtml,
   makeFragment
@@ -57,28 +59,38 @@ declTypeOrValue decl = case declInfo decl of
 
 data HtmlOutput a = HtmlOutput
   { htmlIndex     :: [(Maybe Char, a)]
-  , htmlModules   :: [(P.ModuleName, a)]
+  , htmlModules   :: [(P.ModuleName, HtmlOutputModule a)]
   }
-  deriving (Show)
+  deriving (Show, Functor)
+
+data HtmlOutputModule a = HtmlOutputModule
+  { htmlOutputModuleLocals    :: a
+  , htmlOutputModuleReExports :: [(P.ModuleName, a)]
+  }
+  deriving (Show, Functor)
 
 type DocLinkRenderer = LinksContext' -> DocLink -> T.Text
 
 packageAsHtml :: DocLinkRenderer -> Package a -> HtmlOutput LT.Text
 packageAsHtml r pkg@Package{..} =
-  HtmlOutput (htmlAsText indexFile) (htmlAsText modules)
+  HtmlOutput
+    ((fmap . fmap) renderText indexFile)
+    ((fmap . fmap . fmap) renderText modules)
   where
   ctx = getLinksContext pkg
   indexFile = renderIndex ctx
   modules = map (moduleAsHtml r ctx) pkgModules
-  htmlAsText = map (second renderText)
 
-moduleAsHtml :: DocLinkRenderer -> LinksContext -> Module -> (P.ModuleName, Html ())
-moduleAsHtml r ctx Module{..} = (modName, html)
+moduleAsHtml :: DocLinkRenderer -> LinksContext -> Module -> (P.ModuleName, HtmlOutputModule (Html ()))
+moduleAsHtml r ctx Module{..} = (modName, HtmlOutputModule html reexports)
   where
   ctx' = (ctx, modName)
+  renderDecl = declAsHtml r ctx'
   html = do
     for_ modComments renderComments
-    for_ modDeclarations (declAsHtml r ctx')
+    for_ modDeclarations renderDecl
+  reexports =
+    map (second (foldMap renderDecl)) modReExports
 
 renderIndex :: LinksContext -> [(Maybe Char, Html ())]
 renderIndex LinksContext{..} = go ctxBookmarks
