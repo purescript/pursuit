@@ -3,6 +3,12 @@
 Please see https://github.com/purescript/pursuit/blob/master/CHANGELOG.md for
 the most up-to-date version of this file.
 
+## v0.3.8
+
+* Remove superfluous "licensed" text on package pages. ("MIT licensed
+  licensed")
+* Reject packages which do not have a license.
+
 ## v0.3.7
 
 * Re-exported declarations are now included on documentation pages.
