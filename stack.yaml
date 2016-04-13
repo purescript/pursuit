@@ -1,10 +1,12 @@
-resolver: lts-5.10
-packages:
-- '.'
-extra-deps:
-- purescript-0.8.3.0
-- bower-json-0.8.0
-- wai-middleware-gunzip-0.0.2
+resolver: lts-5.12
 flags:
   pursuit:
     dev: true
+packages:
+- '.'
+extra-deps:
+- hjsmin-0.2.0.1
+- bower-json-0.8.0
+- purescript-0.8.4.0
+- language-javascript-0.6.0.4
+- wai-middleware-gunzip-0.0.2
