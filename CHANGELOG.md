@@ -3,6 +3,12 @@
 Please see https://github.com/purescript/pursuit/blob/master/CHANGELOG.md for
 the most up-to-date version of this file.
 
+## v0.3.9
+
+* Update to purescript-0.8.4. Fixes an issue where types with constraints
+  not in the left-most position were being rendered incorrectly: for
+  example, `unsafePartial` (#176).
+
 ## v0.3.8
 
 * Remove superfluous "licensed" text on package pages. ("MIT licensed
