@@ -9,6 +9,7 @@ the most up-to-date version of this file.
   @tfausak).
 * Improve error messages when uploading incompatible JSON data from a newer
   version of the compiler.
+* Invalidate caches for `/` and `/packages` properly (#167).
 
 ## v0.3.9
 
