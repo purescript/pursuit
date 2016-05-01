@@ -3,8 +3,9 @@
 Please see https://github.com/purescript/pursuit/blob/master/CHANGELOG.md for
 the most up-to-date version of this file.
 
-## v0.3.10 (unreleased)
+## v0.3.10
 
+* Update to purescript-0.8.5.
 * Use the `barrier` Haskell library for generating SVG badges (#102,
   @tfausak).
 * Improve error messages when uploading incompatible JSON data from a newer
