@@ -3,10 +3,10 @@ module Handler.PackageBadges where
 
 import Import
 import Data.Version
+import qualified Text.Blaze as Blaze
 import qualified Text.Blaze.Svg11 as S
 import Text.Blaze.Svg.Renderer.Text (renderSvg)
 import qualified Graphics.Badge.Barrier as Badge
-import qualified Graphics.Badge.Barrier.Internal as Badge
 
 import Handler.Database (getLatestVersionFor)
 import Handler.Caching (cacheSvg)
@@ -29,7 +29,7 @@ getPackageBadgeR (PathPackageName pkgName) =
 
 renderBadge :: Version -> S.Svg
 renderBadge version =
-  Badge.makeBadge badge left right
+  Blaze.unsafeLazyByteString (Badge.renderBadge badge left right)
   where
   badge = Badge.flat
   left = "pursuit"
