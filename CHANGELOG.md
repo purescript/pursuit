@@ -3,6 +3,11 @@
 Please see https://github.com/purescript/pursuit/blob/master/CHANGELOG.md for
 the most up-to-date version of this file.
 
+## v0.3.10 (unreleased)
+
+* Use the `barrier` Haskell library for generating SVG badges (#102,
+  @tfausak).
+
 ## v0.3.9
 
 * Update to purescript-0.8.4. Fixes an issue where types with constraints
