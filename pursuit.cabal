@@ -123,6 +123,7 @@ library
                  , cookie
                  , xss-sanitize
                  , wai-middleware-gunzip
+                 , barrier ==0.1.*
 
     if flag(dev)
       build-depends: foreign-store
