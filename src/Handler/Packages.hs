@@ -87,8 +87,8 @@ postPackageIndexR = do
     epackage <- parseUploadedPackage body
     case epackage of
       Left err ->
-        let display = A.displayError D.displayPackageError
-        in sendResponseStatus badRequest400 $ object [ "error" .= display err ]
+        let errorMessage = unlines $ displayJsonError body err
+        in sendResponseStatus badRequest400 $ object [ "error" .= errorMessage ]
       Right package ->
         return package
 
