@@ -3,6 +3,7 @@ module Model.DocLinks where
 
 import Prelude
 import Data.List (find)
+import Data.Char (isUpper)
 import Data.Version
 import Data.Maybe (fromJust)
 import qualified Data.Map as M
@@ -55,17 +56,17 @@ data LinkLocation
   | DepsModule P.ModuleName PackageName Version P.ModuleName
   deriving (Show, Eq, Ord)
 
--- | Given a links context, a type constructor, and its containing module,
--- attempt to create a DocLink for that type constructor.
+-- | Given a links context, a thing to link to (either a value or a type), and
+-- its containing module, attempt to create a DocLink.
 getLink :: LinksContext' -> String -> ContainingModule -> Maybe DocLink
-getLink (LinksContext{..}, curMn) ctor' containingMod = do
-  let bookmark' = (fromContainingModule curMn containingMod, ctor')
+getLink (LinksContext{..}, curMn) target containingMod = do
+  let bookmark' = (fromContainingModule curMn containingMod, target)
   bookmark <- find ((bookmark' ==) . ignorePackage) ctxBookmarks
   loc <- getLocation containingMod bookmark
-  return $ DocLink
+  return DocLink
     { linkLocation    = loc
-    , linkTitle       = ctor'
-    , linkTypeOrValue = Type
+    , linkTitle       = target
+    , linkTypeOrValue = typeOrValue
     }
 
   where
@@ -74,10 +75,19 @@ getLink (LinksContext{..}, curMn) ctor' containingMod = do
       ThisModule -> return SameModule
       OtherModule destMn ->
         case bookmark of
-          Local _ -> return $ LocalModule curMn destMn
+          Local _ ->
+            return $ LocalModule curMn destMn
           FromDep pkgName _ -> do
-          pkgVersion <- lookup pkgName ctxResolvedDependencies
-          return $ DepsModule curMn pkgName pkgVersion destMn
+            pkgVersion <- lookup pkgName ctxResolvedDependencies
+            return $ DepsModule curMn pkgName pkgVersion destMn
+
+  typeOrValue = case target of
+    [] ->
+      Type -- should never happen, but this will do
+    (t:_) ->
+      if isUpper t
+        then Type
+        else Value
 
 getLinksContext :: Package a -> LinksContext
 getLinksContext Package{..} =

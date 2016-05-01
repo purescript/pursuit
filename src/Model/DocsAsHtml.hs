@@ -167,18 +167,27 @@ cdeclTypeOrValue decl = case cdeclInfo decl of
 codeAsHtml :: DocLinkRenderer -> LinksContext' -> RenderedCode -> Html ()
 codeAsHtml r ctx = outputWith elemAsHtml
   where
-  elemAsHtml (Syntax x)  = withClass "syntax" (text x)
-  elemAsHtml (Ident x)   = withClass "ident" (text x)
-  elemAsHtml (Ctor x mn) = linkToConstructor r ctx x mn (withClass "ctor" (text x))
-  elemAsHtml (Kind x)    = text x
-  elemAsHtml (Keyword x) = withClass "keyword" (text x)
-  elemAsHtml Space       = text " "
+  elemAsHtml e = case e of
+    Syntax x ->
+      withClass "syntax" (text x)
+    Ident x mn ->
+      linkToDecl x mn (withClass "ident" (text x))
+    Ctor x mn ->
+      linkToDecl x mn (withClass "ctor" (text x))
+    Kind x ->
+      text x
+    Keyword x ->
+      withClass "keyword" (text x)
+    Space ->
+      text " "
+
+  linkToDecl = linkToDeclaration r ctx
 
 renderLink :: DocLinkRenderer -> LinksContext' -> DocLink -> Html () -> Html ()
-renderLink r ctx link@DocLink{..} inner =
+renderLink r ctx link@DocLink{..} =
   a_ [ href_ (r ctx link <> T.pack (fragmentFor link))
      , title_ (T.pack fullyQualifiedName)
-     ] inner
+     ]
   where
   fullyQualifiedName = case linkLocation of
     SameModule                -> fq (snd ctx) linkTitle
@@ -195,9 +204,14 @@ makeFragment Value = ("#v:" ++)
 fragmentFor :: DocLink -> String
 fragmentFor l = makeFragment (linkTypeOrValue l) (linkTitle l)
 
-linkToConstructor :: DocLinkRenderer -> LinksContext' -> String -> ContainingModule -> Html () -> Html ()
-linkToConstructor r ctx ctor' containMn =
-  maybe id (renderLink r ctx) (getLink ctx ctor' containMn)
+linkToDeclaration :: DocLinkRenderer ->
+                     LinksContext' ->
+                     String ->
+                     ContainingModule ->
+                     Html () ->
+                     Html ()
+linkToDeclaration r ctx target containMn =
+  maybe id (renderLink r ctx) (getLink ctx target containMn)
 
 linkToSource :: LinksContext' -> P.SourceSpan -> Html ()
 linkToSource (LinksContext{..}, _) (P.SourceSpan name start end) =

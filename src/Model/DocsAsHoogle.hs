@@ -29,6 +29,8 @@ import qualified Web.Bower.PackageMeta as Bower
 import qualified Paths_pursuit as Paths
 import Model.DocLinks
 
+-- TODO: Investigate how operator aliases interact with Hoogle output.
+
 packageAsHoogle :: D.Package a -> LT.Text
 packageAsHoogle pkg@D.Package{..} = preamble <> modules
   where
@@ -51,7 +53,7 @@ codeAsHoogle :: LinksContext' -> D.RenderedCode -> LT.Text
 codeAsHoogle ctx = D.outputWith elemAsText
   where
   elemAsText (D.Syntax x)  = LT.pack x
-  elemAsText (D.Ident x)   = LT.pack x
+  elemAsText (D.Ident x _) = LT.pack x
   elemAsText (D.Ctor x mn) = qualifyConstructor ctx x mn
   elemAsText (D.Kind x)    = LT.pack x
   elemAsText (D.Keyword x) = LT.pack x
