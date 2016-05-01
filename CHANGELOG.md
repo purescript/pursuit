@@ -7,6 +7,8 @@ the most up-to-date version of this file.
 
 * Use the `barrier` Haskell library for generating SVG badges (#102,
   @tfausak).
+* Improve error messages when uploading incompatible JSON data from a newer
+  version of the compiler.
 
 ## v0.3.9
 

@@ -9,6 +9,8 @@ import qualified Data.ByteString.Lazy as BL
 import qualified Data.Text.Lazy as TL
 import qualified Language.PureScript.Docs as D
 import Web.Bower.PackageMeta (PackageName, runPackageName, bowerDependencies, bowerLicense)
+import qualified Data.HashMap.Strict as HashMap
+import qualified Data.Aeson as Aeson
 import qualified Data.Aeson.BetterErrors as A
 import qualified Language.PureScript as P
 
@@ -206,7 +208,7 @@ postUploadPackageR =
   handleFormResult user result = runExceptT $ do
     file <- ExceptT . pure . unpackResult $ result
     bytes <- lift . runResourceT $ fileSource file $$ sinkLazy
-    pkg <- ExceptT . fmap (first (Just . displayJsonError)) $ parseUploadedPackage bytes
+    pkg <- ExceptT . fmap (first (Just . displayJsonError bytes)) $ parseUploadedPackage bytes
 
     when (null (bowerLicense (D.pkgMeta pkg))) $
       throwError (Just ["No license specified. Packages must specify their " ++
@@ -232,7 +234,45 @@ parseUploadedPackage bytes = do
   minVersion <- appMinimumCompilerVersion . appSettings <$> getYesod
   return $ D.parseUploadedPackage minVersion bytes
 
-displayJsonError :: A.ParseError D.PackageError -> [Text]
-displayJsonError e = case e of
-  A.InvalidJSON _ -> ["The file you submitted was not valid JSON."]
-  _ -> A.displayError D.displayPackageError e
+displayJsonError :: BL.ByteString -> A.ParseError D.PackageError -> [Text]
+displayJsonError bytes e = case e of
+  A.InvalidJSON _ ->
+    ["The file you submitted was not valid JSON."]
+  A.BadSchema _ _ ->
+    A.displayError D.displayPackageError e ++ extraInfo
+
+  where
+  -- Attempt to extract the compiler version that a JSON upload was created
+  -- with.
+  extractVersion =
+    Aeson.decode
+    >=> toObject
+    >=> HashMap.lookup "compilerVersion"
+    >=> toString
+    >=> (D.parseVersion' . unpack)
+
+  toObject json =
+    case json of
+      Aeson.Object obj -> Just obj
+      _ -> Nothing
+
+  toString json =
+    case json of
+      Aeson.String str -> Just str
+      _ -> Nothing
+
+  -- Some extra information about what might have caused an error.
+  extraInfo =
+    case extractVersion bytes of
+      Just v | v > P.version ->
+        let pursuitVersion = pack (showVersion P.version) in
+        [ "Usually, this occurs because the JSON data was generated with a newer " <>
+          "version of the compiler than what Pursuit is currently using, and " <>
+          "the JSON format changed between compiler releases."
+        , "This data was generated with " <> pack (showVersion v) <> " of the compiler."
+        , "Pursuit is currently using " <> pursuitVersion <> "."
+        , "You might be able to fix this by temporarily downgrading to " <>
+           pursuitVersion <> " to generate the JSON data."
+        ]
+      _ ->
+        []
