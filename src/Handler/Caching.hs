@@ -19,7 +19,7 @@ import qualified Data.Text.Lazy.Encoding as LTE
 import Text.Blaze.Html.Renderer.Utf8 (renderHtml)
 import Text.Blaze.Svg11 (Svg)
 import Text.Blaze.Svg.Renderer.Utf8 (renderSvg)
-import System.Directory (removeDirectoryRecursive)
+import System.Directory (removeDirectoryRecursive, removeFile, getDirectoryContents)
 import Web.Bower.PackageMeta (PackageName, runPackageName)
 import Data.Aeson (encode)
 
@@ -91,15 +91,43 @@ clearCache pkgName version = do
   $logDebug (pack $ "clearing cache for: " ++ runPackageName pkgName ++
                     ", at version: " ++ showVersion version)
 
-  let pkgName' = PathPackageName pkgName
-  let routes =
-         [ PackageVersionR pkgName' (PathVersion version)
-         , PackageAvailableVersionsR pkgName'
-         , PackageBadgeR pkgName'
-         ]
+  -- TODO: hack, this should be improved. Not quite sure how, though.
+  removeSpecific
+  removeShared
 
-  dirs <- getRouteCacheDirs routes
-  forM_ dirs (liftIO . void . catchDoesNotExist . removeDirectoryRecursive)
+  where
+  -- Remove files specific to that package.
+  removeSpecific =
+    let
+      pkgName' = PathPackageName pkgName
+    in
+      eachRouteDir
+        [ PackageVersionR pkgName' (PathVersion version)
+        , PackageAvailableVersionsR pkgName'
+        , PackageBadgeR pkgName'
+        ]
+        removeDirectoryRecursive
+
+  -- Remove files that need to be regenerated every time a new package is
+  -- uploaded, eg lists of all packages.
+  removeShared =
+    eachRouteDir
+      [ PackageIndexR
+      , HomeR
+      ]
+      removeIndexFiles
+
+  eachRouteDir routes f = do
+    dirs <- getRouteCacheDirs routes
+    forM_ dirs (liftIO . void . catchDoesNotExist . f)
+
+  -- Remove all files that start "index." in a directory.
+  removeIndexFiles :: FilePath -> IO ()
+  removeIndexFiles path = do
+    files <- filter ("index." `isPrefixOf`) <$> getDirectoryContents path
+    putStrLn ("Removing index files at: " <> tshow path <> ", files:" <> tshow files)
+    mapM_ (void . catchDoesNotExist . removeFile . (path ++)) files
+
 
 getCacheDir :: Handler String
 getCacheDir = (++ "/cache/") <$> getDataDir
