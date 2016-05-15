@@ -1,6 +1,14 @@
 <div .col.col-main>
   <h2>Upload a package
 
+  <div .message .not-available>
+    <p>
+      This upload form is deprecated, and will eventually be removed entirely.
+      Please consider switching to Pulp for uploading your packages. There is
+      more information on the
+      <a href=#{fr (HelpR, Just "submitting-packages")}>package uploading guide#
+      \.
+
   <p>
     You can upload the files produced by
     <code>psc-publish
