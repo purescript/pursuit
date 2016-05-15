@@ -20,61 +20,55 @@
     <ol>
       <li>
         <p>
-          Put the code up on GitHub. (Currently, GitHub is the only supported hosting
-          method. If you'd rather host your code somewhere else, please open an issue
-          and let us know).
-
+          Put the code up on GitHub. (Currently, GitHub is the only supported
+          hosting method. If you'd rather host your code somewhere else, please
+          open an issue and let us know).
       <li>
         <p>
-          Ensure that your package is suitable for submission to Pursuit, by running
-          the following inside your project directory:
-        <pre>
-          <code>$ psc-publish --dry-run
-        <p>
-          If <code>psc-publish</code> reports any errors, you should fix them before
-          continuing.
-
+          Create a git tag for the version you're releasing, if you haven't
+          already. It is recommended to use <code>pulp version</code> to do
+          this for you, as doing it this way will also check your package for
+          common errors.
       <li>
         <p>
-          Release your package on Bower, by using
-          <code>bower register#
-          \, creating a git tag, and pushing the tag to GitHub.
-
+          Authenticate to GitHub by running <code>pulp login</code>. (This is
+          necessary in order for us to be able to tell who uploaded which
+          packages).
       <li>
         <p>
-          Ensure that the tagged version is checked out, change to your project
-          directory, and run:
-        <pre>
-          <code>$ psc-publish > pursuit.json
+          Change to your project directory and run <code>pulp publish</code>.
+          This will register your package on Bower if necessary, push commits
+          and the relevant tag to your "origin" Git remote, and then generate
+          your documentation and upload it to Pursuit.
         <p>
-          This will go through your bower.json file and all of your code,
-          collecting all of the information necessary to host your package on
-          Pursuit, and dump that data to a new file called pursuit.json.
-
-      <li>
-        <p>
-          Go to
-          <a href=@{UploadPackageR}>the upload page
-          and submit the pursuit.json file you just created.
+          <code>pulp publish</code> also accepts a <code>--no-push</code> flag
+          which skips the Bower registration check as well as pushing commits
+          (this is useful for uploading other people's packages, if you ever
+          need to do this). There is also a <code>--push-to</code> option which
+          allows you to specify a different Git remote to push tags and commits
+          to.
     <p>
       Your package, together with documentation, should now appear in Pursuit.
-    <p>
-      Unfortunately, the pursuit.json file ends up being too large sometimes,
-      and the uploading will fail with a 'Request entity too large' error. If
-      this happens, you can work around this by following the 'Submitting
-      packages from a script' steps below.
-
-  <div #updating-packages .help>
-    <h3>How to update packages
-    <p>
-        Packages are updated the same way they are created.  Except that
-        you don't need to run <code>bower register</code> again.
 
   <div #submit-automated .help>
     <h3>Submitting packages from a script
+    <p>
+      You can also use Pulp to submit packages from a script. Pulp prompts
+      for confirmation when you run <code>pulp publish</code>, so you will need
+      to use a program like <code>yes</code> to answer affirmatively.
+    <p>
+      For example, if you want to automatically upload documentation from your
+      Travis CI build on tags, you should add the following to your
+      `after_script` build step:
+    <p>
+      <code>test -n "$TRAVIS_TAG" && ( yes | pulp publish --no-push )
+    <p>
+      Alternatively, if you don't want to use Pulp for whatever reason, you can
+      upload packages using Pursuit's HTTP API directly:
     <ul>
       <li>
-        Gzip the JSON output produced by psc-publish and save it to a file.
+        Gzip the JSON output produced by <code>psc-publish</code> and save it
+        to a file.
       <li>
         If you don't already have one, get a GitHub API token by visiting <a
         href="https://github.com/settings/tokens/new">https://github.com/settings/tokens/new</a>.
@@ -100,9 +94,6 @@
       If your submission is successful, Pursuit will return a 201 Created
       response, and the URL for your newly uploaded package will be in the
       Location header.
-    <p>
-      This feature can be used to automatically upload documentation to Pursuit
-      from Travis after tagging a release.
 
   <div #package-badges .help>
     <h3>Package badges
