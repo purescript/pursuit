@@ -131,7 +131,6 @@ declAsHtml r ctx d@Declaration{..} = do
       code_ [class_ "code-block"] $
         codeAsHtml r ctx (Render.renderDeclaration d)
 
-      for_ declFixity renderFixity
       for_ declComments renderComments
 
       let (instances, dctors, members) = partitionChildren declChildren
@@ -240,15 +239,6 @@ splitOnPathSep str
   | '/'  `elem` str = splitOn "/" str
   | '\\' `elem` str = splitOn "\\" str
   | otherwise       = [str]
-
-renderFixity :: P.Fixity -> Html ()
-renderFixity (P.Fixity associativity precedence) =
-  p_ (em_ (text (associativityStr <> " / precedence " <> show precedence)))
-  where
-  associativityStr = case associativity of
-    P.Infixl -> "left-associative"
-    P.Infixr -> "right-associative"
-    P.Infix  -> "non-associative"
 
 -- TODO: use GitHub API instead?
 renderComments :: String -> Html ()
