@@ -18,7 +18,7 @@ module Model.DocsAsHtml (
 import Prelude
 import Control.Arrow (second)
 import Control.Category ((>>>))
-import Control.Monad (when)
+import Control.Monad (unless)
 import Data.Char (toUpper)
 import Data.Ord (comparing)
 import Data.Monoid ((<>))
@@ -128,22 +128,26 @@ declAsHtml r ctx d@Declaration{..} = do
     linkTo declFragment $
       h3_ (text declTitle)
     div_ [class_ "decl-inner"] $ do
-      code_ [class_ "code-block"] $
-        codeAsHtml r ctx (Render.renderDeclaration d)
+      case declInfo of
+        AliasDeclaration fixity alias ->
+          renderAlias fixity alias
+        _ ->
+          code_ [class_ "code-block"] $
+            codeAsHtml r ctx (Render.renderDeclaration d)
 
       for_ declComments renderComments
 
       let (instances, dctors, members) = partitionChildren declChildren
 
-      when (not (null dctors)) $ do
+      unless (null dctors) $ do
         h4_ "Constructors"
         renderChildren r ctx dctors
 
-      when (not (null members)) $ do
+      unless (null members) $ do
         h4_ "Members"
         renderChildren r ctx members
 
-      when (not (null instances)) $ do
+      unless (null instances) $ do
         h4_ "Instances"
         renderChildren r ctx instances
 
@@ -239,6 +243,21 @@ splitOnPathSep str
   | '/'  `elem` str = splitOn "/" str
   | '\\' `elem` str = splitOn "\\" str
   | otherwise       = [str]
+
+renderAlias :: P.Fixity -> FixityAlias -> Html ()
+renderAlias (P.Fixity associativity precedence) alias =
+  p_ $ do
+    text $ "Operator alias for " <> P.showQualified showAliasName alias <> " "
+    em_ (text ("(" <> associativityStr <> " / precedence " <> show precedence <> ")"))
+  where
+  showAliasName (Left valueAlias) = P.runProperName valueAlias
+  showAliasName (Right typeAlias) = case typeAlias of
+    (Left identifier)  -> P.runIdent identifier
+    (Right properName) -> P.runProperName properName
+  associativityStr = case associativity of
+    P.Infixl -> "left-associative"
+    P.Infixr -> "right-associative"
+    P.Infix  -> "non-associative"
 
 -- TODO: use GitHub API instead?
 renderComments :: String -> Html ()
