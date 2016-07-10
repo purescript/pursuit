@@ -10,7 +10,7 @@ module Model.DocsAsHoogle
 -- | an input file, suitable for supplying to Hoogle to build a database from.
 
 import Prelude
-import Control.Arrow (first, second)
+import Control.Arrow (first)
 import Data.Maybe (fromMaybe)
 import Data.List (intersperse)
 import Data.Monoid
@@ -162,7 +162,9 @@ renderChildDeclaration
         classConstraint =
           case D.declInfo parent of
             D.TypeClassDeclaration args _ ->
-              (P.Qualified Nothing (P.ProperName (D.declTitle parent)), map D.toTypeVar args)
+               P.Constraint { constraintClass = P.Qualified Nothing (P.ProperName (D.declTitle parent))
+                            , constraintArgs = map D.toTypeVar args
+                            , constraintData = Nothing }
             _ ->
               invalidArgument $
                 "the parent of a type class member was something other than a "
@@ -226,7 +228,7 @@ everywhereOnTypesInfo f info =
   case info of
     D.ValueDeclaration ty -> D.ValueDeclaration (go ty)
     D.TypeSynonymDeclaration args ty -> D.TypeSynonymDeclaration args (go ty)
-    D.TypeClassDeclaration args implies -> D.TypeClassDeclaration args (map (second (map go)) implies)
+    D.TypeClassDeclaration args implies -> D.TypeClassDeclaration args (P.mapConstraintArgs (map go) <$> implies)
     other -> other
   where
   go = P.everywhereOnTypesTopDown f
@@ -239,7 +241,7 @@ everywhereOnTypesChildInfo :: (P.Type -> P.Type) -> D.ChildDeclarationInfo -> D.
 everywhereOnTypesChildInfo f info =
   case info of
     D.ChildDataConstructor tys -> D.ChildDataConstructor (map go tys)
-    D.ChildInstance constraints ty -> D.ChildInstance (map (second (map go)) constraints) (go ty)
+    D.ChildInstance constraints ty -> D.ChildInstance (P.mapConstraintArgs (map go) <$> constraints) (go ty)
     D.ChildTypeClassMember ty -> D.ChildTypeClassMember (go ty)
   where
   go = P.everywhereOnTypesTopDown f

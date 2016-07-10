@@ -17,7 +17,7 @@ import "monad-logger" Control.Monad.Logger
   (liftLoc)
 import Language.Haskell.TH.Syntax
   (qLocation)
-import Control.Concurrent (threadDelay, forkIO)
+import Control.Concurrent (forkIO)
 import Network.Wai.Handler.Warp
   (Settings, defaultSettings, defaultShouldDisplayException, runSettings,
   setHost, setOnException, setPort, getPort)
