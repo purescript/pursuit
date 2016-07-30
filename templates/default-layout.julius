@@ -1,1 +1,2 @@
-window.Pursuit.initializeSearchForm()
+// Disabled until Hoogle is reinstated
+// window.Pursuit.initializeSearchForm()

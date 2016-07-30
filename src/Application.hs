@@ -61,26 +61,11 @@ makeFoundation appSettings = do
     appCPRNG <- (cprgCreate <$> createEntropyPool) >>= newTVarIO
     appHoogleDatabase <- newTVarIO mempty
     let foundation = App{..}
-    void (startRegenThread foundation)
     return foundation
 
     where
     every interval action =
         forkIO (forever (action >> threadDelay interval))
-
-    startRegenThread foundation =
-        let hour = 60 * 60 * 1000 * 1000 -- microseconds
-        in every hour $ do
-            let emptySessionMap = mempty :: SessionMap
-            mdb <- Unsafe.runFakeHandler emptySessionMap
-                                         appLogger
-                                         foundation
-                                         generateDatabase
-            case mdb of
-              Right (Just db) ->
-                atomically $ writeTVar (appHoogleDatabase foundation) db
-              _ ->
-                return ()
 
 -- | Convert our foundation to a WAI Application by calling @toWaiAppPlain@ and
 -- applyng some additional middlewares.
