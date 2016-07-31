@@ -3,7 +3,7 @@
 [![Build Status](https://api.travis-ci.org/purescript/pursuit.svg?branch=master)](http://travis-ci.org/purescript/pursuit)
 
 Pursuit is a web application which hosts documentation for PureScript packages,
-and lets you search for code by names or types, via Hoogle.
+and lets you search for code by names or types.
 
 Pursuit is currently deployed at <http://pursuit.purescript.org>.
 
@@ -27,7 +27,7 @@ $ stack exec pursuit
 ```
 
 If you have content in your data directory
-(see [Database structure](#database-structure)) then the Hoogle database will
+(see [Database structure](#database-structure)) then the database will
 be regenerated before the server starts listening - this can take a short time
 depending on how much data you have.  The site should then be available at
 `http://localhost:3000`.

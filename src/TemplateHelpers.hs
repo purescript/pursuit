@@ -9,7 +9,6 @@ import Text.Blaze.Html5.Attributes as A hiding (span)
 import qualified Web.Bower.PackageMeta as Bower
 import qualified Language.PureScript as P
 import qualified Language.PureScript.Docs as D
-import qualified Hoogle
 
 import Model.DocsAsHtml (packageAsHtml, htmlModules, HtmlOutputModule(..))
 import Model.DocLinks
@@ -118,16 +117,7 @@ getDocLinkRenderer :: Handler (LinksContext' -> DocLink -> Text)
 getDocLinkRenderer = do
   renderUrl <- getUrlRender
   return $ \ctx link -> renderUrl (docLinkRoute ctx link)
-
-tagStrToHtml :: Hoogle.TagStr -> Html
-tagStrToHtml tagStr = case tagStr of
-  Hoogle.Str str -> text (pack str)
-  Hoogle.Tags tags -> foldMap tagStrToHtml tags
-  Hoogle.TagBold tag -> span ! class_ "highlight" $ tagStrToHtml tag
-  Hoogle.TagEmph tag -> strong (tagStrToHtml tag)
-  Hoogle.TagLink _ tag -> tagStrToHtml tag -- Ignore urls
-  Hoogle.TagColor _ tag -> tagStrToHtml tag -- Ignore colours for now
-
+  
 -- | Render a URL together with a fragment (possibly).
 getFragmentRender :: Handler ((Route App, Maybe Text) -> Text)
 getFragmentRender = do

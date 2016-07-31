@@ -18,6 +18,8 @@ import "monad-logger" Control.Monad.Logger
 import Language.Haskell.TH.Syntax
   (qLocation)
 import Control.Concurrent (forkIO)
+import Control.Parallel.Strategies (withStrategy, evalTraversable, rdeepseq)
+import qualified Data.Trie as Trie
 import Network.Wai.Handler.Warp
   (Settings, defaultSettings, defaultShouldDisplayException, runSettings,
   setHost, setOnException, setPort, getPort)
@@ -34,8 +36,9 @@ import qualified Yesod.Core.Unsafe as Unsafe
 -- Import all relevant handler modules here.
 -- Don't forget to add new modules to your cabal file!
 import Handler.Common
+import Handler.Database
 import Handler.Packages
-import Handler.Hoogle
+import Handler.Search
 import Handler.PackageBadges
 import Handler.GithubOAuth
 import Handler.Help
@@ -59,13 +62,27 @@ makeFoundation appSettings = do
         (if appMutableStatic appSettings then staticDevel else static)
         (appStaticDir appSettings)
     appCPRNG <- (cprgCreate <$> createEntropyPool) >>= newTVarIO
-    appHoogleDatabase <- newTVarIO mempty
+    appDatabase <- newTVarIO Trie.empty
     let foundation = App{..}
+    void (startRegenThread foundation)
     return foundation
 
     where
     every interval action =
         forkIO (forever (action >> threadDelay interval))
+
+    startRegenThread foundation =
+       let hour = 60 * 60 * 1000 * 1000 -- microseconds
+       in every hour $ do
+           let emptySessionMap = mempty :: SessionMap
+           pkgs <- Unsafe.runFakeHandler emptySessionMap
+                                         appLogger
+                                         foundation
+                                         createDatabase
+           traverse ( atomically
+                    . writeTVar (appDatabase foundation)
+                    . withStrategy (evalTraversable rdeepseq)
+                    ) pkgs
 
 -- | Convert our foundation to a WAI Application by calling @toWaiAppPlain@ and
 -- applyng some additional middlewares.

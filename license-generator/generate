@@ -21,7 +21,7 @@ echo_header() {
 
 sort_human() {
     if which sort >/dev/null; then
-        sort -h
+        sort
     else
         if which gsort >/dev/null; then
             gsort -h
@@ -55,8 +55,6 @@ get_license() {
             get_licence_from_url "http://code.haskell.org/cpphs/COPYRIGHT"
             echo ""
             cat "license-generator/gnu-lgpl-2.1.txt";;
-        hoogle)
-            get_licence_from_url "$hackage/hoogle/docs/LICENSE";;
         monad-loops)
             # PublicDomain; do nothing
             ;;

@@ -12,10 +12,12 @@ import Yesod.Core.Types            (Logger)
 import Yesod.Default.Util          (addStaticContentExternal)
 import qualified Yesod.Core.Unsafe as Unsafe
 import Crypto.Random
-import qualified Hoogle
 
 import Web.Bower.PackageMeta (PackageName, parsePackageName, runPackageName)
+import qualified Data.Trie as Trie
+import Control.DeepSeq (NFData, rnf)
 import Data.Version
+import Model.DocLinks (TypeOrValue(..))
 import qualified Css
 import qualified Language.PureScript.Docs as D
 import qualified Paths_pursuit as Paths
@@ -53,6 +55,48 @@ instance PathPiece VerificationKey where
   toPathPiece = decodeUtf8 . runVerificationKey
   fromPathPiece = Just . VerificationKey . encodeUtf8
 
+-- | A single search result.
+data SearchResult = SearchResult
+  { hrPkgName    :: PackageName
+  , hrPkgVersion :: Version
+  , hrDetails    :: String
+  , hrInfo       :: SearchResultInfo
+  }
+  deriving (Show, Eq, Generic)
+
+instance NFData SearchResult
+
+data SearchResultInfo
+  = PackageResult
+  | ModuleResult String
+  -- ^ Module name
+  | DeclarationResult TypeOrValue String String
+  -- ^ Module name & declaration title
+  deriving (Show, Eq, Generic)
+
+instance NFData SearchResultInfo
+
+-- Orphan instance which belongs in bower-json
+
+instance NFData PackageName where
+  rnf _ = ()
+
+instance ToJSON SearchResultInfo where
+  toJSON i = object $ case i of
+    PackageResult ->
+      [ "type" .= ("package" :: Text)
+      ]
+    ModuleResult moduleName ->
+      [ "type" .= ("module" :: Text)
+      , "module" .= moduleName
+      ]
+    DeclarationResult typeOrValue moduleName declTitle ->
+      [ "type" .= ("declaration" :: Text)
+      , "typeOrValue" .= show typeOrValue
+      , "module" .= moduleName
+      , "title" .= declTitle
+      ]
+
 -- | The foundation datatype for your application. This can be a good place to
 -- keep settings and values requiring initialization before your application
 -- starts running, such as database connections. Every handler will have
@@ -65,7 +109,7 @@ data App = App
     , appLogger         :: Logger
     , appCPRNG          :: TVar SystemRNG
     -- ^ Random number generator, used for OAuth
-    , appHoogleDatabase :: TVar Hoogle.Database
+    , appDatabase       :: TVar (Trie.Trie [SearchResult])
     }
 
 instance HasHttpManager App where
