@@ -2,12 +2,14 @@
 module Model.DocLinks where
 
 import Prelude
+import Control.Arrow (second)
+import Control.DeepSeq (NFData)
 import Data.List (find)
 import Data.Char (isUpper)
 import Data.Version
 import Data.Maybe (fromJust)
 import qualified Data.Map as M
-import Control.Arrow (second)
+import GHC.Generics (Generic)
 
 import Web.Bower.PackageMeta hiding (Version)
 
@@ -32,7 +34,9 @@ type LinksContext' = (LinksContext, P.ModuleName)
 data TypeOrValue
   = Type
   | Value
-  deriving (Show, Eq, Enum, Ord)
+  deriving (Show, Eq, Enum, Ord, Generic)
+
+instance NFData TypeOrValue
 
 data DocLink = DocLink
   { linkLocation    :: LinkLocation

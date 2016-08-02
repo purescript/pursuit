@@ -1,18 +1,25 @@
 <div .col .col-single>
   <h2>Search results: #{query}
-  $case results
-    $of Left err
-      <div .message .error>#{err}
-    $of Right results'
-      $if null results'
-        <p>No results for "#{query}", sorry.
-      $forall r <- results'
-        <a .search-result href=#{fr $ routeResult r}>
-          <p>#{tagStrToHtml $ hrTagStr r}
-          $case hrInfo r
-            $of PackageResult
-              <p>
-            $of ModuleResult _
-              <p>#{Bower.runPackageName $ hrPkgName r}
-            $of DeclarationResult _ modName _
-              <p>#{modName} (#{Bower.runPackageName $ hrPkgName r})
+    $if null results
+      <p>No results for "#{query}", sorry.
+    $forall r <- results
+      <a .search-result href=#{fr $ routeResult r}>
+        $case hrInfo r
+          $of PackageResult
+            <p>#{Bower.runPackageName $ hrPkgName r}
+          $of ModuleResult moduleName
+            <p>#{moduleName} (#{Bower.runPackageName $ hrPkgName r})
+          $of DeclarationResult _ _ name
+            <p>#{name}
+
+        <p>
+          <small>#{hrDetails r}
+
+        $case hrInfo r
+          $of PackageResult
+            <p>
+          $of ModuleResult _
+            <p>
+          $of DeclarationResult _ modName _
+            <p>
+              <small>#{modName} (#{Bower.runPackageName $ hrPkgName r})

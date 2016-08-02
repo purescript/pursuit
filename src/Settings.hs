@@ -13,7 +13,6 @@ import Language.Haskell.TH.Syntax (Exp, Name, Q)
 import Network.Wai.Handler.Warp (HostPreference)
 import Yesod.Default.Util (WidgetFileSettings, widgetFileNoReload,
                           widgetFileReload)
-import TimeUtils (NominalDiffTime, oneHour)
 import System.Exit (exitFailure)
 
 newtype GithubAuthToken =
@@ -58,11 +57,6 @@ data AppSettings = AppSettings
     -- ^ GitHub OAuth client ID
     , appGithubClientSecret     :: ByteString
     -- ^ GitHub OAuth client secret
-    , appMaxHoogleParseErrors   :: Int
-    -- ^ The maximum allowable number of Hoogle parse errors before a Hoogle
-    -- database regeneration is considered a failure.
-    , appHoogleDatabaseMaxAge   :: NominalDiffTime
-    -- ^ The minimum amount of time between hoogle database regenerations.
     , appMinimumCompilerVersion :: Version
     -- ^ The minimum version of the compiler that may be used to generate data
     -- to be uploaded.
@@ -108,9 +102,6 @@ getAppSettings = do
 
   appGithubClientID     <- fromString <$> env' "GITHUB_CLIENT_ID"
   appGithubClientSecret <- fromString <$> env' "GITHUB_CLIENT_SECRET"
-
-  appMaxHoogleParseErrors <- env "MAX_HOOGLE_PARSE_ERRORS" .!= 250
-  appHoogleDatabaseMaxAge <- (map fromInteger <$> env "HOOGLE_DATABASE_MAX_AGE_SECONDS") .!= oneHour
 
   appMinimumCompilerVersion <- envP parseVersion' "MINIMUM_COMPILER_VERSION" .!= Version [0,0,0,0] []
 

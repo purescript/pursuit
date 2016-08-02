@@ -18,25 +18,24 @@ Flag library-only
 library
     hs-source-dirs: src, app
     exposed-modules: Application
+                     Css
                      Foundation
-                     Import
-                     Import.NoFoundation
-                     Settings
+                     GithubAPI
+                     Handler.Caching
                      Handler.Common
-                     Handler.Packages
-                     Handler.Hoogle
-                     Handler.PackageBadges
                      Handler.Database
                      Handler.GithubOAuth
-                     Handler.Caching
-                     Handler.Utils
                      Handler.Help
+                     Handler.PackageBadges
+                     Handler.Packages
+                     Handler.Search
+                     Handler.Utils
+                     Import
+                     Import.NoFoundation
                      Model.DocLinks
                      Model.DocsAsHtml
-                     Model.DocsAsHoogle
+                     Settings
                      TemplateHelpers
-                     GithubAPI
-                     Css
                      TimeUtils
 
     other-modules:   Paths_pursuit
@@ -60,10 +59,12 @@ library
                 EmptyDataDecls
                 NoMonomorphismRestriction
                 DeriveDataTypeable
+                DeriveGeneric
                 ViewPatterns
                 TupleSections
                 RecordWildCards
                 ScopedTypeVariables
+                StandaloneDeriving
 
     build-depends: base                          >= 4          && < 5
                  , yesod                         >= 1.4.1      && < 1.5
@@ -74,6 +75,7 @@ library
                  , classy-prelude-conduit        >= 0.10.2
                  , classy-prelude-yesod          >= 0.10.2
                  , bytestring                    >= 0.9        && < 0.11
+                 , bytestring-trie               >= 0.2.4      && < 0.2.5
                  , text                          >= 0.11       && < 2.0
                  , template-haskell
                  , shakespeare                   >= 2.0        && < 2.1
@@ -82,6 +84,7 @@ library
                  , wai-extra                     >= 3.0        && < 3.1
                  , yaml                          >= 0.8        && < 0.9
                  , http-conduit                  >= 2.1        && < 2.2
+                 , deepseq                       >= 1.4        && < 1.5
                  , directory                     >= 1.1        && < 1.3
                  , warp                          >= 3.0        && < 4
                  , data-default
@@ -90,6 +93,7 @@ library
                  , monad-logger                  >= 0.3        && < 0.4
                  , fast-logger                   >= 2.2        && < 2.5
                  , wai-logger                    >= 2.2        && < 2.3
+                 , parallel
                  , file-embed
                  , safe
                  , unordered-containers
@@ -118,7 +122,6 @@ library
                  , conduit-extra
                  , aeson-better-errors
                  , exceptions
-                 , hoogle >= 4.2.41 && < 5
                  , transformers
                  , cookie
                  , xss-sanitize

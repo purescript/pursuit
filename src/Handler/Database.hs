@@ -1,6 +1,8 @@
 
 module Handler.Database
-  ( getAllPackageNames
+  ( createDatabase
+  , getAllPackageNames
+  , getAllPackages
   , lookupPackage
   , availableVersionsFor
   , getLatestVersionFor
@@ -12,10 +14,14 @@ import Import
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Text as T
+import qualified Data.Trie as Trie
 import Data.Version (Version, showVersion)
 import System.Directory (getDirectoryContents, doesDirectoryExist)
 
-import Web.Bower.PackageMeta (PackageName, mkPackageName, runPackageName)
+import Model.DocLinks (TypeOrValue(..))
+import Web.Bower.PackageMeta (PackageName, bowerName, bowerDescription,
+                              mkPackageName, runPackageName)
+import qualified Language.PureScript as P
 import qualified Language.PureScript.Docs as D
 
 import Handler.Utils
@@ -26,6 +32,57 @@ getAllPackageNames = do
   dir <- getDataDir
   contents <- liftIO $ getDirectoryContents (dir ++ "/verified/")
   return . sort . rights $ map mkPackageName contents
+
+-- | This is horribly inefficient, but it will do for now.
+getAllPackages :: Handler [D.VerifiedPackage]
+getAllPackages = do
+  pkgNames <- getAllPackageNames
+  pkgNamesAndVersions <- catMaybes <$> traverse withVersion pkgNames
+  catMaybes <$> traverse lookupPackageMay pkgNamesAndVersions
+  where
+  withVersion name = (map . map) (name,) (getLatestVersionFor name)
+  lookupPackageMay = map (either (const Nothing) Just) . uncurry lookupPackage
+
+tryStripPrefix :: String -> String -> String
+tryStripPrefix pre s = fromMaybe s (stripPrefix pre s)
+
+createDatabase :: Handler (Trie.Trie [SearchResult])
+createDatabase = do
+  pkgs <- getAllPackages
+  return . fromListWithDuplicates $ do
+    D.Package{..} <- pkgs
+    let packageEntry =
+          ( fromString (tryStripPrefix "purescript-" (runPackageName (bowerName pkgMeta)))
+          , SearchResult (bowerName pkgMeta)
+                         pkgVersion
+                         (fromMaybe "" (bowerDescription pkgMeta))
+                         PackageResult
+          )
+    packageEntry : do
+      D.Module{..} <- pkgModules
+      let moduleEntry =
+            ( fromString (P.runModuleName modName)
+            , SearchResult (bowerName pkgMeta)
+                           pkgVersion
+                           (fromMaybe "" modComments)
+                           (ModuleResult (P.runModuleName modName))
+            )
+      moduleEntry : do
+        D.Declaration{..} <- modDeclarations
+        let typeOrValue =
+              case declInfo of
+                D.ValueDeclaration{} -> Value
+                D.AliasDeclaration{} -> Value
+                _ -> Type
+        return ( fromString declTitle
+               , SearchResult (bowerName pkgMeta)
+                              pkgVersion
+                              (fromMaybe "" declComments)
+                              (DeclarationResult typeOrValue (P.runModuleName modName) (fromString declTitle))
+               )
+  where
+    fromListWithDuplicates :: [(ByteString, a)] -> Trie.Trie [a]
+    fromListWithDuplicates = foldr (\(k, a) -> Trie.alterBy (\_ xs -> Just . maybe xs (xs <>)) k [a]) Trie.empty
 
 data SomethingMissing
   = NoSuchPackage

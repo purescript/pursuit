@@ -3,8 +3,7 @@
     <strong>Pursuit
     is the home of PureScript documentation.
   <p>
-    Pursuit hosts generated API documentation for PureScript packages, as well as
-    providing code search, supporting searches by name or by type, via <a href="https://www.haskell.org/hoogle/">Hoogle</a>.
+    Pursuit hosts generated API documentation for PureScript packages.
   <p>
     If you are a package author looking for information on how to publish your
     packages, see the <a href=@{HelpR}>Help page</a>.
