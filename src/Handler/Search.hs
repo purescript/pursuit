@@ -18,7 +18,7 @@ getSearchR = do
   case mquery of
     Nothing -> redirect HomeR
     Just query -> do
-      results <- searchForName query
+      results <- searchForName (toLower query)
       selectRep $ do
         provideRep (htmlOutput query results)
         provideRep (jsonOutput results)
@@ -37,7 +37,8 @@ searchResultToJSON result@SearchResult{..} = do
   return $
     object [ "package" .= hrPkgName
            , "version" .= showVersion hrPkgVersion
-           , "details" .= hrDetails
+           , "markup" .= hrDetails
+           , "text" .= hrDetails
            , "info" .= toJSON hrInfo
            , "url" .= url
            ]
