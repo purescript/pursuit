@@ -13,7 +13,7 @@
             <p>#{name}
 
         <p>
-          <small>#{hrDetails r}
+          <small>#{renderComments $ hrComments r}
 
         $case hrInfo r
           $of PackageResult

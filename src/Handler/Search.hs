@@ -12,6 +12,10 @@ import qualified Web.Bower.PackageMeta as Bower
 import Model.DocsAsHtml (makeFragment)
 import TemplateHelpers (getFragmentRender)
 
+import Cheapskate (allowRawHtml, markdown)
+import qualified Text.Blaze as Blaze
+import qualified Text.Blaze.Renderer.Text as Blaze
+
 getSearchR :: Handler TypedContent
 getSearchR = do
   mquery <- (map . map) unpack $ lookupGetParam "q"
@@ -34,11 +38,12 @@ getSearchR = do
 searchResultToJSON :: SearchResult -> Handler Value
 searchResultToJSON result@SearchResult{..} = do
   url <- getFragmentRender <*> pure (routeResult result)
+  let html = renderComments hrComments
   return $
     object [ "package" .= hrPkgName
            , "version" .= showVersion hrPkgVersion
-           , "markup" .= hrDetails
-           , "text" .= hrDetails
+           , "markup" .= Blaze.renderMarkup html
+           , "text" .= Blaze.renderMarkup (Blaze.contents html)
            , "info" .= toJSON hrInfo
            , "url" .= url
            ]
@@ -66,3 +71,8 @@ searchForName :: String -> Handler [SearchResult]
 searchForName query = do
   db <- atomically . readTVar =<< (appDatabase <$> getYesod)
   return (take 50 (concat (elems (submap (fromString query) db))))
+
+renderComments :: String -> Html
+renderComments = Blaze.toMarkup . markdown opts . pack
+  where
+    opts = def { allowRawHtml = False }
