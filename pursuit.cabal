@@ -94,6 +94,7 @@ library
                  , fast-logger                   >= 2.2        && < 2.5
                  , wai-logger                    >= 2.2        && < 2.3
                  , parallel
+                 , parsec
                  , file-embed
                  , safe
                  , unordered-containers

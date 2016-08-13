@@ -46,39 +46,45 @@ getAllPackages = do
 tryStripPrefix :: String -> String -> String
 tryStripPrefix pre s = fromMaybe s (stripPrefix pre s)
 
-createDatabase :: Handler (Trie.Trie [SearchResult])
+createDatabase :: Handler (Trie.Trie [(SearchResult, Maybe P.Type)])
 createDatabase = do
   pkgs <- getAllPackages
   return . fromListWithDuplicates $ do
     D.Package{..} <- pkgs
     let packageEntry =
           ( fromString (tryStripPrefix "purescript-" (toLower (runPackageName (bowerName pkgMeta))))
-          , SearchResult (bowerName pkgMeta)
+          , ( SearchResult (bowerName pkgMeta)
                          pkgVersion
                          (fromMaybe "" (bowerDescription pkgMeta))
                          PackageResult
+            , Nothing
+            )
           )
     packageEntry : do
       D.Module{..} <- pkgModules
       let moduleEntry =
             ( fromString (toLower (P.runModuleName modName))
-            , SearchResult (bowerName pkgMeta)
-                           pkgVersion
-                           (fromMaybe "" modComments)
-                           (ModuleResult (P.runModuleName modName))
+            , ( SearchResult (bowerName pkgMeta)
+                             pkgVersion
+                             (fromMaybe "" modComments)
+                             (ModuleResult (P.runModuleName modName))
+              , Nothing
+              )
             )
       moduleEntry : do
         D.Declaration{..} <- modDeclarations
-        let typeOrValue =
+        let (typeOrValue, typ) =
               case declInfo of
-                D.ValueDeclaration{} -> Value
-                D.AliasDeclaration{} -> Value
-                _ -> Type
+                D.ValueDeclaration ty -> (Value, Just ty)
+                D.AliasDeclaration{} -> (Value, Nothing)
+                _ -> (Type, Nothing)
         return ( fromString (toLower declTitle)
-               , SearchResult (bowerName pkgMeta)
-                              pkgVersion
-                              (fromMaybe "" declComments)
-                              (DeclarationResult typeOrValue (P.runModuleName modName) (fromString declTitle))
+               , ( SearchResult (bowerName pkgMeta)
+                                pkgVersion
+                                (fromMaybe "" declComments)
+                                (DeclarationResult typeOrValue (P.runModuleName modName) (fromString declTitle))
+                 , typ
+                 )
                )
   where
     fromListWithDuplicates :: [(ByteString, a)] -> Trie.Trie [a]

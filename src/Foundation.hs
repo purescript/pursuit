@@ -19,6 +19,7 @@ import Control.DeepSeq (NFData, rnf)
 import Data.Version
 import Model.DocLinks (TypeOrValue(..))
 import qualified Css
+import qualified Language.PureScript as P
 import qualified Language.PureScript.Docs as D
 import qualified Paths_pursuit as Paths
 
@@ -76,9 +77,12 @@ data SearchResultInfo
 
 instance NFData SearchResultInfo
 
--- Orphan instance which belongs in bower-json
+-- Orphan instances which belong elsewhere
 
 instance NFData PackageName where
+  rnf _ = ()
+
+instance NFData P.Type where
   rnf _ = ()
 
 instance ToJSON SearchResultInfo where
@@ -109,7 +113,7 @@ data App = App
     , appLogger         :: Logger
     , appCPRNG          :: TVar SystemRNG
     -- ^ Random number generator, used for OAuth
-    , appDatabase       :: TVar (Trie.Trie [SearchResult])
+    , appDatabase       :: TVar (Trie.Trie [(SearchResult, Maybe P.Type)])
     }
 
 instance HasHttpManager App where
