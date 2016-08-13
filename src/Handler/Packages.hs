@@ -2,6 +2,7 @@ module Handler.Packages where
 
 import Import
 import Text.Julius (rawJS)
+import Text.Blaze (ToMarkup, toMarkup)
 import Control.Monad.Except (ExceptT(..), runExceptT)
 import Control.Monad.Error.Class (throwError)
 import qualified Data.Char as Char
@@ -22,7 +23,12 @@ import Handler.Utils
 import TemplateHelpers
 import qualified GithubAPI
 
-newtype FirstLetter = FirstLetter { getFirstLetter :: Char } deriving Show
+newtype FirstLetter = FirstLetter { getFirstLetter :: Char }
+
+instance ToMarkup FirstLetter where
+  toMarkup (FirstLetter a)
+    | Char.isAlpha a = toMarkup (Char.toUpper a)
+    | otherwise = toMarkup '#' -- Symbols, digits, etc.
 
 instance Eq FirstLetter where
   FirstLetter a == FirstLetter b

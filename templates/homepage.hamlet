@@ -17,7 +17,7 @@
     <h2>Packages:
       $forall pkgs <- pkgNamesByLetter
         $forall letter <- headMay pkgs >>= firstLetter
-          <h3>#{Char.toUpper (getFirstLetter letter)}
+          <h3>#{letter}
         <ul>
           $forall pkgName <- pkgs
             <li>
