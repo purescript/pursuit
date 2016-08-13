@@ -59,7 +59,7 @@ instance PathPiece VerificationKey where
 data SearchResult = SearchResult
   { hrPkgName    :: PackageName
   , hrPkgVersion :: Version
-  , hrDetails    :: String
+  , hrComments    :: String
   , hrInfo       :: SearchResultInfo
   }
   deriving (Show, Eq, Generic)

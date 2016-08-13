@@ -52,7 +52,7 @@ createDatabase = do
   return . fromListWithDuplicates $ do
     D.Package{..} <- pkgs
     let packageEntry =
-          ( fromString (tryStripPrefix "purescript-" (runPackageName (bowerName pkgMeta)))
+          ( fromString (tryStripPrefix "purescript-" (toLower (runPackageName (bowerName pkgMeta))))
           , SearchResult (bowerName pkgMeta)
                          pkgVersion
                          (fromMaybe "" (bowerDescription pkgMeta))
@@ -61,7 +61,7 @@ createDatabase = do
     packageEntry : do
       D.Module{..} <- pkgModules
       let moduleEntry =
-            ( fromString (P.runModuleName modName)
+            ( fromString (toLower (P.runModuleName modName))
             , SearchResult (bowerName pkgMeta)
                            pkgVersion
                            (fromMaybe "" modComments)
@@ -74,7 +74,7 @@ createDatabase = do
                 D.ValueDeclaration{} -> Value
                 D.AliasDeclaration{} -> Value
                 _ -> Type
-        return ( fromString declTitle
+        return ( fromString (toLower declTitle)
                , SearchResult (bowerName pkgMeta)
                               pkgVersion
                               (fromMaybe "" declComments)
