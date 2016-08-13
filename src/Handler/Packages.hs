@@ -39,6 +39,7 @@ getHomeR :: Handler Html
 getHomeR =
   cacheHtml $ do
     pkgNames <- getAllPackageNames
+    latest <- getLatestPackages
     let firstLetter :: PackageName -> Maybe FirstLetter
         firstLetter = fmap FirstLetter . headMay . stripIntro . runPackageName
 
