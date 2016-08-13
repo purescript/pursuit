@@ -4,6 +4,7 @@ import Import
 import Text.Julius (rawJS)
 import Control.Monad.Except (ExceptT(..), runExceptT)
 import Control.Monad.Error.Class (throwError)
+import qualified Data.Char as Char
 import Data.Version
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Text.Lazy as TL
@@ -21,10 +22,25 @@ import Handler.Utils
 import TemplateHelpers
 import qualified GithubAPI
 
+newtype FirstLetter = FirstLetter { getFirstLetter :: Char } deriving Show
+
+instance Eq FirstLetter where
+  FirstLetter a == FirstLetter b
+    | Char.isAlpha a && Char.isAlpha b = Char.toUpper a == Char.toUpper b
+    | otherwise = True
+
 getHomeR :: Handler Html
 getHomeR =
   cacheHtml $ do
     pkgNames <- getAllPackageNames
+    let firstLetter :: PackageName -> Maybe FirstLetter
+        firstLetter = fmap FirstLetter . headMay . stripIntro . runPackageName
+
+        stripIntro :: String -> String
+        stripIntro s = fromMaybe s (stripPrefix "purescript-" s)
+
+        pkgNamesByLetter :: [[PackageName]]
+        pkgNamesByLetter = groupBy ((==) `on` (firstLetter )) pkgNames
     defaultLayout $(widgetFile "homepage")
 
 getPackageR :: PathPackageName -> Handler Html
