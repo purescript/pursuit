@@ -15,7 +15,10 @@
     <h2>No packages uploaded yet.
   $else
     <h2>Packages:
-    <ul>
-      $forall pkgName <- pkgNames
-        <li>
-          <a href=@{PackageR (PathPackageName pkgName)}>#{runPackageName pkgName}
+      $forall pkgs <- pkgNamesByLetter
+        $forall letter <- headMay pkgs >>= firstLetter
+          <h3>#{letter}
+        <ul>
+          $forall pkgName <- pkgs
+            <li>
+              <a href=@{PackageR (PathPackageName pkgName)}>#{runPackageName pkgName}
