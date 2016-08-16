@@ -14,6 +14,12 @@
   $if null pkgNames
     <h2>No packages uploaded yet.
   $else
+    <h2>Latest Uploads
+    <ul>
+      $forall (pkgName, version) <- latest
+        <li>
+          <a href=@{PackageVersionR (PathPackageName pkgName) (PathVersion version)}>
+            #{runPackageName pkgName} - #{showVersion version}
     <h2>Packages:
       $forall pkgs <- pkgNamesByLetter
         $forall letter <- headMay pkgs >>= firstLetter

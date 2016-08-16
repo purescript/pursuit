@@ -60,7 +60,7 @@ body {
 
 .col ul,
 .col ol {
-  padding-left: 25px;
+  padding-left: 45px;
 }
 
 .top-banner .banner-item {

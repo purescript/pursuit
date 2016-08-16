@@ -3,6 +3,7 @@ module Handler.Database
   ( createDatabase
   , getAllPackageNames
   , getAllPackages
+  , getLatestPackages
   , lookupPackage
   , availableVersionsFor
   , getLatestVersionFor
@@ -16,7 +17,7 @@ import qualified Data.ByteString.Lazy as BL
 import qualified Data.Text as T
 import qualified Data.Trie as Trie
 import Data.Version (Version, showVersion)
-import System.Directory (getDirectoryContents, doesDirectoryExist)
+import System.Directory (getDirectoryContents, getModificationTime, doesDirectoryExist)
 
 import Model.DocLinks (TypeOrValue(..))
 import Web.Bower.PackageMeta (PackageName, bowerName, bowerDescription,
@@ -32,6 +33,19 @@ getAllPackageNames = do
   dir <- getDataDir
   contents <- liftIO $ getDirectoryContents (dir ++ "/verified/")
   return . sort . rights $ map mkPackageName contents
+
+getLatestPackages :: Handler [(PackageName, Version)]
+getLatestPackages = do
+    pkgNames <- getAllPackageNames
+    pkgNamesAndTimestamps <- traverse withTimestamp pkgNames
+    let latest = (map fst . take 10 . sortBy (comparing (Down . snd))) pkgNamesAndTimestamps
+    catMaybes <$> traverse withVersion latest
+  where
+    withTimestamp :: PackageName -> Handler (PackageName, UTCTime)
+    withTimestamp name = map (name,) (getPackageModificationTime name)
+
+    withVersion :: PackageName -> Handler (Maybe (PackageName, Version))
+    withVersion name = (map . map) (name,) (getLatestVersionFor name)
 
 -- | This is horribly inefficient, but it will do for now.
 getAllPackages :: Handler [D.VerifiedPackage]
@@ -109,6 +123,11 @@ availableVersionsFor pkgName = do
     files <- getDirectoryContents dir
     return $ mapMaybe (stripSuffix ".json" >=> D.parseVersion') files
   return $ fromMaybe [] mresult
+
+getPackageModificationTime :: PackageName -> Handler UTCTime
+getPackageModificationTime pkgName = do
+  dir <- packageDirFor pkgName
+  liftIO $ getModificationTime dir
 
 getLatestVersionFor :: PackageName -> Handler (Maybe Version)
 getLatestVersionFor pkgName = do
