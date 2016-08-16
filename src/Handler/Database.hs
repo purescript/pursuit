@@ -37,8 +37,8 @@ getAllPackageNames = do
 getLatestPackages :: Handler [(PackageName, Version)]
 getLatestPackages = do
     pkgNames <- getAllPackageNames
-    pkgNamesAndVersions <- traverse withTimestamp pkgNames
-    let latest = (map fst . take 5 . sortBy (comparing (Down . snd))) pkgNamesAndVersions
+    pkgNamesAndTimestamps <- traverse withTimestamp pkgNames
+    let latest = (map fst . take 10 . sortBy (comparing (Down . snd))) pkgNamesAndTimestamps
     catMaybes <$> traverse withVersion latest
   where
     withTimestamp :: PackageName -> Handler (PackageName, UTCTime)
