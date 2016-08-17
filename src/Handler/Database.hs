@@ -88,12 +88,21 @@ createDatabase = do
                 D.ValueDeclaration{} -> Value
                 D.AliasDeclaration{} -> Value
                 _ -> Type
-        return ( fromString (toLower declTitle)
+        let declEntry =
+               ( fromString (toLower declTitle)
                , SearchResult (bowerName pkgMeta)
                               pkgVersion
                               (fromMaybe "" declComments)
                               (DeclarationResult typeOrValue (P.runModuleName modName) (fromString declTitle))
                )
+        declEntry : do
+          D.ChildDeclaration{..} <- declChildren
+          return ( fromString (toLower cdeclTitle)
+                 , SearchResult (bowerName pkgMeta)
+                                pkgVersion
+                                (fromMaybe "" cdeclComments)
+                                (DeclarationResult Value (P.runModuleName modName) (fromString cdeclTitle))
+                 )
   where
     fromListWithDuplicates :: [(ByteString, a)] -> Trie.Trie [a]
     fromListWithDuplicates = foldr (\(k, a) -> Trie.alterBy (\_ xs -> Just . maybe xs (xs <>)) k [a]) Trie.empty
