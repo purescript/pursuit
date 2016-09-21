@@ -134,11 +134,11 @@ mediaTypeHtml = "application/vnd.github.v3.html"
 
 parseGithubUrlWithQuery :: MonadThrow m => [String] -> String -> m Request
 parseGithubUrlWithQuery parts query =
-  parseUrl $ concat [ "https://api.github.com/"
-                    , intercalate "/" parts
-                    , "?"
-                    , query
-                    ]
+  parseUrlThrow $ concat [ "https://api.github.com/"
+                         , intercalate "/" parts
+                         , "?"
+                         , query
+                         ]
 
 tryHttp :: MonadCatch m => m a -> m (Either HttpException a)
 tryHttp = Catch.try

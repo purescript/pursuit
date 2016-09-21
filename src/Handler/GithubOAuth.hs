@@ -62,7 +62,7 @@ tryExchangeToken :: ByteString -> Handler (Maybe GithubAuthToken)
 tryExchangeToken code = do
   url <- getGithubExchangeTokenUrl code
   liftIO $ do
-    initReq <- parseUrl (unpack url)
+    initReq <- parseUrlThrow (unpack url)
     let req = initReq { method = "POST"
                       , requestHeaders = [("Accept", "application/json")]
                       }
