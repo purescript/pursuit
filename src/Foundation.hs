@@ -70,8 +70,8 @@ data SearchResultInfo
   = PackageResult
   | ModuleResult String
   -- ^ Module name
-  | DeclarationResult TypeOrValue String String
-  -- ^ Module name & declaration title
+  | DeclarationResult TypeOrValue String String (Maybe String)
+  -- ^ Module name & declaration title & type if value
   deriving (Show, Eq, Generic)
 
 instance NFData SearchResultInfo
@@ -90,11 +90,12 @@ instance ToJSON SearchResultInfo where
       [ "type" .= ("module" :: Text)
       , "module" .= moduleName
       ]
-    DeclarationResult typeOrValue moduleName declTitle ->
+    DeclarationResult typeOrValue moduleName declTitle typeText ->
       [ "type" .= ("declaration" :: Text)
       , "typeOrValue" .= show typeOrValue
       , "module" .= moduleName
       , "title" .= declTitle
+      , "typeText" .= typeText
       ]
 
 -- | The foundation datatype for your application. This can be a good place to
