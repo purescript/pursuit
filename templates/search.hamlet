@@ -9,8 +9,12 @@
             <p>#{Bower.runPackageName $ hrPkgName r}
           $of ModuleResult moduleName
             <p>#{moduleName} (#{Bower.runPackageName $ hrPkgName r})
-          $of DeclarationResult _ _ name
+          $of DeclarationResult _ _ name typ
             <p>#{name}
+              $maybe typeValue <- typ
+                <small>
+                  <span> ::
+                  <code>#{typeValue}
 
         <p>
           <small>#{renderComments $ hrComments r}
@@ -20,6 +24,6 @@
             <p>
           $of ModuleResult _
             <p>
-          $of DeclarationResult _ modName _
+          $of DeclarationResult _ modName _ _
             <p>
               <small>#{modName} (#{Bower.runPackageName $ hrPkgName r})

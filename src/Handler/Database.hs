@@ -24,6 +24,8 @@ import Web.Bower.PackageMeta (PackageName, bowerName, bowerDescription,
                               mkPackageName, runPackageName)
 import qualified Language.PureScript as P
 import qualified Language.PureScript.Docs as D
+import Language.PureScript.Docs.RenderedCode.Render (renderType)
+import Language.PureScript.Docs.RenderedCode.Types (RenderedCodeElement(..), outputWith)
 
 import Handler.Utils
 import Handler.Caching (clearCache)
@@ -60,6 +62,15 @@ getAllPackages = do
 tryStripPrefix :: String -> String -> String
 tryStripPrefix pre s = fromMaybe s (stripPrefix pre s)
 
+renderString :: RenderedCodeElement -> String
+renderString str = case str of
+  Syntax s -> s
+  Ident s _ -> s
+  Ctor s _ -> s
+  Kind s -> s
+  Keyword s -> s
+  Space -> " "
+
 createDatabase :: Handler (Trie.Trie [SearchResult])
 createDatabase = do
   pkgs <- getAllPackages
@@ -88,12 +99,17 @@ createDatabase = do
                 D.ValueDeclaration{} -> Value
                 D.AliasDeclaration{} -> Value
                 _ -> Type
+        let typeOrKind =
+              case declInfo of
+                D.ValueDeclaration ty -> Just $ outputWith renderString $ renderType ty
+                _ -> Nothing
+
         let declEntry =
                ( fromString (toLower declTitle)
                , SearchResult (bowerName pkgMeta)
                               pkgVersion
                               (fromMaybe "" declComments)
-                              (DeclarationResult typeOrValue (P.runModuleName modName) (fromString declTitle))
+                              (DeclarationResult typeOrValue (P.runModuleName modName) (fromString declTitle) typeOrKind)
                )
         declEntry : do
           D.ChildDeclaration{..} <- declChildren
@@ -101,7 +117,7 @@ createDatabase = do
                  , SearchResult (bowerName pkgMeta)
                                 pkgVersion
                                 (fromMaybe "" cdeclComments)
-                                (DeclarationResult Value (P.runModuleName modName) (fromString cdeclTitle))
+                                (DeclarationResult Value (P.runModuleName modName) (fromString cdeclTitle) Nothing)
                  )
   where
     fromListWithDuplicates :: [(ByteString, a)] -> Trie.Trie [a]
