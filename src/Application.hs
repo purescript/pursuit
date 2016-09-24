@@ -55,12 +55,10 @@ mkYesodDispatch "App" resourcesApp
 makeFoundation :: AppSettings -> IO App
 makeFoundation appSettings = do
     let mode = if isDevelopment then "development" else "production"
+        appStatic = eStatic
     putStrLn $ "Starting in " <> mode <> " mode"
     appHttpManager <- newManager
     appLogger <- newStdoutLoggerSet defaultBufSize >>= makeYesodLogger
-    appStatic <-
-        (if appMutableStatic appSettings then staticDevel else static)
-        (appStaticDir appSettings)
     appCPRNG <- (cprgCreate <$> createEntropyPool) >>= newTVarIO
     appDatabase <- newTVarIO Trie.empty
     let foundation = App{..}

@@ -14,6 +14,7 @@ import Network.Wai.Handler.Warp (HostPreference)
 import Yesod.Default.Util (WidgetFileSettings, widgetFileNoReload,
                           widgetFileReload)
 import System.Exit (exitFailure)
+import Yesod.EmbeddedStatic (mkEmbeddedStatic, embedDir)
 
 newtype GithubAuthToken =
   GithubAuthToken { runGithubAuthToken :: ByteString }
@@ -23,9 +24,7 @@ newtype GithubAuthToken =
 -- loaded from various sources: defaults, environment variables, config files,
 -- theoretically even a database.
 data AppSettings = AppSettings
-    { appStaticDir              :: String
-    -- ^ Directory from which to serve static files.
-    , appRoot                   :: Text
+    { appRoot                   :: Text
     -- ^ Base for all generated URLs.
     , appHost                   :: HostPreference
     -- ^ Host/interface the server should bind to.
@@ -62,12 +61,15 @@ data AppSettings = AppSettings
     -- to be uploaded.
     }
 
-isDevelopment :: Bool
 #if DEVELOPMENT
-isDevelopment = True
+#define DEV_BOOL True
 #else
-isDevelopment = False
+#define DEV_BOOL False
 #endif
+mkEmbeddedStatic DEV_BOOL "eStatic" [embedDir "static"]
+
+isDevelopment :: Bool
+isDevelopment = DEV_BOOL
 
 getAppSettings :: IO AppSettings
 getAppSettings = do
@@ -77,7 +79,6 @@ getAppSettings = do
   let appMutableStatic          = isDevelopment
   let appSkipCombining          = isDevelopment
 
-  appStaticDir    <- env "STATIC_DIR" .!= "./static"
   appRoot         <- env "APPROOT" .!= "http://localhost:3000"
   appHost         <- fromString <$> env "HOST" .!= "*4"
   appPort         <- env "PORT" .!= 3000
