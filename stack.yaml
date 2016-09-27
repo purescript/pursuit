@@ -5,5 +5,5 @@ flags:
 packages:
 - '.'
 extra-deps:
-- purescript-0.9.1
+- purescript-0.9.3
 - wai-middleware-gunzip-0.0.2
