@@ -62,7 +62,7 @@ getReadme' mauth (D.GithubUser user) (D.GithubRepo repo) ref =
 
 -- | Get the currently logged in user.
 getUser ::
-  (MonadCatch m, MonadIO m, HasHttpManager env, MonadReader env m, Functor m) =>
+  (MonadCatch m, MonadIO m, HasHttpManager env, MonadReader env m) =>
   GithubAuthToken -> m (Either HttpException (Maybe D.GithubUser))
 getUser token =
   (map . map) extractUser (getUser' token) >>= catch401
