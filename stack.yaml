@@ -1,4 +1,4 @@
-resolver: lts-6.1
+resolver: lts-6.18
 flags:
   pursuit:
     dev: true
