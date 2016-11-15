@@ -74,7 +74,7 @@ routeResult SearchResult{..} =
       ( PackageVersionModuleDocsR ppkgName pversion modName
       , Nothing
       )
-    DeclarationResult typeOrValue modName declTitle ->
+    DeclarationResult typeOrValue modName declTitle typeText ->
       ( PackageVersionModuleDocsR ppkgName pversion modName
       , Just $ pack $ drop 1 $ makeFragment typeOrValue declTitle
       )

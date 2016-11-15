@@ -3,6 +3,7 @@ module Handler.Database
   ( createDatabase
   , getAllPackageNames
   , getAllPackages
+  , getLatestPackages
   , lookupPackage
   , availableVersionsFor
   , getLatestVersionFor
@@ -16,13 +17,15 @@ import qualified Data.ByteString.Lazy as BL
 import qualified Data.Text as T
 import qualified Data.Trie as Trie
 import Data.Version (Version, showVersion)
-import System.Directory (getDirectoryContents, doesDirectoryExist)
+import System.Directory (getDirectoryContents, getModificationTime, doesDirectoryExist)
 
 import Model.DocLinks (TypeOrValue(..))
 import Web.Bower.PackageMeta (PackageName, bowerName, bowerDescription,
                               mkPackageName, runPackageName)
 import qualified Language.PureScript as P
 import qualified Language.PureScript.Docs as D
+import Language.PureScript.Docs.RenderedCode.Render (renderType)
+import Language.PureScript.Docs.RenderedCode.Types (RenderedCodeElement(..), outputWith)
 
 import Handler.Utils
 import Handler.Caching (clearCache)
@@ -32,6 +35,19 @@ getAllPackageNames = do
   dir <- getDataDir
   contents <- liftIO $ getDirectoryContents (dir ++ "/verified/")
   return . sort . rights $ map mkPackageName contents
+
+getLatestPackages :: Handler [(PackageName, Version)]
+getLatestPackages = do
+    pkgNames <- getAllPackageNames
+    pkgNamesAndTimestamps <- traverse withTimestamp pkgNames
+    let latest = (map fst . take 10 . sortBy (comparing (Down . snd))) pkgNamesAndTimestamps
+    catMaybes <$> traverse withVersion latest
+  where
+    withTimestamp :: PackageName -> Handler (PackageName, UTCTime)
+    withTimestamp name = map (name,) (getPackageModificationTime name)
+
+    withVersion :: PackageName -> Handler (Maybe (PackageName, Version))
+    withVersion name = (map . map) (name,) (getLatestVersionFor name)
 
 -- | This is horribly inefficient, but it will do for now.
 getAllPackages :: Handler [D.VerifiedPackage]
@@ -45,6 +61,15 @@ getAllPackages = do
 
 tryStripPrefix :: String -> String -> String
 tryStripPrefix pre s = fromMaybe s (stripPrefix pre s)
+
+renderString :: RenderedCodeElement -> String
+renderString str = case str of
+  Syntax s -> s
+  Ident s _ -> s
+  Ctor s _ -> s
+  Kind s -> s
+  Keyword s -> s
+  Space -> " "
 
 createDatabase :: Handler (Trie.Trie [(SearchResult, Maybe P.Type)])
 createDatabase = do
@@ -73,19 +98,30 @@ createDatabase = do
             )
       moduleEntry : do
         D.Declaration{..} <- modDeclarations
-        let (typeOrValue, typ) =
+        let (typeOrValue, typeOrKind) =
               case declInfo of
                 D.ValueDeclaration ty -> (Value, Just ty)
                 D.AliasDeclaration{} -> (Value, Nothing)
                 _ -> (Type, Nothing)
-        return ( fromString (toLower declTitle)
+            declEntry =
+               ( fromString (toLower declTitle)
                , ( SearchResult (bowerName pkgMeta)
                                 pkgVersion
                                 (fromMaybe "" declComments)
-                                (DeclarationResult typeOrValue (P.runModuleName modName) (fromString declTitle))
-                 , typ
+                                (DeclarationResult typeOrValue (P.runModuleName modName) (fromString declTitle) (fmap (outputWith renderString . renderType) typeOrKind))
+                 , typeOrKind
                  )
                )
+        declEntry : do
+          D.ChildDeclaration{..} <- declChildren
+          return ( fromString (toLower cdeclTitle)
+                 , ( SearchResult (bowerName pkgMeta)
+                                  pkgVersion
+                                  (fromMaybe "" cdeclComments)
+                                  (DeclarationResult Value (P.runModuleName modName) (fromString cdeclTitle) Nothing)
+                   , Nothing
+                   )
+                 )
   where
     fromListWithDuplicates :: [(ByteString, a)] -> Trie.Trie [a]
     fromListWithDuplicates = foldr (\(k, a) -> Trie.alterBy (\_ xs -> Just . maybe xs (xs <>)) k [a]) Trie.empty
@@ -115,6 +151,11 @@ availableVersionsFor pkgName = do
     files <- getDirectoryContents dir
     return $ mapMaybe (stripSuffix ".json" >=> D.parseVersion') files
   return $ fromMaybe [] mresult
+
+getPackageModificationTime :: PackageName -> Handler UTCTime
+getPackageModificationTime pkgName = do
+  dir <- packageDirFor pkgName
+  liftIO $ getModificationTime dir
 
 getLatestVersionFor :: PackageName -> Handler (Maybe Version)
 getLatestVersionFor pkgName = do
