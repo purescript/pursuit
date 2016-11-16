@@ -71,53 +71,56 @@ renderString str = case str of
   Keyword s -> s
   Space -> " "
 
-createDatabase :: Handler (Trie.Trie [SearchResult])
+createDatabase :: Handler (Trie.Trie [(SearchResult, Maybe P.Type)])
 createDatabase = do
   pkgs <- getAllPackages
   return . fromListWithDuplicates $ do
     D.Package{..} <- pkgs
     let packageEntry =
           ( fromString (tryStripPrefix "purescript-" (toLower (runPackageName (bowerName pkgMeta))))
-          , SearchResult (bowerName pkgMeta)
+          , ( SearchResult (bowerName pkgMeta)
                          pkgVersion
                          (fromMaybe "" (bowerDescription pkgMeta))
                          PackageResult
+            , Nothing
+            )
           )
     packageEntry : do
       D.Module{..} <- pkgModules
       let moduleEntry =
             ( fromString (toLower (P.runModuleName modName))
-            , SearchResult (bowerName pkgMeta)
-                           pkgVersion
-                           (fromMaybe "" modComments)
-                           (ModuleResult (P.runModuleName modName))
+            , ( SearchResult (bowerName pkgMeta)
+                             pkgVersion
+                             (fromMaybe "" modComments)
+                             (ModuleResult (P.runModuleName modName))
+              , Nothing
+              )
             )
       moduleEntry : do
         D.Declaration{..} <- modDeclarations
-        let typeOrValue =
+        let (typeOrValue, typeOrKind) =
               case declInfo of
-                D.ValueDeclaration{} -> Value
-                D.AliasDeclaration{} -> Value
-                _ -> Type
-        let typeOrKind =
-              case declInfo of
-                D.ValueDeclaration ty -> Just $ outputWith renderString $ renderType ty
-                _ -> Nothing
-
-        let declEntry =
+                D.ValueDeclaration ty -> (Value, Just ty)
+                D.AliasDeclaration{} -> (Value, Nothing)
+                _ -> (Type, Nothing)
+            declEntry =
                ( fromString (toLower declTitle)
-               , SearchResult (bowerName pkgMeta)
-                              pkgVersion
-                              (fromMaybe "" declComments)
-                              (DeclarationResult typeOrValue (P.runModuleName modName) (fromString declTitle) typeOrKind)
+               , ( SearchResult (bowerName pkgMeta)
+                                pkgVersion
+                                (fromMaybe "" declComments)
+                                (DeclarationResult typeOrValue (P.runModuleName modName) (fromString declTitle) (fmap (outputWith renderString . renderType) typeOrKind))
+                 , typeOrKind
+                 )
                )
         declEntry : do
           D.ChildDeclaration{..} <- declChildren
           return ( fromString (toLower cdeclTitle)
-                 , SearchResult (bowerName pkgMeta)
-                                pkgVersion
-                                (fromMaybe "" cdeclComments)
-                                (DeclarationResult Value (P.runModuleName modName) (fromString cdeclTitle) Nothing)
+                 , ( SearchResult (bowerName pkgMeta)
+                                  pkgVersion
+                                  (fromMaybe "" cdeclComments)
+                                  (DeclarationResult Value (P.runModuleName modName) (fromString cdeclTitle) Nothing)
+                   , Nothing
+                   )
                  )
   where
     fromListWithDuplicates :: [(ByteString, a)] -> Trie.Trie [a]
