@@ -2,6 +2,7 @@
 module GithubAPI
   ( getReadme
   , getUser
+  , ReadmeMissing(..)
   ) where
 
 import Import
@@ -10,11 +11,29 @@ import qualified Control.Monad.Catch as Catch
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Aeson as A
 import qualified Data.HashMap.Strict as HashMap
+import qualified Data.CaseInsensitive as CI
 import Text.XML.HXT.Core as HXT
 import Text.HTML.SanitizeXSS (sanitize)
 import Data.CaseInsensitive (CI)
 import qualified Language.PureScript.Docs as D
 import qualified Network.HTTP.Types as HTTP
+
+data ReadmeMissing
+  = APIRateLimited
+  | ReadmeNotFound
+  | OtherReason HttpException
+
+-- | Try to determine why a readme was not available
+diagnoseReadmeProblem :: HttpException -> ReadmeMissing
+diagnoseReadmeProblem = \case
+  StatusCodeException status headers _
+    | lookup (CI.mk "X-RateLimit-Remaining") headers == Just "0"
+      && status == forbidden403 ->
+    APIRateLimited
+    | status == notFound404 ->
+    ReadmeNotFound
+  r ->
+    OtherReason r
 
 -- | Get a repository readme, rendered as HTML.
 getReadme ::
@@ -23,11 +42,12 @@ getReadme ::
   D.GithubUser ->
   D.GithubRepo ->
   String -> -- ^ ref: commit, branch, etc.
-  m (Either HttpException Html)
-getReadme mauth user repo ref =
-  (liftM . liftM) go (getReadme' mauth user repo ref)
+  m (Either ReadmeMissing Html)
+getReadme mauth user repo ref = do
+  readme <- getReadme' mauth user repo ref
+  pure $ bimap diagnoseReadmeProblem treatHtml readme
   where
-  go =
+  treatHtml =
     decodeUtf8
     >>> unpack
     >>> runXmlArrow arrow
