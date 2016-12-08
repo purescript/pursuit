@@ -74,8 +74,8 @@ getPackageVersionR (PathPackageName pkgName) (PathVersion version) =
   cacheHtmlConditional $
     findPackage pkgName version $ \pkg@D.Package{..} -> do
       moduleList <- renderModuleList pkg
-      mreadme    <- tryGetReadme pkg
-      let cacheStatus = maybe NotOkToCache (const OkToCache) mreadme
+      ereadme    <- tryGetReadme pkg
+      let cacheStatus = either (const NotOkToCache) (const OkToCache) ereadme
       content <- defaultLayout $ do
         setTitle (toHtml (runPackageName pkgName))
         let dependencies = bowerDependencies pkgMeta

@@ -12,6 +12,7 @@ import qualified Language.PureScript.Docs as D
 
 import Model.DocsAsHtml (packageAsHtml, htmlModules, HtmlOutputModule(..))
 import Model.DocLinks
+import GithubAPI (ReadmeMissing(..))
 import qualified GithubAPI
 
 linkToGithubUser :: D.GithubUser -> Html
@@ -62,18 +63,42 @@ insertBreaks =
    >>> map toHtml
    >>> intercalate (toHtml ("." :: Text) *> wbr)
 
-tryGetReadme :: D.VerifiedPackage -> Handler (Maybe Html)
+tryGetReadme :: D.VerifiedPackage -> Handler (Either ReadmeMissing Html)
 tryGetReadme D.Package{..} = do
   mtoken <- appGithubAuthToken . appSettings <$> getYesod
   let (ghUser, ghRepo) = pkgGithub
   let ghTag = pkgVersionTag
-  ereadme <- GithubAPI.getReadme mtoken ghUser ghRepo ghTag
-  case ereadme of
-    Right readme ->
-      return (Just readme)
-    Left err -> do
-      $logError (tshow err)
-      return Nothing
+  res <- GithubAPI.getReadme mtoken ghUser ghRepo ghTag
+  case res of
+    Left (OtherReason r) -> do
+      $logError (tshow r)
+    _ ->
+      return ()
+  return res
+
+renderReadme :: Either ReadmeMissing Html -> Html
+renderReadme = \case
+  Right html' ->
+    html'
+  Left APIRateLimited ->
+    [shamlet|
+      <div .message .not-available>
+        No readme available (due to rate limiting). Please try again later.
+    |]
+  Left ReadmeNotFound ->
+    [shamlet|
+      <div .message .not-available>
+        No readme found in the repository at this tag. If you are the maintainer,
+        perhaps consider adding one in the next release.
+    |]
+  Left (OtherReason _) ->
+    [shamlet|
+      <div .message .not-available>
+        No readme available, for some unexpected reason (which has been logged).
+        Perhaps
+        <a href="https://github.com/purescript/pursuit/issues/new">
+          open an issue?
+    |]
 
 renderHtmlDocs :: D.VerifiedPackage -> String -> Handler (Maybe Html)
 renderHtmlDocs pkg mnString = do
@@ -117,7 +142,7 @@ getDocLinkRenderer :: Handler (LinksContext' -> DocLink -> Text)
 getDocLinkRenderer = do
   renderUrl <- getUrlRender
   return $ \ctx link -> renderUrl (docLinkRoute ctx link)
-  
+
 -- | Render a URL together with a fragment (possibly).
 getFragmentRender :: Handler ((Route App, Maybe Text) -> Text)
 getFragmentRender = do

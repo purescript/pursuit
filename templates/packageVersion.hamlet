@@ -27,10 +27,7 @@
   <hr>
 
 <div .col.col-main>
-  $maybe readme <- mreadme
-    #{readme}
-  $nothing
-    <div .message .not-available>No README available.
+  #{renderReadme ereadme}
   <hr>
   <h2>
     <strong>Modules
