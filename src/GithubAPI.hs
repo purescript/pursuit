@@ -62,7 +62,7 @@ getReadme' mauth (D.GithubUser user) (D.GithubRepo repo) ref =
 
 -- | Get the currently logged in user.
 getUser ::
-  (MonadCatch m, MonadIO m, HasHttpManager env, MonadReader env m, Functor m) =>
+  (MonadCatch m, MonadIO m, HasHttpManager env, MonadReader env m) =>
   GithubAuthToken -> m (Either HttpException (Maybe D.GithubUser))
 getUser token =
   (map . map) extractUser (getUser' token) >>= catch401
@@ -134,11 +134,11 @@ mediaTypeHtml = "application/vnd.github.v3.html"
 
 parseGithubUrlWithQuery :: MonadThrow m => [String] -> String -> m Request
 parseGithubUrlWithQuery parts query =
-  parseUrl $ concat [ "https://api.github.com/"
-                    , intercalate "/" parts
-                    , "?"
-                    , query
-                    ]
+  parseUrlThrow $ concat [ "https://api.github.com/"
+                         , intercalate "/" parts
+                         , "?"
+                         , query
+                         ]
 
 tryHttp :: MonadCatch m => m a -> m (Either HttpException a)
 tryHttp = Catch.try

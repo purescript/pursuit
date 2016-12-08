@@ -39,7 +39,7 @@ writeFileWithParents file contents = liftIO $ do
   writeFile file contents
 
 deleteFilesOlderThan :: forall m.
-  (MonadIO m, MonadLogger m, MonadBaseControl IO m) =>
+  (MonadIO m, MonadCatch m, MonadLogger m, MonadBaseControl IO m) =>
   NominalDiffTime -> FilePath -> m ()
 deleteFilesOlderThan maxAge dir = do
   files <- getDirectoryContents' dir

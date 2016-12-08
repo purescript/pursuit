@@ -7,14 +7,14 @@ $doctype 5
     <title>#{pageTitle'}
 
     <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,700" type="text/css" rel="stylesheet">
-    <link href="/static/css/normalize.css" type="text/css" rel="stylesheet">
-    <script type="text/javascript" src="/static/js/js.cookie.js">
-    <script type="text/javascript" src="/static/js/Markup.js">
-    <script type="text/javascript" src="/static/js/Pursuit.js">
+    <link href=@{StaticR css_normalize_css} type="text/css" rel="stylesheet">
+    <script type="text/javascript" src=@{StaticR js_js_cookie_js}>
+    <script type="text/javascript" src=@{StaticR js_Markup_js}>
+    <script type="text/javascript" src=@{StaticR js_Pursuit_js}>
     ^{pageHead pc}
 
     \<!--[if lt IE 9]>
-    \<script type="text/javascript" src="/static/js/html5shiv.js"></script>
+    \<script type="text/javascript" src=@{StaticR js_html5shiv_js}></script>
     \<![endif]-->
 
   <body>
