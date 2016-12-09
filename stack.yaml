@@ -5,5 +5,13 @@ flags:
 packages:
 - '.'
 extra-deps:
+- chunked-data-0.3.0
+- classy-prelude-1.0.2
+- classy-prelude-conduit-1.0.2
+- classy-prelude-yesod-1.0.2
+- minlen-0.1.0.0
+- mono-traversable-1.0.1
+- mono-traversable-instances-0.1.0.0
+- say-0.1.0.0
 - purescript-0.9.3
 - wai-middleware-gunzip-0.0.2
