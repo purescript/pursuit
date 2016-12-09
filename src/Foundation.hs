@@ -16,7 +16,6 @@ import Crypto.Random
 
 import Web.Bower.PackageMeta (PackageName, parsePackageName, runPackageName)
 import qualified Data.Trie as Trie
-import Control.DeepSeq (NFData, rnf)
 import Data.Version
 import Model.DocLinks (TypeOrValue(..))
 import qualified Css
