@@ -161,7 +161,7 @@ getPackageModificationTime pkgName = do
 getLatestVersionFor :: PackageName -> Handler (Maybe Version)
 getLatestVersionFor pkgName = do
   vs  <- availableVersionsFor pkgName
-  return $ map NN.maximum vs
+  return $ map NN.maximum (NN.fromNullable vs)
 
 -- | Insert a package at a specific version into the database.
 insertPackage :: D.VerifiedPackage -> Handler ()
