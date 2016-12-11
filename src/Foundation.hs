@@ -1,3 +1,6 @@
+-- To work around a bug in GHC 8.0.1:
+-- See https://groups.google.com/forum/#!topic/yesodweb/DlyXqFM7ZnY
+{-# LANGUAGE NoDisambiguateRecordFields #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Foundation where
 
