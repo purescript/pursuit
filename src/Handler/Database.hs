@@ -14,6 +14,7 @@ module Handler.Database
 import Import
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy as BL
+import qualified Data.MinLen as MinLen
 import qualified Data.Text as T
 import qualified Data.Trie as Trie
 import Data.Version (Version, showVersion)
@@ -29,6 +30,8 @@ import Language.PureScript.Docs.RenderedCode.Types (RenderedCodeElement(..), out
 
 import Handler.Utils
 import Handler.Caching (clearCache)
+
+type One = MinLen.Succ MinLen.Zero
 
 getAllPackageNames :: Handler [PackageName]
 getAllPackageNames = do
@@ -160,8 +163,8 @@ getPackageModificationTime pkgName = do
 getLatestVersionFor :: PackageName -> Handler (Maybe Version)
 getLatestVersionFor pkgName = do
   vs  <- availableVersionsFor pkgName
-  let vs' = toMinLen vs :: Maybe (MinLen One [Version])
-  return $ map maximum vs'
+  let vs' = MinLen.toMinLen vs :: Maybe (MinLen.MinLen One [Version])
+  return $ map MinLen.maximum vs'
 
 -- | Insert a package at a specific version into the database.
 insertPackage :: D.VerifiedPackage -> Handler ()

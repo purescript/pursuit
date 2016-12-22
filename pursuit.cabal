@@ -130,6 +130,8 @@ library
                  , xss-sanitize
                  , wai-middleware-gunzip
                  , barrier ==0.1.*
+                 , minlen
+                 , mono-traversable
 
     if flag(dev)
       build-depends: foreign-store
