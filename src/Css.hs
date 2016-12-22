@@ -92,3 +92,9 @@ codeForeground = fromRGB 25 74 91
 
 codeBackground :: HSV
 codeBackground = fromRGB 241 245 249
+
+lightGlyphColor :: HSV
+lightGlyphColor = fromRGB 160 160 160
+
+lightTypeColor :: HSV
+lightTypeColor = fromRGB 102 102 102

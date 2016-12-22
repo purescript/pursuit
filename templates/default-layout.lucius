@@ -9,8 +9,9 @@ html {
 }
 
 body {
-  font-family: "Roboto", sans-serif;
   background-color: #{Css.backgroundColor};
+  font-family: "Roboto", sans-serif;
+  line-height: 1.563em;
 }
 
 /* Utility classes */
@@ -56,11 +57,6 @@ body {
 .col table,
 .col {
   padding: 0 10px;
-}
-
-.col ul,
-.col ol {
-  padding-left: 45px;
 }
 
 .top-banner .banner-item {
@@ -175,26 +171,65 @@ html, body {
   border-color: #{Css.darken20 Css.notAvailableBackgroundColor};
 }
 
-/* Typography */
-h1, h2 {
+/**
+ * Typography
+ * Font sizes are based on a major third scale (1:1.250)
+ * -------------------------------------------------------------------------- */
+
+h1 {
+  font-size: 3.814em;
+  font-weight: normal;
+  letter-spacing: -0.5px;
+  line-height: 1.125;
+}
+
+h2 {
+  font-size: 1.953em;
   font-weight: normal;
 }
 
 h3 {
-  font-size: 1.4em;
+  font-size: 1.563em;
 }
 
-a h2 {
+a h2 { /* FIXME: target with class name instead */
   margin-top: 0.83em;
 }
 
-/*
+p {
+  font-size: 1em;
+
+  /*
   Useful for narrow screens, such as mobiles. Documentation often contains URLs
   which would otherwise force the page to become wider, and force creation of
   horizontal scrollbars. Yuck.
-*/
-p {
+  */
   word-wrap: break-word;
+}
+
+ul {
+  list-style-type: none;
+}
+
+ul li {
+  position: relative;
+  padding-left: 1.250em;
+}
+
+ul li:before {
+  position: absolute;
+  color: #{Css.lightGlyphColor};
+  content: "–";
+  display: inline-block;
+  margin-left: -1.250em;
+  width: 1.250em;
+}
+
+ol {
+
+}
+
+ol li {
 }
 
 /* Tables */
@@ -258,6 +293,19 @@ a.search-result:focus {
   background: #{Css.lighten5 Css.codeBackground};
   border: 1px solid #{Css.codeForeground};
   outline: none;
+}
+
+/* Dependencies */
+.dependency-link {
+  display: inline-block;
+  margin-right: 0.41em;
+}
+
+.dependency-version {
+  color: #{Css.lightTypeColor};
+  display: inline-block;
+  font-size: 0.8em;
+  line-height: 1;
 }
 
 /* Help paragraphs */
