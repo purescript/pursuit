@@ -14,10 +14,13 @@ import TemplateHelpers (getFragmentRender)
 
 import Cheapskate (allowRawHtml, markdown)
 import qualified Text.Blaze as Blaze
-import qualified Text.Blaze.Renderer.Text as Blaze
+import qualified Text.Blaze.Html5 as Html5
+import qualified Text.Blaze.Renderer.Text as BlazeT
 import qualified Text.Parsec.Combinator as Parsec
 
 import qualified Language.PureScript as P
+
+import qualified XMLArrows
 
 getSearchR :: Handler TypedContent
 getSearchR = do
@@ -57,8 +60,8 @@ searchResultToJSON result@SearchResult{..} = do
   return $
     object [ "package" .= hrPkgName
            , "version" .= showVersion hrPkgVersion
-           , "markup" .= Blaze.renderMarkup html
-           , "text" .= Blaze.renderMarkup (Blaze.contents html)
+           , "markup" .= BlazeT.renderMarkup html
+           , "text" .= BlazeT.renderMarkup (Blaze.contents html)
            , "info" .= toJSON hrInfo
            , "url" .= url
            ]
@@ -158,3 +161,10 @@ renderComments :: String -> Html
 renderComments = Blaze.toMarkup . markdown opts . pack
   where
     opts = def { allowRawHtml = False }
+
+renderCommentsNoLinks :: String -> Html
+renderCommentsNoLinks =
+  renderComments
+  -- Wrapping in a div is necessary because of how XML arrows work
+  >>> Html5.div
+  >>> XMLArrows.run XMLArrows.replaceLinks

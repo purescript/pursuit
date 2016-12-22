@@ -12,11 +12,12 @@ import qualified Data.ByteString.Lazy as BL
 import qualified Data.Aeson as A
 import qualified Data.HashMap.Strict as HashMap
 import qualified Data.CaseInsensitive as CI
-import Text.XML.HXT.Core as HXT
 import Text.HTML.SanitizeXSS (sanitize)
 import Data.CaseInsensitive (CI)
 import qualified Language.PureScript.Docs as D
 import qualified Network.HTTP.Types as HTTP
+
+import qualified XMLArrows
 
 data ReadmeMissing
   = APIRateLimited
@@ -41,7 +42,7 @@ getReadme ::
   Maybe GithubAuthToken ->
   D.GithubUser ->
   D.GithubRepo ->
-  String -> -- ^ ref: commit, branch, etc.
+  String -> -- ref: commit, branch, etc.
   m (Either ReadmeMissing Html)
 getReadme mauth user repo ref = do
   readme <- getReadme' mauth user repo ref
@@ -50,15 +51,17 @@ getReadme mauth user repo ref = do
   treatHtml =
     decodeUtf8
     >>> unpack
-    >>> runXmlArrow arrow
+    >>> XMLArrows.runString arrow
     >>> pack
     >>> sanitize
     >>> preEscapedToHtml
 
   arrow =
-    stripH1
-    >>> makeRelativeLinksAbsolute "a" "href" (buildGithubURL user repo ref)
-    >>> makeRelativeLinksAbsolute "img" "src" (buildRawGithubURL user repo ref)
+    XMLArrows.stripH1
+    >>> XMLArrows.makeRelativeLinksAbsolute
+          "a" "href" (buildGithubURL user repo ref)
+    >>> XMLArrows.makeRelativeLinksAbsolute
+          "img" "src" (buildRawGithubURL user repo ref)
 
 buildGithubURL :: D.GithubUser -> D.GithubRepo -> String -> String
 buildGithubURL (D.GithubUser user) (D.GithubRepo repo) ref =
@@ -73,7 +76,7 @@ getReadme' ::
   Maybe GithubAuthToken ->
   D.GithubUser ->
   D.GithubRepo ->
-  String -> -- ^ ref: commit, branch, etc.
+  String -> -- ref: commit, branch, etc.
   m (Either HttpException BL.ByteString)
 getReadme' mauth (D.GithubUser user) (D.GithubRepo repo) ref =
   let query = "ref=" ++ ref
@@ -110,9 +113,9 @@ getUser' auth =
 
 githubAPI ::
   (MonadCatch m, MonadIO m, HasHttpManager env, MonadReader env m) =>
-  [String] -> -- ^ Path parts
-  String -> -- ^ Query string
-  [(CI ByteString, ByteString)] -> -- ^ Extra headers
+  [String] -> -- Path parts
+  String -> -- Query string
+  [(CI ByteString, ByteString)] -> -- Extra headers
   m (Either HttpException BL.ByteString)
 githubAPI path query extraHeaders = do
   tryHttp $ do
@@ -126,28 +129,6 @@ authHeader mauth =
    maybe []
          (\t -> [("Authorization", "bearer " <> runGithubAuthToken t)])
          mauth
-
-runXmlArrow :: LA XmlTree XmlTree -> String -> String
-runXmlArrow arrow =
-  unsafeHead . runLA (hread >>> arrow >>> writeDocumentToString [])
-
-stripH1 :: LA XmlTree XmlTree
-stripH1 =
-  processTopDown (neg (hasName "h1") `guards` this)
-
--- | Make all relative links into absolute links by providing a base URL.
-makeRelativeLinksAbsolute ::
-  String    -- ^ Tag name to modify
-  -> String -- ^ Attribute name to modify
-  -> String -- ^ Base URL to use for relative links
-  -> LA XmlTree XmlTree
-makeRelativeLinksAbsolute tagName attrName base =
-  processTopDown $
-    processAttrl (changeAttrValue (mkAbs base) `HXT.when` hasName attrName)
-      `HXT.when` (isElem >>> hasName tagName)
-
-  where
-  mkAbs base' url = fromMaybe url $ expandURIString url $ base'
 
 mediaTypeHtml :: ByteString
 mediaTypeHtml = "application/vnd.github.v3.html"

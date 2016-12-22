@@ -1,29 +1,28 @@
 <div .col .col-single>
   <h2>Search results: #{query}
-    $if null results
-      <p>No results for "#{query}", sorry.
-    $forall r <- results
-      <a .search-result href=#{fr $ routeResult r}>
-        $case hrInfo r
-          $of PackageResult
-            <p>#{Bower.runPackageName $ hrPkgName r}
-          $of ModuleResult moduleName
-            <p>#{moduleName} (#{Bower.runPackageName $ hrPkgName r})
-          $of DeclarationResult _ _ name typ
-            <p>#{name}
-              $maybe typeValue <- typ
-                <small>
-                  <span> ::
-                  <code>#{typeValue}
+  $if null results
+    <p>No results for "#{query}", sorry.
+  $forall r <- results
+    <a .search-result href=#{fr $ routeResult r}>
+      $case hrInfo r
+        $of PackageResult
+          <p>#{Bower.runPackageName $ hrPkgName r}
+        $of ModuleResult moduleName
+          <p>#{moduleName} (#{Bower.runPackageName $ hrPkgName r})
+        $of DeclarationResult _ _ name typ
+          <p>#{name}
+            $maybe typeValue <- typ
+              <span> ::
+              <code>#{typeValue}
 
-        <p>
-          <small>#{renderComments $ hrComments r}
+      <p>
+        #{renderCommentsNoLinks $ hrComments r}
 
-        $case hrInfo r
-          $of PackageResult
-            <p>
-          $of ModuleResult _
-            <p>
-          $of DeclarationResult _ modName _ _
-            <p>
-              <small>#{modName} (#{Bower.runPackageName $ hrPkgName r})
+      $case hrInfo r
+        $of PackageResult
+          <p>
+        $of ModuleResult _
+          <p>
+        $of DeclarationResult _ modName _ _
+          <p>
+            #{modName} (#{Bower.runPackageName $ hrPkgName r})

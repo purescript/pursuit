@@ -37,6 +37,7 @@ library
                      Settings
                      TemplateHelpers
                      TimeUtils
+                     XMLArrows
 
     other-modules:   Paths_pursuit
 
