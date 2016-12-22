@@ -178,7 +178,7 @@ html, body {
 
 h1 {
   font-size: 3.814em;
-  font-weight: normal;
+  font-weight: 300;
   letter-spacing: -0.5px;
   line-height: 1.125;
 }
@@ -306,6 +306,16 @@ a.search-result:focus {
   display: inline-block;
   font-size: 0.8em;
   line-height: 1;
+}
+
+/* Package label */
+.package-label {
+  color: #{Css.lightTypeColor};
+  display: block;
+  font-size: 0.8rem;
+  letter-spacing: 1px;
+  margin-bottom: -0.41em;
+  text-transform: uppercase;
 }
 
 /* Help paragraphs */
