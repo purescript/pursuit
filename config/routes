@@ -9,7 +9,7 @@
 /packages/#PathPackageName                             PackageR                    GET
 /packages/#PathPackageName/#PathVersion                PackageVersionR             GET
 /packages/#PathPackageName/#PathVersion/docs           PackageVersionDocsR         GET
-/packages/#PathPackageName/#PathVersion/docs/#String   PackageVersionModuleDocsR   GET
+/packages/#PathPackageName/#PathVersion/docs/#Text     PackageVersionModuleDocsR   GET
 !/packages/#PathPackageName/badge                      PackageBadgeR               GET
 !/packages/#PathPackageName/available-versions         PackageAvailableVersionsR   GET
 

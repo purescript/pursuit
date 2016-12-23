@@ -142,7 +142,7 @@ getPackageVersionDocsR (PathPackageName pkgName) (PathVersion version) =
   findPackage pkgName version $ \pkg@D.Package{..} ->
     redirect (packageRoute pkg)
 
-getPackageVersionModuleDocsR :: PathPackageName -> PathVersion -> String -> Handler Html
+getPackageVersionModuleDocsR :: PathPackageName -> PathVersion -> Text -> Handler Html
 getPackageVersionModuleDocsR (PathPackageName pkgName) (PathVersion version) mnString =
   cacheHtml $ findPackage pkgName version $ \pkg@D.Package{..} -> do
     mhtmlDocs <- renderHtmlDocs pkg mnString
@@ -151,7 +151,7 @@ getPackageVersionModuleDocsR (PathPackageName pkgName) (PathVersion version) mnS
       Just htmlDocs ->
         defaultLayout $ do
           let mn = P.moduleNameFromString mnString
-          setTitle (toHtml (mnString <> " - " <> runPackageName pkgName))
+          setTitle (toHtml (mnString <> " - " <> pack (runPackageName pkgName)))
           documentationPage pkg $
             $(widgetFile "packageVersionModuleDocs")
 

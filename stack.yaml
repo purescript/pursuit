@@ -4,8 +4,7 @@ flags:
     dev: true
 packages:
 - '.'
-- location:
-    git: https://github.com/philopon/barrier.git
-    commit: 22d9041bd01f4590f517ad7b426c665104eefd97
 extra-deps:
 - wai-middleware-gunzip-0.0.2
+- barrier-0.1.1
+- purescript-0.10.3

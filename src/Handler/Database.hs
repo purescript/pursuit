@@ -16,6 +16,7 @@ import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.NonNull as NN
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as TE
 import qualified Data.Trie as Trie
 import Data.Version (Version, showVersion)
 import System.Directory (getDirectoryContents, getModificationTime, doesDirectoryExist)
@@ -72,6 +73,12 @@ renderString str = case str of
   Keyword s -> s
   Space -> " "
 
+renderText :: RenderedCodeElement -> Text
+renderText = T.pack . renderString
+
+fromText :: Text -> ByteString
+fromText = TE.encodeUtf8
+
 createDatabase :: Handler (Trie.Trie [(SearchResult, Maybe P.Type)])
 createDatabase = do
   pkgs <- getAllPackages
@@ -89,7 +96,7 @@ createDatabase = do
     packageEntry : do
       D.Module{..} <- pkgModules
       let moduleEntry =
-            ( fromString (toLower (P.runModuleName modName))
+            ( fromText (T.toLower (P.runModuleName modName))
             , ( SearchResult (bowerName pkgMeta)
                              pkgVersion
                              (fromMaybe "" modComments)
@@ -109,7 +116,7 @@ createDatabase = do
                , ( SearchResult (bowerName pkgMeta)
                                 pkgVersion
                                 (fromMaybe "" declComments)
-                                (DeclarationResult typeOrValue (P.runModuleName modName) (fromString declTitle) (fmap (outputWith renderString . renderType) typeOrKind))
+                                (DeclarationResult typeOrValue (P.runModuleName modName) (fromString declTitle) (fmap (outputWith renderText . renderType) typeOrKind))
                  , typeOrKind
                  )
                )

@@ -24,7 +24,7 @@ import qualified XMLArrows
 
 getSearchR :: Handler TypedContent
 getSearchR = do
-  mquery <- (map . map) unpack $ lookupGetParam "q"
+  mquery <- lookupGetParam "q"
   case mquery of
     Nothing -> redirect HomeR
     Just query -> do
@@ -35,7 +35,7 @@ getSearchR = do
         provideRep (htmlOutput query results)
         provideRep (jsonOutput results)
   where
-    htmlOutput :: String -> [SearchResult] -> Handler Html
+    htmlOutput :: Text -> [SearchResult] -> Handler Html
     htmlOutput query results = do
       fr <- getFragmentRender
       content <- defaultLayout $(widgetFile "search")
@@ -43,7 +43,7 @@ getSearchR = do
 
     jsonOutput = fmap toJSON . traverse searchResultToJSON
 
-    tryParseType :: String -> Maybe P.Type
+    tryParseType :: Text -> Maybe P.Type
     tryParseType = hush (P.lex "") >=> hush (P.runTokenParser "" (P.parsePolyType <* Parsec.eof))
       where
         hush f = either (const Nothing) Just . f
@@ -79,16 +79,16 @@ routeResult SearchResult{..} =
       )
     DeclarationResult typeOrValue modName declTitle _ ->
       ( PackageVersionModuleDocsR ppkgName pversion modName
-      , Just $ pack $ drop 1 $ makeFragment typeOrValue declTitle
+      , Just $ pack $ drop 1 $ makeFragment typeOrValue (unpack declTitle)
       )
   where
   ppkgName = PathPackageName hrPkgName
   pversion = PathVersion hrPkgVersion
 
-searchForName :: String -> Handler [SearchResult]
+searchForName :: Text -> Handler [SearchResult]
 searchForName query = do
   db <- atomically . readTVar =<< (appDatabase <$> getYesod)
-  return (map fst (take 50 (concat (elems (submap (fromString query) db)))))
+  return (map fst (take 50 (concat (elems (submap (encodeUtf8 query) db)))))
 
 searchForType :: P.Type -> Handler [SearchResult]
 searchForType ty = do

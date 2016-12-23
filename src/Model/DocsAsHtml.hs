@@ -189,7 +189,7 @@ codeAsHtml r ctx = outputWith elemAsHtml
 renderLink :: DocLinkRenderer -> LinksContext' -> DocLink -> Html () -> Html ()
 renderLink r ctx link@DocLink{..} =
   a_ [ href_ (r ctx link <> T.pack (fragmentFor link))
-     , title_ (T.pack fullyQualifiedName)
+     , title_ fullyQualifiedName
      ]
   where
   fullyQualifiedName = case linkLocation of
@@ -197,7 +197,7 @@ renderLink r ctx link@DocLink{..} =
     LocalModule _ modName     -> fq modName linkTitle
     DepsModule _ _ _ modName  -> fq modName linkTitle
 
-  fq mn str = P.runModuleName mn ++ "." ++ str
+  fq mn str = P.runModuleName mn <> "." <> T.pack str
 
 -- TODO: escaping?
 makeFragment :: TypeOrValue -> String -> String
@@ -247,7 +247,7 @@ splitOnPathSep str
 renderAlias :: P.Fixity -> FixityAlias -> Html ()
 renderAlias (P.Fixity associativity precedence) alias =
   p_ $ do
-    text $ "Operator alias for " <> P.showQualified showAliasName alias <> " "
+    toHtml $ "Operator alias for " <> P.showQualified showAliasName alias <> " "
     em_ (text ("(" <> associativityStr <> " / precedence " <> show precedence <> ")"))
   where
   showAliasName (Left valueAlias) = P.runProperName valueAlias

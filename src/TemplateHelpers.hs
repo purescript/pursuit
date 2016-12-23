@@ -2,7 +2,7 @@
 module TemplateHelpers where
 
 import Import hiding (span)
-import Data.List.Split (splitOn)
+import Data.Text (splitOn)
 import qualified Data.Text.Lazy as LT
 import Text.Blaze.Html5 as H hiding (map, link)
 import Text.Blaze.Html5.Attributes as A hiding (span)
@@ -100,7 +100,7 @@ renderReadme = \case
           open an issue?
     |]
 
-renderHtmlDocs :: D.VerifiedPackage -> String -> Handler (Maybe Html)
+renderHtmlDocs :: D.VerifiedPackage -> Text -> Handler (Maybe Html)
 renderHtmlDocs pkg mnString = do
   docLinkRenderer <- getDocLinkRenderer
   let docsOutput = packageAsHtml docLinkRenderer pkg

@@ -72,9 +72,9 @@ instance NFData SearchResult
 
 data SearchResultInfo
   = PackageResult
-  | ModuleResult String
+  | ModuleResult Text
   -- ^ Module name
-  | DeclarationResult TypeOrValue String String (Maybe String)
+  | DeclarationResult TypeOrValue Text Text (Maybe Text)
   -- ^ Module name & declaration title & type if value
   deriving (Show, Eq, Generic)
 
@@ -212,7 +212,7 @@ packageDocsRoute pkg =
   PackageVersionDocsR (PathPackageName (D.packageName pkg))
                       (PathVersion (D.pkgVersion pkg))
 
-moduleDocsRoute :: D.VerifiedPackage -> String -> Route App
+moduleDocsRoute :: D.VerifiedPackage -> Text -> Route App
 moduleDocsRoute pkg moduleName =
   PackageVersionModuleDocsR (PathPackageName (D.packageName pkg))
                             (PathVersion (D.pkgVersion pkg))

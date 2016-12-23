@@ -8,6 +8,7 @@ import Data.List (find)
 import Data.Char (isUpper)
 import Data.Version
 import Data.Maybe (fromJust)
+import qualified Data.Text as T
 import qualified Data.Map as M
 import GHC.Generics (Generic)
 
@@ -111,7 +112,7 @@ primPackageName = x
 
 primBookmarks :: [Bookmark]
 primBookmarks =
-  map (FromDep primPackageName . second P.runProperName . toPair . fst) $ M.toList P.primTypes
+  map (FromDep primPackageName . second (T.unpack . P.runProperName) . toPair . fst) $ M.toList P.primTypes
   where
   toPair (P.Qualified mn x) = (fromJust mn, x)
 
