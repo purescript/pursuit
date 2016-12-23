@@ -1,9 +1,11 @@
-resolver: lts-6.18
+resolver: lts-7.12
 flags:
   pursuit:
     dev: true
 packages:
 - '.'
+- location:
+    git: https://github.com/philopon/barrier.git
+    commit: 22d9041bd01f4590f517ad7b426c665104eefd97
 extra-deps:
-- purescript-0.9.3
 - wai-middleware-gunzip-0.0.2

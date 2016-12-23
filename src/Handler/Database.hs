@@ -14,6 +14,7 @@ module Handler.Database
 import Import
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy as BL
+import qualified Data.NonNull as NN
 import qualified Data.Text as T
 import qualified Data.Trie as Trie
 import Data.Version (Version, showVersion)
@@ -160,8 +161,7 @@ getPackageModificationTime pkgName = do
 getLatestVersionFor :: PackageName -> Handler (Maybe Version)
 getLatestVersionFor pkgName = do
   vs  <- availableVersionsFor pkgName
-  let vs' = toMinLen vs :: Maybe (MinLen One [Version])
-  return $ map maximum vs'
+  return $ map NN.maximum (NN.fromNullable vs)
 
 -- | Insert a package at a specific version into the database.
 insertPackage :: D.VerifiedPackage -> Handler ()

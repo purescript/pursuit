@@ -1,3 +1,6 @@
+-- To work around a bug in GHC 8.0.1:
+-- See https://groups.google.com/forum/#!topic/yesodweb/DlyXqFM7ZnY
+{-# LANGUAGE NoDisambiguateRecordFields #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Foundation where
 
@@ -16,7 +19,6 @@ import Crypto.Random
 
 import Web.Bower.PackageMeta (PackageName, parsePackageName, runPackageName)
 import qualified Data.Trie as Trie
-import Control.DeepSeq (NFData, rnf)
 import Data.Version
 import Model.DocLinks (TypeOrValue(..))
 import qualified Css
