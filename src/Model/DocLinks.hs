@@ -29,9 +29,6 @@ data LinksContext = LinksContext
   }
   deriving (Show, Eq, Ord)
 
--- | A LinksContext with the current module name.
-type LinksContext' = (LinksContext, P.ModuleName)
-
 data TypeOrValue
   = Type
   | Value
@@ -63,8 +60,8 @@ data LinkLocation
 
 -- | Given a links context, a thing to link to (either a value or a type), and
 -- its containing module, attempt to create a DocLink.
-getLink :: LinksContext' -> String -> ContainingModule -> Maybe DocLink
-getLink (LinksContext{..}, curMn) target containingMod = do
+getLink :: LinksContext -> P.ModuleName -> String -> ContainingModule -> Maybe DocLink
+getLink LinksContext{..} curMn target containingMod = do
   let bookmark' = (fromContainingModule curMn containingMod, target)
   bookmark <- find ((bookmark' ==) . ignorePackage) ctxBookmarks
   loc <- getLocation containingMod bookmark

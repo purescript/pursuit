@@ -10,8 +10,11 @@
 module Model.DocsAsHtml (
   HtmlOutput(..),
   HtmlOutputModule(..),
+  HtmlRenderContext(..),
+  nullRenderContext,
   declTypeOrValue,
   packageAsHtml,
+  moduleAsHtml,
   makeFragment
 ) where
 
@@ -69,23 +72,35 @@ data HtmlOutputModule a = HtmlOutputModule
   }
   deriving (Show, Functor)
 
-type DocLinkRenderer = LinksContext' -> DocLink -> T.Text
+data HtmlRenderContext = HtmlRenderContext
+  { currentModuleName :: P.ModuleName
+  , buildDocLink :: String -> ContainingModule -> Maybe DocLink
+  , renderDocLink :: DocLink -> T.Text
+  , renderSourceLink :: P.SourceSpan -> T.Text
+  }
 
-packageAsHtml :: DocLinkRenderer -> Package a -> HtmlOutput LT.Text
-packageAsHtml r pkg@Package{..} =
-  HtmlOutput
-    ((fmap . fmap) renderText indexFile)
-    ((fmap . fmap . fmap) renderText modules)
-  where
-  ctx = getLinksContext pkg
-  indexFile = renderIndex ctx
-  modules = map (moduleAsHtml r ctx) pkgModules
+-- |
+-- An HtmlRenderContext for when you don't want to render any links.
+nullRenderContext :: P.ModuleName -> HtmlRenderContext
+nullRenderContext mn = HtmlRenderContext
+  { currentModuleName = mn
+  , buildDocLink = const (const Nothing)
+  , renderDocLink = const ""
+  , renderSourceLink = const ""
+  }
 
-moduleAsHtml :: DocLinkRenderer -> LinksContext -> Module -> (P.ModuleName, HtmlOutputModule (Html ()))
-moduleAsHtml r ctx Module{..} = (modName, HtmlOutputModule html reexports)
+packageAsHtml :: (P.ModuleName -> HtmlRenderContext) -> Package a -> HtmlOutput LT.Text
+packageAsHtml getHtmlCtx pkg@Package{..} =
+  fmap renderText (HtmlOutput indexFile modules)
   where
-  ctx' = (ctx, modName)
-  renderDecl = declAsHtml r ctx'
+  linksCtx = getLinksContext pkg
+  indexFile = renderIndex linksCtx
+  modules = map (\m -> moduleAsHtml (getHtmlCtx (modName m)) m) pkgModules
+
+moduleAsHtml :: HtmlRenderContext -> Module -> (P.ModuleName, HtmlOutputModule (Html ()))
+moduleAsHtml r Module{..} = (modName, HtmlOutputModule html reexports)
+  where
+  renderDecl = declAsHtml r
   html = do
     for_ modComments renderComments
     for_ modDeclarations renderDecl
@@ -121,8 +136,8 @@ renderIndex LinksContext{..} = go ctxBookmarks
           new = DList.snoc cur val
       in  M.insert idx new m
 
-declAsHtml :: DocLinkRenderer -> LinksContext' -> Declaration -> Html ()
-declAsHtml r ctx d@Declaration{..} = do
+declAsHtml :: HtmlRenderContext -> Declaration -> Html ()
+declAsHtml r d@Declaration{..} = do
   let declFragment = T.pack $ makeFragment (declTypeOrValue d) declTitle
   div_ [class_ "decl", id_ (T.drop 1 declFragment)] $ do
     linkTo declFragment $
@@ -133,7 +148,7 @@ declAsHtml r ctx d@Declaration{..} = do
           renderAlias fixity alias
         _ ->
           code_ [class_ "code-block"] $
-            codeAsHtml r ctx (Render.renderDeclaration d)
+            codeAsHtml r (Render.renderDeclaration d)
 
       for_ declComments renderComments
 
@@ -141,23 +156,23 @@ declAsHtml r ctx d@Declaration{..} = do
 
       unless (null dctors) $ do
         h4_ "Constructors"
-        renderChildren r ctx dctors
+        renderChildren r dctors
 
       unless (null members) $ do
         h4_ "Members"
-        renderChildren r ctx members
+        renderChildren r members
 
       unless (null instances) $ do
         h4_ "Instances"
-        renderChildren r ctx instances
+        renderChildren r instances
 
-      for_ declSourceSpan (linkToSource ctx)
+      for_ declSourceSpan (linkToSource r)
 
-renderChildren :: DocLinkRenderer -> LinksContext' -> [ChildDeclaration] -> Html ()
-renderChildren _ _   [] = return ()
-renderChildren r ctx xs = ul_ $ mapM_ go xs
+renderChildren :: HtmlRenderContext -> [ChildDeclaration] -> Html ()
+renderChildren _ [] = return ()
+renderChildren r xs = ul_ $ mapM_ go xs
   where
-  go decl = item decl . code_ . codeAsHtml r ctx . Render.renderChildDeclaration $ decl
+  go decl = item decl . code_ . codeAsHtml r . Render.renderChildDeclaration $ decl
   item decl = let fragment = makeFragment (cdeclTypeOrValue decl) (cdeclTitle decl)
               in  li_ [id_ (T.pack (drop 1 fragment))]
 
@@ -167,8 +182,8 @@ cdeclTypeOrValue decl = case cdeclInfo decl of
   ChildDataConstructor _ -> Value
   ChildTypeClassMember _ -> Value
 
-codeAsHtml :: DocLinkRenderer -> LinksContext' -> RenderedCode -> Html ()
-codeAsHtml r ctx = outputWith elemAsHtml
+codeAsHtml :: HtmlRenderContext -> RenderedCode -> Html ()
+codeAsHtml r = outputWith elemAsHtml
   where
   elemAsHtml e = case e of
     Syntax x ->
@@ -184,16 +199,16 @@ codeAsHtml r ctx = outputWith elemAsHtml
     Space ->
       text " "
 
-  linkToDecl = linkToDeclaration r ctx
+  linkToDecl = linkToDeclaration r
 
-renderLink :: DocLinkRenderer -> LinksContext' -> DocLink -> Html () -> Html ()
-renderLink r ctx link@DocLink{..} =
-  a_ [ href_ (r ctx link <> T.pack (fragmentFor link))
+renderLink :: HtmlRenderContext -> DocLink -> Html () -> Html ()
+renderLink r link@DocLink{..} =
+  a_ [ href_ (renderDocLink r link <> T.pack (fragmentFor link))
      , title_ fullyQualifiedName
      ]
   where
   fullyQualifiedName = case linkLocation of
-    SameModule                -> fq (snd ctx) linkTitle
+    SameModule                -> fq (currentModuleName r) linkTitle
     LocalModule _ modName     -> fq modName linkTitle
     DepsModule _ _ _ modName  -> fq modName linkTitle
 
@@ -207,42 +222,17 @@ makeFragment Value = ("#v:" ++)
 fragmentFor :: DocLink -> String
 fragmentFor l = makeFragment (linkTypeOrValue l) (linkTitle l)
 
-linkToDeclaration :: DocLinkRenderer ->
-                     LinksContext' ->
+linkToDeclaration :: HtmlRenderContext ->
                      String ->
                      ContainingModule ->
                      Html () ->
                      Html ()
-linkToDeclaration r ctx target containMn =
-  maybe id (renderLink r ctx) (getLink ctx target containMn)
+linkToDeclaration r target containMn =
+  maybe id (renderLink r) (buildDocLink r target containMn)
 
-linkToSource :: LinksContext' -> P.SourceSpan -> Html ()
-linkToSource (LinksContext{..}, _) (P.SourceSpan name start end) =
-  p_ (linkTo (T.pack $ concat
-               [ githubBaseUrl
-               , "/blob/"
-               , ctxVersionTag
-               , "/"
-               , relativeToBase name
-               , "#", fragment
-               ])
-             (text "Source"))
-  where
-  (P.SourcePos startLine _) = start
-  (P.SourcePos endLine _) = end
-  (GithubUser user, GithubRepo repo) = ctxGithub
-
-  relativeToBase = intercalate "/" . dropWhile (/= "src") . splitOnPathSep
-  githubBaseUrl = concat ["https://github.com/", user, "/", repo]
-  fragment = "L" ++ show startLine ++ "-L" ++ show endLine
-
--- | Split a string on either unix-style "/" or Windows-style "\\" path
--- | separators.
-splitOnPathSep :: String -> [String]
-splitOnPathSep str
-  | '/'  `elem` str = splitOn "/" str
-  | '\\' `elem` str = splitOn "\\" str
-  | otherwise       = [str]
+linkToSource :: HtmlRenderContext -> P.SourceSpan -> Html ()
+linkToSource r srcspan =
+  p_ (linkTo (renderSourceLink r srcspan) (text "Source"))
 
 renderAlias :: P.Fixity -> FixityAlias -> Html ()
 renderAlias (P.Fixity associativity precedence) alias =
