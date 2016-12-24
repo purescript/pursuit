@@ -1,16 +1,16 @@
-
 module TemplateHelpers where
 
 import Import hiding (span)
+import qualified Data.List.Split as List
 import Data.Text (splitOn)
 import qualified Data.Text.Lazy as LT
 import Text.Blaze.Html5 as H hiding (map, link)
-import Text.Blaze.Html5.Attributes as A hiding (span)
+import Text.Blaze.Html5.Attributes as A hiding (span, name, start)
 import qualified Web.Bower.PackageMeta as Bower
 import qualified Language.PureScript as P
 import qualified Language.PureScript.Docs as D
 
-import Model.DocsAsHtml (packageAsHtml, htmlModules, HtmlOutputModule(..))
+import Model.DocsAsHtml
 import Model.DocLinks
 import GithubAPI (ReadmeMissing(..))
 import qualified GithubAPI
@@ -42,8 +42,8 @@ linkToModule pkg mn =
 
 renderModuleList :: D.VerifiedPackage -> Handler Html
 renderModuleList pkg = do
-  docLinkRenderer <- getDocLinkRenderer
-  let docsOutput = packageAsHtml docLinkRenderer pkg
+  htmlRenderContext <- getHtmlRenderContext
+  let docsOutput = packageAsHtml (htmlRenderContext pkg) pkg
       moduleNames = sort . map fst $ htmlModules docsOutput
   moduleLinks <- traverse (linkToModule pkg) moduleNames
 
@@ -102,10 +102,11 @@ renderReadme = \case
 
 renderHtmlDocs :: D.VerifiedPackage -> Text -> Handler (Maybe Html)
 renderHtmlDocs pkg mnString = do
-  docLinkRenderer <- getDocLinkRenderer
-  let docsOutput = packageAsHtml docLinkRenderer pkg
+  htmlRenderContext <- getHtmlRenderContext
+  let docsOutput = packageAsHtml (htmlRenderContext pkg) pkg
       mn = P.moduleNameFromString mnString
   traverse render $ lookup mn (htmlModules docsOutput)
+
   where
   render :: HtmlOutputModule LT.Text -> Handler Html
   render HtmlOutputModule{..} = do
@@ -120,11 +121,9 @@ renderHtmlDocs pkg mnString = do
             (text "Re-exports from " *> strong moduleLink))
           *> preEscapedToHtml decls)
 
-
--- | Produce a Route for a given DocLink. Note that we do not include the
--- fragment; this is the responsibility of the DocsAsHtml module.
-docLinkRoute :: LinksContext' -> DocLink -> Route App
-docLinkRoute (LinksContext{..}, srcModule) link = case linkLocation link of
+-- | Produce a Route for a given DocLink.
+docLinkRoute :: LinksContext -> P.ModuleName -> DocLink -> Route App
+docLinkRoute LinksContext{..} srcModule link = case linkLocation link of
   SameModule ->
     mkRoute ctxPackageName ctxVersion srcModule
   LocalModule _ otherModule ->
@@ -138,10 +137,46 @@ docLinkRoute (LinksContext{..}, srcModule) link = case linkLocation link of
       (PathVersion version)
       (P.runModuleName modName)
 
-getDocLinkRenderer :: Handler (LinksContext' -> DocLink -> Text)
-getDocLinkRenderer = do
+getHtmlRenderContext :: Handler (D.Package a -> P.ModuleName -> HtmlRenderContext)
+getHtmlRenderContext = do
   renderUrl <- getUrlRender
-  return $ \ctx link -> renderUrl (docLinkRoute ctx link)
+  return $ \pkg currentMn ->
+    let
+      linksContext = getLinksContext pkg
+    in
+      HtmlRenderContext
+        { currentModuleName = currentMn
+        , buildDocLink = getLink linksContext currentMn
+        , renderDocLink = renderUrl . docLinkRoute linksContext currentMn
+        , renderSourceLink = renderSourceLink' linksContext
+        }
+
+renderSourceLink' :: LinksContext -> P.SourceSpan -> Text
+renderSourceLink' LinksContext{..} (P.SourceSpan name start end) =
+  pack $ concat
+           [ githubBaseUrl
+           , "/blob/"
+           , ctxVersionTag
+           , "/"
+           , relativeToBase (unpack name)
+           , "#", fragment
+           ]
+  where
+  (P.SourcePos startLine _) = start
+  (P.SourcePos endLine _) = end
+  (D.GithubUser user, D.GithubRepo repo) = ctxGithub
+
+  relativeToBase = intercalate "/" . dropWhile (/= "src") . splitOnPathSep
+  githubBaseUrl = concat ["https://github.com/", user, "/", repo]
+  fragment = "L" ++ show startLine ++ "-L" ++ show endLine
+
+-- | Split a string on either unix-style "/" or Windows-style "\\" path
+-- | separators.
+splitOnPathSep :: String -> [String]
+splitOnPathSep str
+  | '/'  `elem` str = List.splitOn "/" str
+  | '\\' `elem` str = List.splitOn "\\" str
+  | otherwise       = [str]
 
 -- | Render a URL together with a fragment (possibly).
 getFragmentRender :: Handler ((Route App, Maybe Text) -> Text)
