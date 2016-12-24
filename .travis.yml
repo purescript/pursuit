@@ -28,8 +28,7 @@ install:
   - stack --no-terminal -j1 --install-ghc build --only-dependencies
 
 script:
-  - true
-  # - stack --no-terminal -j1 build --flag pursuit:-dev --pedantic
+  - stack --no-terminal -j1 build --flag pursuit:-dev --pedantic
 
 notifications:
   email: true
