@@ -217,6 +217,7 @@ renderLink r link@DocLink{..} =
     SameModule                -> fq (currentModuleName r) linkTitle
     LocalModule _ modName     -> fq modName linkTitle
     DepsModule _ _ _ modName  -> fq modName linkTitle
+    BuiltinModule modName     -> fq modName linkTitle
 
   fq mn str = P.runModuleName mn <> "." <> str
 

@@ -6,6 +6,7 @@ import Data.Text (splitOn)
 import qualified Data.Text.Lazy as LT
 import Text.Blaze.Html5 as H hiding (map, link)
 import Text.Blaze.Html5.Attributes as A hiding (span, name, start)
+import qualified Lucid
 import qualified Web.Bower.PackageMeta as Bower
 import qualified Language.PureScript as P
 import qualified Language.PureScript.Docs as D
@@ -121,6 +122,16 @@ renderHtmlDocs pkg mnString = do
             (text "Re-exports from " *> strong moduleLink))
           *> preEscapedToHtml decls)
 
+primDocs :: Html
+primDocs =
+  preEscapedToHtml $
+    Lucid.renderText $
+      htmlOutputModuleLocals $
+        snd $
+          moduleAsHtml
+            (nullRenderContext (P.moduleNameFromString "Prim"))
+            D.primDocsModule
+
 -- | Produce a Route for a given DocLink.
 docLinkRoute :: LinksContext -> P.ModuleName -> DocLink -> Route App
 docLinkRoute LinksContext{..} srcModule link = case linkLocation link of
@@ -130,6 +141,8 @@ docLinkRoute LinksContext{..} srcModule link = case linkLocation link of
     mkRoute ctxPackageName ctxVersion otherModule
   DepsModule _ otherPackageName otherVersion otherModule ->
     mkRoute otherPackageName otherVersion otherModule
+  BuiltinModule otherModule ->
+    BuiltinDocsR (P.runModuleName otherModule)
   where
   mkRoute pkgName version modName =
     PackageVersionModuleDocsR

@@ -13,6 +13,8 @@
 !/packages/#PathPackageName/badge                      PackageBadgeR               GET
 !/packages/#PathPackageName/available-versions         PackageAvailableVersionsR   GET
 
+/builtins/docs/#Text                                   BuiltinDocsR                GET
+
 /search                                                SearchR                     GET
 
 /upload                                                UploadPackageR              GET POST

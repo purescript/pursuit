@@ -2,15 +2,14 @@
 module Model.DocLinks where
 
 import Prelude
-import Control.Arrow (second)
+import Control.Applicative ((<|>))
+import Control.Monad (guard)
 import Control.DeepSeq (NFData)
 import Data.List (find)
 import Data.Char (isUpper)
 import Data.Version
-import Data.Maybe (fromJust)
 import Data.Text (Text)
 import qualified Data.Text as T
-import qualified Data.Map as M
 import GHC.Generics (Generic)
 
 import Web.Bower.PackageMeta hiding (Version)
@@ -57,25 +56,36 @@ data LinkLocation
   -- name, name of the other package, version of the other package, and name of
   -- the module in the other package that the declaration is in.
   | DepsModule P.ModuleName PackageName Version P.ModuleName
+
+  -- | A link to a declaration that is built in to the compiler, e.g. the Prim
+  -- module. In this case we only need to store the module that the builtin
+  -- comes from (at the time of writing, this will only ever be "Prim").
+  | BuiltinModule P.ModuleName
   deriving (Show, Eq, Ord)
 
 -- | Given a links context, a thing to link to (either a value or a type), and
 -- its containing module, attempt to create a DocLink.
 getLink :: LinksContext -> P.ModuleName -> Text -> ContainingModule -> Maybe DocLink
 getLink LinksContext{..} curMn target containingMod = do
-  let bookmark' = (fromContainingModule curMn containingMod, target)
-  bookmark <- find ((bookmark' ==) . ignorePackage) ctxBookmarks
-  loc <- getLocation containingMod bookmark
+  location <- getLinkLocation
   return DocLink
-    { linkLocation    = loc
-    , linkTitle       = target
+    { linkLocation = location
+    , linkTitle = target
     , linkTypeOrValue = typeOrValue
     }
 
   where
+  getLinkLocation = normalLinkLocation <|> builtinLinkLocation
+
+  normalLinkLocation = do
+    let bookmark' = (fromContainingModule curMn containingMod, target)
+    bookmark <- find ((bookmark' ==) . ignorePackage) ctxBookmarks
+    getLocation containingMod bookmark
+
   getLocation containingModule bookmark =
     case containingModule of
-      ThisModule -> return SameModule
+      ThisModule ->
+        return SameModule
       OtherModule destMn ->
         case bookmark of
           Local _ ->
@@ -84,10 +94,17 @@ getLink LinksContext{..} curMn target containingMod = do
             pkgVersion <- lookup pkgName ctxResolvedDependencies
             return $ DepsModule curMn pkgName pkgVersion destMn
 
+  builtinLinkLocation = do
+    let primMn = P.moduleNameFromString "Prim"
+    guard $ containingMod == OtherModule primMn
+    -- TODO: ensure the declaration exists in the builtin module too
+    return $ BuiltinModule primMn
+
   typeOrValue = case T.unpack target of
     [] ->
       Type -- should never happen, but this will do
     (t:_) ->
+      -- TODO: fix this, it's not correct.
       if isUpper t
         then Type
         else Value
@@ -96,23 +113,9 @@ getLinksContext :: Package a -> LinksContext
 getLinksContext Package{..} =
   LinksContext
     { ctxGithub               = pkgGithub
-    , ctxBookmarks            = primBookmarks ++ pkgBookmarks
-    , ctxResolvedDependencies = primDependency : pkgResolvedDependencies
+    , ctxBookmarks            = pkgBookmarks
+    , ctxResolvedDependencies = pkgResolvedDependencies
     , ctxPackageName          = bowerName pkgMeta
     , ctxVersion              = pkgVersion
     , ctxVersionTag           = pkgVersionTag
     }
-
-primPackageName :: PackageName
-primPackageName = x
-  where
-  Right x = parsePackageName "purescript-prim"
-
-primBookmarks :: [Bookmark]
-primBookmarks =
-  map (FromDep primPackageName . second P.runProperName . toPair . fst) $ M.toList P.primTypes
-  where
-  toPair (P.Qualified mn x) = (fromJust mn, x)
-
-primDependency :: (PackageName, Version)
-primDependency = (primPackageName, Version [0,8,0] []) -- hardcoded for now

@@ -155,6 +155,26 @@ getPackageVersionModuleDocsR (PathPackageName pkgName) (PathVersion version) mnS
           documentationPage pkg $
             $(widgetFile "packageVersionModuleDocs")
 
+getBuiltinDocsR :: Text -> Handler Html
+getBuiltinDocsR mnString = do
+  case mnString of
+    "Prim" ->
+      defaultLayout $ do
+        setTitle (toHtml mnString)
+        let mn = P.moduleNameFromString mnString
+        let htmlDocs = primDocs
+        let widget = $(widgetFile "packageVersionModuleDocs")
+        [whamlet|
+          <div .col.col-main>
+            ^{widget}
+          |]
+    _ ->
+      defaultLayout404 $ [whamlet|
+        <h2>Module not found
+        <p>No such builtin module: #
+          <b>#{mnString}
+        |]
+
 findPackage ::
   PackageName ->
   Version ->
