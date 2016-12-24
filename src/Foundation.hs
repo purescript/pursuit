@@ -82,9 +82,6 @@ instance NFData SearchResultInfo
 
 -- Orphan instances which belong elsewhere
 
-instance NFData PackageName where
-  rnf _ = ()
-
 instance NFData P.Type where
   rnf _ = ()
 

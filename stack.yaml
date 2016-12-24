@@ -1,10 +1,10 @@
-resolver: lts-7.12
+resolver: lts-7.14
 flags:
   pursuit:
     dev: true
 packages:
 - '.'
 extra-deps:
-- wai-middleware-gunzip-0.0.2
 - barrier-0.1.1
 - purescript-0.10.3
+- wai-middleware-gunzip-0.0.2
