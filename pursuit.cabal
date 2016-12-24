@@ -104,7 +104,7 @@ library
                  , vector
                  , time
                  , purescript >= 0.9.1
-                 , bower-json >= 0.4
+                 , bower-json >= 0.8.1
                  , lucid
                  , blaze-builder
                  , blaze-markup
