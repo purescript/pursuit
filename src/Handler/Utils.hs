@@ -3,6 +3,10 @@ module Handler.Utils where
 
 import Import
 import TimeUtils
+import qualified Data.Aeson.Parser as AP
+import qualified Data.Conduit.Zlib as Zlib
+import Data.Streaming.Zlib (ZlibException(..))
+import qualified Data.Conduit.Attoparsec as Attoparsec
 import Web.Cookie (setCookieName, setCookieValue, setCookieMaxAge)
 import System.Directory (createDirectoryIfMissing, removeFile,
                         getDirectoryContents, getModificationTime)
@@ -71,3 +75,31 @@ setCookieMessage msg =
                 , setCookieValue = msg
                 , setCookieMaxAge = Just $ secondsToDiffTime 3600
                 }
+
+-- | Like Yesod's parseJsonBody, but this version first checks for a
+-- Content-Encoding: gzip header and unzips the body if that is found.
+parseJsonBodyPotentiallyGzipped :: Handler (Either String Value)
+parseJsonBodyPotentiallyGzipped = do
+  unzipping <- shouldUnzip <$> lookupHeader hContentEncoding
+  let ungzip = if unzipping then Zlib.ungzip else mapC id
+  let parser = ungzip .| Attoparsec.sinkParser AP.value'
+  eValue <- runConduit $ rawRequestBody .| catchEither parser
+
+  return $ bimap display id eValue
+
+  where
+  shouldUnzip = maybe False (== "gzip")
+
+  display e =
+    case fromException e of
+      Just (ZlibException (-3)) ->
+        "Invalid gzip data in request body"
+      _ ->
+        case fromException e of
+          Just err ->
+            Attoparsec.errorMessage err
+          _ ->
+            show e
+
+catchEither :: MonadCatch m => m a -> m (Either SomeException a)
+catchEither m = catch (map Right m) (pure . Left)

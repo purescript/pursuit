@@ -128,9 +128,9 @@ library
                  , transformers
                  , cookie
                  , xss-sanitize
-                 , wai-middleware-gunzip
                  , barrier ==0.1.*
                  , mono-traversable
+                 , streaming-commons
 
     if flag(dev)
       build-depends: foreign-store

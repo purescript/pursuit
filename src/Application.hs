@@ -29,8 +29,6 @@ import Network.Wai.Handler.Warp
 import Network.Wai.Middleware.RequestLogger
   (Destination (Logger), IPAddrSource (..), OutputFormat (..), destination,
   mkRequestLogger, outputFormat)
-import Network.Wai.Middleware.Gunzip
-  (gunzip)
 import System.Log.FastLogger
   (defaultBufSize, newStdoutLoggerSet, toLogStr)
 import Crypto.Random
@@ -102,7 +100,7 @@ makeApplication foundation = do
 
     -- Create the WAI application and apply middlewares
     appPlain <- toWaiAppPlain foundation
-    return $ gunzip $ logWare $ defaultMiddlewaresNoLogging appPlain
+    return $ logWare $ defaultMiddlewaresNoLogging appPlain
 
 -- | Warp settings for the given foundation value.
 warpSettings :: App -> Settings

@@ -7,13 +7,12 @@ import Control.Monad.Except (ExceptT(..), runExceptT)
 import Control.Monad.Error.Class (throwError)
 import qualified Data.Char as Char
 import Data.Version
-import qualified Data.ByteString.Lazy as BL
 import qualified Data.Text.Lazy as TL
 import qualified Language.PureScript.Docs as D
 import Web.Bower.PackageMeta (PackageName, runPackageName, bowerDependencies, bowerLicense)
 import qualified Data.HashMap.Strict as HashMap
 import qualified Data.Aeson as Aeson
-import qualified Data.Aeson.BetterErrors as A
+import qualified Data.Aeson.BetterErrors as ABE
 import qualified Language.PureScript as P
 
 import Handler.Database
@@ -106,17 +105,18 @@ postPackageIndexR = do
 
   where
   getUploadedPackageFromBody = do
-    body     <- getRequestBody
-    epackage <- parseUploadedPackage body
-    case epackage of
+    ejson <- parseJsonBodyPotentiallyGzipped
+    case ejson of
       Left err ->
-        let errorMessage = unlines $ displayJsonError body err
-        in sendResponseStatus badRequest400 $ object [ "error" .= errorMessage ]
-      Right package ->
-        return package
-
-  getRequestBody =
-    rawRequestBody $$ sinkLazy
+        badRequest (pack err)
+      Right json -> do
+        epackage <- parseUploadedPackage json
+        case epackage of
+          Left err ->
+            let errorMessage = unlines $ displayJsonError json err
+            in badRequest errorMessage
+          Right package ->
+            return package
 
   getUserOrNotAuthenticated token = do
     euser <- GithubAPI.getUser token
@@ -228,10 +228,15 @@ postUploadPackageR =
     either (renderUploadPackageForm widget enctype) pure =<< handleFormResult user result
 
   where
+  handleFormResult ::
+    D.GithubUser ->
+    FormResult FileInfo ->
+    Handler (Either (Maybe [Text]) Html)
   handleFormResult user result = runExceptT $ do
     file <- ExceptT . pure . unpackResult $ result
     bytes <- lift . runResourceT $ fileSource file $$ sinkLazy
-    pkg <- ExceptT . fmap (first (Just . displayJsonError bytes)) $ parseUploadedPackage bytes
+    value <- ExceptT . pure . bimap (Just . (:[]) . pack) id $ Aeson.eitherDecode bytes
+    pkg <- ExceptT . onError (displayJsonError value) $ parseUploadedPackage value
 
     when (null (bowerLicense (D.pkgMeta pkg))) $
       throwError (Just ["No license specified. Packages must specify their " ++
@@ -249,27 +254,28 @@ postUploadPackageR =
     _ ->
       Left Nothing
 
--- | Try to parse a D.UploadedPackage from a ByteString containing JSON.
-parseUploadedPackage ::
-  BL.ByteString ->
-  Handler (Either (A.ParseError D.PackageError) D.UploadedPackage)
-parseUploadedPackage bytes = do
-  minVersion <- appMinimumCompilerVersion . appSettings <$> getYesod
-  return $ D.parseUploadedPackage minVersion bytes
+  onError f = fmap (first (Just . f))
 
-displayJsonError :: BL.ByteString -> A.ParseError D.PackageError -> [Text]
-displayJsonError bytes e = case e of
-  A.InvalidJSON _ ->
+-- | Try to parse a D.UploadedPackage from a JSON Value.
+parseUploadedPackage ::
+  Value ->
+  Handler (Either (ABE.ParseError D.PackageError) D.UploadedPackage)
+parseUploadedPackage value = do
+  minVersion <- appMinimumCompilerVersion . appSettings <$> getYesod
+  return $ ABE.parseValue (D.asUploadedPackage minVersion) value
+
+displayJsonError :: Value -> ABE.ParseError D.PackageError -> [Text]
+displayJsonError value e = case e of
+  ABE.InvalidJSON _ ->
     ["The file you submitted was not valid JSON."]
-  A.BadSchema _ _ ->
-    A.displayError D.displayPackageError e ++ extraInfo
+  ABE.BadSchema _ _ ->
+    ABE.displayError D.displayPackageError e ++ extraInfo
 
   where
   -- Attempt to extract the compiler version that a JSON upload was created
   -- with.
   extractVersion =
-    Aeson.decode
-    >=> toObject
+    toObject
     >=> HashMap.lookup "compilerVersion"
     >=> toString
     >=> (D.parseVersion' . unpack)
@@ -286,7 +292,7 @@ displayJsonError bytes e = case e of
 
   -- Some extra information about what might have caused an error.
   extraInfo =
-    case extractVersion bytes of
+    case extractVersion value of
       Just v | v > P.version ->
         let pursuitVersion = pack (showVersion P.version) in
         [ "Usually, this occurs because the JSON data was generated with a newer " <>
