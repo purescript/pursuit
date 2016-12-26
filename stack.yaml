@@ -7,4 +7,3 @@ packages:
 extra-deps:
 - barrier-0.1.1
 - purescript-0.10.3
-- wai-middleware-gunzip-0.0.2
