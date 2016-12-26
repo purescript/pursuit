@@ -2,6 +2,7 @@ module TemplateHelpers where
 
 import Import hiding (span)
 import qualified Data.List.Split as List
+import Data.Version (Version)
 import Data.Text (splitOn)
 import qualified Data.Text.Lazy as LT
 import Text.Blaze.Html5 as H hiding (map, link)
@@ -35,18 +36,39 @@ joinLicenses ls
 renderVersionRange :: Bower.VersionRange -> Html
 renderVersionRange = toHtml . Bower.runVersionRange
 
-linkToModule :: D.VerifiedPackage -> P.ModuleName -> Handler Html
-linkToModule pkg mn =
-  withUrlRenderer [hamlet|
-    <a href=@{moduleDocsRoute pkg (P.runModuleName mn)}>#{insertBreaks mn}
-    |]
+linkToModule :: D.VerifiedPackage -> D.InPackage P.ModuleName -> Handler Html
+linkToModule pkg mn' = do
+  let mtargetPkg = findTargetPackage pkg mn'
+  let mn = D.ignorePackage mn'
+  let linkText = insertBreaks mn
+  case mtargetPkg of
+    Just (pkgName, pkgVersion) ->
+      let route = PackageVersionModuleDocsR
+                    (PathPackageName pkgName)
+                    (PathVersion pkgVersion)
+                    (P.runModuleName mn)
+      in
+        withUrlRenderer [hamlet|<a href=@{route}>#{linkText}|]
+    Nothing ->
+      withUrlRenderer [hamlet|<span class="link-target-missing">#{linkText}|]
+
+-- | Given a package name and a verified package, attempt to find details of
+-- package which defines that module. This may be the package given in the
+-- argument or one of its dependencies.
+findTargetPackage :: D.VerifiedPackage -> D.InPackage P.ModuleName -> Maybe (Bower.PackageName, Version)
+findTargetPackage pkg mn' =
+  case mn' of
+    D.Local _ ->
+      Just (D.packageName pkg, D.pkgVersion pkg)
+    D.FromDep pkgName _ ->
+      (pkgName,) <$> lookup pkgName (D.pkgResolvedDependencies pkg)
 
 renderModuleList :: D.VerifiedPackage -> Handler Html
 renderModuleList pkg = do
   htmlRenderContext <- getHtmlRenderContext
   let docsOutput = packageAsHtml (htmlRenderContext pkg) pkg
       moduleNames = sort . map fst $ htmlModules docsOutput
-  moduleLinks <- traverse (linkToModule pkg) moduleNames
+  moduleLinks <- traverse (linkToModule pkg . D.Local) moduleNames
 
   withUrlRenderer [hamlet|
     <ul .documentation-contents>
@@ -115,7 +137,7 @@ renderHtmlDocs pkg mnString = do
     reexports <- traverse renderReExports htmlOutputModuleReExports
     return (locals *> mconcat reexports)
 
-  renderReExports :: (P.ModuleName, LT.Text) -> Handler Html
+  renderReExports :: (D.InPackage P.ModuleName, LT.Text) -> Handler Html
   renderReExports (mn, decls) = do
     moduleLink <- linkToModule pkg mn
     pure ((h2 ! class_ "re-exports" $

@@ -69,7 +69,7 @@ data HtmlOutput a = HtmlOutput
 
 data HtmlOutputModule a = HtmlOutputModule
   { htmlOutputModuleLocals    :: a
-  , htmlOutputModuleReExports :: [(P.ModuleName, a)]
+  , htmlOutputModuleReExports :: [(InPackage P.ModuleName, a)]
   }
   deriving (Show, Functor)
 
