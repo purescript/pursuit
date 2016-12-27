@@ -18,8 +18,9 @@
     <ul>
       $forall (pkgName, version) <- latest
         <li>
-          <a href=@{PackageVersionR (PathPackageName pkgName) (PathVersion version)}>
-            #{runPackageName pkgName} - #{showVersion version}
+          <div .deplink>
+            <a .deplink__link href=@{PackageVersionR (PathPackageName pkgName) (PathVersion version)}>#{runPackageName pkgName}
+            <span .deplink__version>#{showVersion version}
     <h2>Packages:
       $forall pkgs <- pkgNamesByLetter
         $forall letter <- headMay pkgs >>= firstLetter

@@ -165,16 +165,14 @@ img {
 /* Component: Dependency Link
  * -------------------------------------------------------------------------- */
 
-.dependency-link {
+.deplink { /* Currently no root styles, but keep the class as a namespace */ }
+
+.deplink__link {
   display: inline-block;
   margin-right: 0.41em;
 }
 
-
-/* Component: Dependency Version
- * -------------------------------------------------------------------------- */
-
-.dependency-version {
+.deplink__version {
   color: #{Css.lightTypeColor};
   display: inline-block;
   font-size: 0.8em;

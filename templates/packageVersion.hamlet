@@ -20,8 +20,9 @@
       <ul>
         $forall (depPkg, versionRange) <- dependencies
           <li>
-            <a .dependency-link href=@{packageNameRoute depPkg}>#{runPackageName depPkg}
-            <span .dependency-version>#{renderVersionRange versionRange}
+            <div .deplink>
+              <a .deplink__link href=@{packageNameRoute depPkg}>#{runPackageName depPkg}
+              <span .deplink__version>#{renderVersionRange versionRange}
     <hr>
   <p>uploaded by #{linkToGithubUser pkgUploader}
   <hr>
