@@ -191,17 +191,12 @@ img {
   padding: 1em !important;
 }
 
-.error {
+.message.message--error {
   background-color: #{Css.errorBackgroundColor};
   border-color: #{Css.errorBorderColor};
 }
 
-.success {
-  background-color: #{Css.successBackgroundColor};
-  border-color: #{Css.darken20 Css.successBackgroundColor};
-}
-
-.not-available {
+.message.message--not-available {
   background-color: #{Css.notAvailableBackgroundColor};
   border-color: #{Css.darken20 Css.notAvailableBackgroundColor};
 }

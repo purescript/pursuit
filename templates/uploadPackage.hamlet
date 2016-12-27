@@ -1,7 +1,7 @@
 <div .col.col-main>
   <h2>Upload a package
 
-  <div .message .not-available>
+  <div .message .message--not-available>
     <p>
       This upload form is deprecated, and will eventually be removed entirely.
       Please consider switching to Pulp for uploading your packages. There is
@@ -17,7 +17,7 @@
     \.
 
   $maybe err <- merror
-    <div .message .error>
+    <div .message .message--error>
       <p>
         An error occurred, and your package could not be uploaded.
       <p>

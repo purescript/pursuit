@@ -92,7 +92,7 @@ function initializeUploadForm() {
 
     // remove previous error messages. Having one rendered by the server on the
     // page at the same time as one rendered client-side is a bit weird.
-    var errors = document.querySelectorAll('div.message.error')
+    var errors = document.querySelectorAll('div.message.message--error')
     Array.prototype.forEach.call(errors,
       function(el) {
         el.parentNode.removeChild(el)

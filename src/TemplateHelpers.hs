@@ -105,18 +105,18 @@ renderReadme = \case
     html'
   Left APIRateLimited ->
     [shamlet|
-      <div .message .not-available>
+      <div .message .message--not-available>
         No readme available (due to rate limiting). Please try again later.
     |]
   Left ReadmeNotFound ->
     [shamlet|
-      <div .message .not-available>
+      <div .message .message--not-available>
         No readme found in the repository at this tag. If you are the maintainer,
         perhaps consider adding one in the next release.
     |]
   Left (OtherReason _) ->
     [shamlet|
-      <div .message .not-available>
+      <div .message .message--not-available>
         No readme available, for some unexpected reason (which has been logged).
         Perhaps
         <a href="https://github.com/purescript/pursuit/issues/new">
