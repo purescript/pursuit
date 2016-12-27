@@ -1,3 +1,6 @@
+/* Section: Document Styles
+ * ========================================================================== */
+
 html {
   overflow-y: scroll;
   box-sizing: border-box;
@@ -14,7 +17,10 @@ body {
   line-height: 1.563em;
 }
 
-/* Utility classes */
+
+/* Section: Utility Classes
+ * ========================================================================== */
+
 .clearfix:before,
 .clearfix:after {
   content: " ";
@@ -35,7 +41,10 @@ body {
   overflow: hidden;
 }
 
-/* Layout */
+
+/* Section: Layout
+ * ========================================================================== */
+
 .container {
   max-width: 1060px;
   margin-left: auto;
@@ -60,73 +69,35 @@ body {
   padding: 0 10px;
 }
 
-.top-banner .banner-item {
-  padding: 0 17px;
+@media (min-width: 50em) {
+  .col {
+    width: 70%
+  }
+
+  .col-single {
+    width: 100%;
+    margin-right: auto;
+    margin-left: auto;
+  }
 }
 
-h2.re-exports {
-  padding-top: 0.5em;
+@media (min-width: 70em) {
+  .col.col-main {
+    float: left;
+  }
+
+  .col.col-aside {
+    width: 30%;
+    float: right;
+  }
 }
 
-/* Links */
-a, a:visited {
-  color: #{Css.linkColor};
-  text-decoration: none;
-  font-weight: bold;
-}
 
-a.weight-normal,
-a.weight-normal:hover {
-  font-weight: normal;
-}
-
-a:hover {
-  text-decoration: underline;
-}
-
-/* Top banner */
-.top-banner,
-.top-banner a,
-.top-banner a:visited {
-  background-color: #{Css.bannerBackground};
-  color: #{Css.darkForeground};
-  text-decoration: none;
-  font-weight: lighter;
-  padding: 5px 0;
-}
-
-.top-banner a:hover {
-  background-color: #{Css.lighten10 Css.bannerBackground};
-}
-
-.top-banner {
-  line-height: 3.5em;
-  vertical-align: middle;
-}
-
-.top-banner .pursuit {
-  font-size: 150%;
-}
-
-.top-banner form {
-  color: #{Css.bannerBackground};
-}
-
-.top-banner input {
-  width: 100%;
-  line-height: 1.5em;
-  padding: 0.2em;
-  border-radius: 3px;
-}
-
-.top-banner .banner-item.upload {
-  font-size: 150%;
-}
-
-/* footer
+/* Footer
  * Based on http://www.lwis.net/journal/2008/02/08/pure-css-sticky-footer/
  * Except we don't support IE6
- */
+ * -------------------------------------------------------------------------- */
+
 html, body {
   height: 100%;
 }
@@ -150,7 +121,70 @@ html, body {
   margin-bottom: 0;
 }
 
-/* Messages */
+
+/* Section: Element Styles
+ *
+ * Have as few of these as possible and keep them general, because they will
+ * influence every component hereafter.
+ * ========================================================================== */
+
+:target {
+    border-radius: 5px;
+    background-color: #{Css.codeBackground};
+}
+
+a, a:visited {
+  color: #{Css.linkColor};
+  text-decoration: none;
+  font-weight: bold;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+a.weight-normal,
+a.weight-normal:hover {
+  font-weight: normal;
+}
+
+hr {
+  border: none;
+  height: 1px;
+  background-color: #{Css.darken20 Css.backgroundColor};
+}
+
+img {
+  max-width: 100%;
+}
+
+
+/* Section: Components
+ * ========================================================================== */
+
+/* Component: Dependency Link
+ * -------------------------------------------------------------------------- */
+
+.dependency-link {
+  display: inline-block;
+  margin-right: 0.41em;
+}
+
+
+/* Component: Dependency Version
+ * -------------------------------------------------------------------------- */
+
+.dependency-version {
+  color: #{Css.lightTypeColor};
+  display: inline-block;
+  font-size: 0.8em;
+  line-height: 1;
+}
+
+
+/* Component: Message
+ * -------------------------------------------------------------------------- */
+
 .message {
   border: 5px solid;
   border-radius: 5px;
@@ -172,10 +206,142 @@ html, body {
   border-color: #{Css.darken20 Css.notAvailableBackgroundColor};
 }
 
-/**
- * Typography
- * Font sizes are based on a major third scale (1:1.250)
+
+/* Component: Package Label
  * -------------------------------------------------------------------------- */
+
+.package-label {
+  color: #{Css.lightTypeColor};
+  display: block;
+  font-size: 0.8rem;
+  letter-spacing: 1px;
+  margin-bottom: -0.41em;
+  text-transform: uppercase;
+}
+
+
+/* Component: Top Banner
+ * -------------------------------------------------------------------------- */
+
+.top-banner {
+  background-color: #{Css.bannerBackground};
+  color: #{Css.darkForeground};
+  font-weight: lighter;
+  line-height: 3.5em;
+  padding: 5px 0;
+  text-decoration: none;
+  vertical-align: middle;
+}
+
+.top-banner a,
+.top-banner a:visited {
+  background-color: #{Css.bannerBackground};
+  color: #{Css.darkForeground};
+  text-decoration: none;
+  font-weight: lighter;
+  padding: 5px 0;
+}
+
+.top-banner a:hover {
+  background-color: #{Css.lighten10 Css.bannerBackground};
+}
+
+.top-banner .pursuit {
+  font-size: 150%;
+}
+
+.top-banner form {
+  color: #{Css.bannerBackground};
+}
+
+.top-banner input {
+  width: 100%;
+  line-height: 1.5em;
+  padding: 0.2em;
+  border-radius: 3px;
+}
+
+.top-banner .banner-item {
+  padding: 0 17px;
+}
+
+.top-banner .banner-item.upload {
+  font-size: 150%;
+}
+
+@media (min-width: 50em) {
+  .top-banner .banner-item {
+    float: left;
+  }
+
+  .top-banner .banner-item.pursuit {
+    margin-right: 3em;
+  }
+
+  .top-banner form.banner-item {
+    width: 50%;
+  }
+
+  .top-banner .banner-item.upload {
+    float: right;
+  }
+}
+
+
+/* Component: Search Results
+ * -------------------------------------------------------------------------- */
+
+.search-result {
+  display: block;
+  background: #{Css.codeBackground};
+  padding: 0.2em 1em;
+  margin-bottom: 1em;
+  color: #000;
+  font-weight: normal;
+  border: 1px solid #{Css.codeBackground};
+  border-radius: 5px;
+}
+
+.search-result .highlight {
+  color: #{Css.linkColor};
+}
+
+.search-result p:first-child {
+  margin-bottom: 0.5em;
+}
+
+.search-result p:nth-child(2) {
+  margin-top: 0.5em;
+}
+
+.search-result:hover,
+.search-result:focus {
+  text-decoration: none;
+  background: #{Css.lighten5 Css.codeBackground};
+  border: 1px solid #{Css.codeForeground};
+  outline: none;
+}
+
+
+/* Component: Version Selector
+ * -------------------------------------------------------------------------- */
+
+.version-selector {
+  float: left;
+  width: auto;
+  min-width: 20%;
+}
+
+@media (min-width: 70em) {
+  .version-selector {
+    margin-top: 1em;
+  }
+}
+
+
+/* Section: Typography
+ * Font sizes are based on a major third scale (1:1.250)
+ * ========================================================================== */
 
 h1 {
   font-size: 3.814em;
@@ -233,6 +399,12 @@ ol {
 ol li {
 }
 
+
+h2.re-exports {
+  padding-top: 0.5em;
+}
+
+
 /* Tables */
 table { /* FIXME: possibly wrap table in div */
   /* Seemingly necessary for the ".col table" rule above to work */
@@ -247,76 +419,10 @@ tbody tr:nth-child(odd) {
   background-color: #eee;
 }
 
-/* Images */
-img {
-  max-width: 100%;
-}
-
-/* Version selector */
-.version-selector {
-  float: left;
-  width: auto;
-  min-width: 20%;
-}
 
 /* GitHub rendered README */
 .entry-content p:first-child {
   margin-top: 0;
-}
-
-/* Search results */
-.search-result {
-  display: block;
-  background: #{Css.codeBackground};
-  padding: 0.2em 1em;
-  margin-bottom: 1em;
-  color: #000;
-  font-weight: normal;
-  border: 1px solid #{Css.codeBackground};
-  border-radius: 5px;
-}
-
-.search-result .highlight {
-  color: #{Css.linkColor};
-}
-
-.search-result p:first-child {
-  margin-bottom: 0.5em;
-}
-
-.search-result p:nth-child(2) {
-  margin-top: 0.5em;
-}
-
-.search-result:hover,
-.search-result:focus {
-  text-decoration: none;
-  background: #{Css.lighten5 Css.codeBackground};
-  border: 1px solid #{Css.codeForeground};
-  outline: none;
-}
-
-/* Dependencies */
-.dependency-link {
-  display: inline-block;
-  margin-right: 0.41em;
-}
-
-.dependency-version {
-  color: #{Css.lightTypeColor};
-  display: inline-block;
-  font-size: 0.8em;
-  line-height: 1;
-}
-
-/* Package label */
-.package-label {
-  color: #{Css.lightTypeColor};
-  display: block;
-  font-size: 0.8rem;
-  letter-spacing: 1px;
-  margin-bottom: -0.41em;
-  text-transform: uppercase;
 }
 
 /* Help paragraphs */
@@ -376,63 +482,10 @@ code, pre {
     padding-top: 0.4em;
 }
 
-:target {
-    border-radius: 5px;
-    background-color: #{Css.codeBackground};
-}
-
 .decl-inner {
     padding: 0 0.9em;
 }
 
 .documentation-contents li {
     font-size: 1.3em;
-}
-
-hr {
-  border: 1px solid #{Css.darken20 Css.backgroundColor};
-}
-
-/* media queries */
-@media (min-width: 50em) {
-  .col {
-    width: 70%
-  }
-
-  .col-single {
-    width: 100%;
-    margin-right: auto;
-    margin-left: auto;
-  }
-
-  .top-banner .banner-item {
-    float: left;
-  }
-
-  .top-banner .banner-item.pursuit {
-    margin-right: 3em;
-  }
-
-  .top-banner form.banner-item {
-    width: 50%;
-  }
-
-  .top-banner .banner-item.upload {
-    float: right;
-  }
-}
-
-@media (min-width: 70em) {
-  .col.col-main {
-    float: left;
-  }
-
-  .col.col-aside {
-    width: 30%;
-    float: right;
-  }
-
-  select.version-selector {
-    margin-top: 1em;
-  }
 }
