@@ -252,19 +252,19 @@ img {
 }
 
 /* Version selector */
-select.version-selector {
+.version-selector {
   float: left;
   width: auto;
   min-width: 20%;
 }
 
 /* GitHub rendered README */
-article.entry-content p:first-child {
+.entry-content p:first-child {
   margin-top: 0;
 }
 
 /* Search results */
-a.search-result {
+.search-result {
   display: block;
   background: #{Css.codeBackground};
   padding: 0.2em 1em;
@@ -275,20 +275,20 @@ a.search-result {
   border-radius: 5px;
 }
 
-a.search-result .highlight {
+.search-result .highlight {
   color: #{Css.linkColor};
 }
 
-a.search-result p:first-child {
+.search-result p:first-child {
   margin-bottom: 0.5em;
 }
 
-a.search-result p:nth-child(2) {
+.search-result p:nth-child(2) {
   margin-top: 0.5em;
 }
 
-a.search-result:hover,
-a.search-result:focus {
+.search-result:hover,
+.search-result:focus {
   text-decoration: none;
   background: #{Css.lighten5 Css.codeBackground};
   border: 1px solid #{Css.codeForeground};
@@ -383,7 +383,7 @@ code, pre {
     padding: 0 0.9em;
 }
 
-ul.documentation-contents li {
+.documentation-contents li {
     font-size: 1.3em;
 }
 
