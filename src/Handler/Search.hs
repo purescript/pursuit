@@ -79,7 +79,7 @@ routeResult SearchResult{..} =
       )
     DeclarationResult typeOrValue modName declTitle _ ->
       ( PackageVersionModuleDocsR ppkgName pversion modName
-      , Just $ pack $ drop 1 $ makeFragment typeOrValue (unpack declTitle)
+      , Just $ drop 1 $ makeFragment typeOrValue declTitle
       )
   where
   ppkgName = PathPackageName hrPkgName
@@ -157,12 +157,12 @@ searchForType ty = do
     compareQual (P.Qualified (Just mn1) a1) (P.Qualified (Just mn2) a2) = mn1 == mn2 && a1 == a2
     compareQual (P.Qualified _ a1) (P.Qualified _ a2) = a1 == a2
 
-renderComments :: String -> Html
-renderComments = Blaze.toMarkup . markdown opts . pack
+renderComments :: Text -> Html
+renderComments = Blaze.toMarkup . markdown opts
   where
     opts = def { allowRawHtml = False }
 
-renderCommentsNoLinks :: String -> Html
+renderCommentsNoLinks :: Text -> Html
 renderCommentsNoLinks =
   renderComments
   -- Wrapping in a div is necessary because of how XML arrows work

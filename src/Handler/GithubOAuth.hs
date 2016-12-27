@@ -126,11 +126,11 @@ keyGithubUser = "github_user"
 
 getSessionUser :: Handler (Maybe D.GithubUser)
 getSessionUser =
-  (map . map) (D.GithubUser . unpack) (lookupSession keyGithubUser)
+  (map . map) D.GithubUser (lookupSession keyGithubUser)
 
 setSessionUser :: D.GithubUser -> Handler ()
 setSessionUser =
-  setSession keyGithubUser . pack . D.runGithubUser
+  setSession keyGithubUser . D.runGithubUser
 
 -- | Session key for the access token for an authenticated github user.
 keyGithubAuthToken :: Text

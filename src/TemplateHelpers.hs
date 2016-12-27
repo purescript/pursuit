@@ -153,14 +153,14 @@ getHtmlRenderContext = do
 
 renderSourceLink' :: LinksContext -> P.SourceSpan -> Text
 renderSourceLink' LinksContext{..} (P.SourceSpan name start end) =
-  pack $ concat
-           [ githubBaseUrl
-           , "/blob/"
-           , ctxVersionTag
-           , "/"
-           , relativeToBase (unpack name)
-           , "#", fragment
-           ]
+  concat
+    [ githubBaseUrl
+    , "/blob/"
+    , ctxVersionTag
+    , "/"
+    , pack (relativeToBase (unpack name))
+    , "#", fragment
+    ]
   where
   (P.SourcePos startLine _) = start
   (P.SourcePos endLine _) = end
@@ -168,7 +168,7 @@ renderSourceLink' LinksContext{..} (P.SourceSpan name start end) =
 
   relativeToBase = intercalate "/" . dropWhile (/= "src") . splitOnPathSep
   githubBaseUrl = concat ["https://github.com/", user, "/", repo]
-  fragment = "L" ++ show startLine ++ "-L" ++ show endLine
+  fragment = "L" <> tshow startLine <> "-L" <> tshow endLine
 
 -- | Split a string on either unix-style "/" or Windows-style "\\" path
 -- | separators.

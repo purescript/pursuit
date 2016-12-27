@@ -64,17 +64,14 @@ getAllPackages = do
 tryStripPrefix :: String -> String -> String
 tryStripPrefix pre s = fromMaybe s (stripPrefix pre s)
 
-renderString :: RenderedCodeElement -> String
-renderString str = case str of
+renderText :: RenderedCodeElement -> Text
+renderText str = case str of
   Syntax s -> s
   Ident s _ -> s
   Ctor s _ -> s
   Kind s -> s
   Keyword s -> s
   Space -> " "
-
-renderText :: RenderedCodeElement -> Text
-renderText = T.pack . renderString
 
 fromText :: Text -> ByteString
 fromText = TE.encodeUtf8
@@ -88,7 +85,7 @@ createDatabase = do
           ( fromString (tryStripPrefix "purescript-" (toLower (runPackageName (bowerName pkgMeta))))
           , ( SearchResult (bowerName pkgMeta)
                          pkgVersion
-                         (fromMaybe "" (bowerDescription pkgMeta))
+                         (maybe "" pack (bowerDescription pkgMeta))
                          PackageResult
             , Nothing
             )
@@ -112,21 +109,21 @@ createDatabase = do
                 D.AliasDeclaration{} -> (Value, Nothing)
                 _ -> (Type, Nothing)
             declEntry =
-               ( fromString (toLower declTitle)
+               ( fromText (T.toLower declTitle)
                , ( SearchResult (bowerName pkgMeta)
                                 pkgVersion
                                 (fromMaybe "" declComments)
-                                (DeclarationResult typeOrValue (P.runModuleName modName) (fromString declTitle) (fmap (outputWith renderText . renderType) typeOrKind))
+                                (DeclarationResult typeOrValue (P.runModuleName modName) declTitle (fmap (outputWith renderText . renderType) typeOrKind))
                  , typeOrKind
                  )
                )
         declEntry : do
           D.ChildDeclaration{..} <- declChildren
-          return ( fromString (toLower cdeclTitle)
+          return ( fromText (T.toLower cdeclTitle)
                  , ( SearchResult (bowerName pkgMeta)
                                   pkgVersion
                                   (fromMaybe "" cdeclComments)
-                                  (DeclarationResult Value (P.runModuleName modName) (fromString cdeclTitle) Nothing)
+                                  (DeclarationResult Value (P.runModuleName modName) cdeclTitle Nothing)
                    , Nothing
                    )
                  )

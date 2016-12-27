@@ -42,7 +42,7 @@ getReadme ::
   Maybe GithubAuthToken ->
   D.GithubUser ->
   D.GithubRepo ->
-  String -> -- ref: commit, branch, etc.
+  Text -> -- ref: commit, branch, etc.
   m (Either ReadmeMissing Html)
 getReadme mauth user repo ref = do
   readme <- getReadme' mauth user repo ref
@@ -59,15 +59,15 @@ getReadme mauth user repo ref = do
   arrow =
     XMLArrows.stripH1
     >>> XMLArrows.makeRelativeLinksAbsolute
-          "a" "href" (buildGithubURL user repo ref)
+          "a" "href" (unpack (buildGithubURL user repo ref))
     >>> XMLArrows.makeRelativeLinksAbsolute
-          "img" "src" (buildRawGithubURL user repo ref)
+          "img" "src" (unpack (buildRawGithubURL user repo ref))
 
-buildGithubURL :: D.GithubUser -> D.GithubRepo -> String -> String
+buildGithubURL :: D.GithubUser -> D.GithubRepo -> Text -> Text
 buildGithubURL (D.GithubUser user) (D.GithubRepo repo) ref =
     concat ["https://github.com/", user, "/", repo, "/blob/", ref, "/"]
 
-buildRawGithubURL :: D.GithubUser -> D.GithubRepo -> String -> String
+buildRawGithubURL :: D.GithubUser -> D.GithubRepo -> Text -> Text
 buildRawGithubURL (D.GithubUser user) (D.GithubRepo repo) ref =
     concat ["https://raw.githubusercontent.com/", user, "/", repo, "/", ref, "/"]
 
@@ -76,7 +76,7 @@ getReadme' ::
   Maybe GithubAuthToken ->
   D.GithubUser ->
   D.GithubRepo ->
-  String -> -- ref: commit, branch, etc.
+  Text -> -- ref: commit, branch, etc.
   m (Either HttpException BL.ByteString)
 getReadme' mauth (D.GithubUser user) (D.GithubRepo repo) ref =
   let query = "ref=" ++ ref
@@ -95,7 +95,7 @@ getUser token =
     case val of
       A.Object obj ->
         case HashMap.lookup "login" obj of
-          Just (A.String t) -> Just $ unpack t
+          Just (A.String t) -> Just t
           _                 -> Nothing
       _            -> Nothing
 
@@ -113,8 +113,8 @@ getUser' auth =
 
 githubAPI ::
   (MonadCatch m, MonadIO m, HasHttpManager env, MonadReader env m) =>
-  [String] -> -- Path parts
-  String -> -- Query string
+  [Text] -> -- Path parts
+  Text -> -- Query string
   [(CI ByteString, ByteString)] -> -- Extra headers
   m (Either HttpException BL.ByteString)
 githubAPI path query extraHeaders = do
@@ -133,13 +133,14 @@ authHeader mauth =
 mediaTypeHtml :: ByteString
 mediaTypeHtml = "application/vnd.github.v3.html"
 
-parseGithubUrlWithQuery :: MonadThrow m => [String] -> String -> m Request
+parseGithubUrlWithQuery :: MonadThrow m => [Text] -> Text -> m Request
 parseGithubUrlWithQuery parts query =
-  parseUrlThrow $ concat [ "https://api.github.com/"
-                         , intercalate "/" parts
-                         , "?"
-                         , query
-                         ]
+  parseUrlThrow $ unpack $ concat
+    [ "https://api.github.com/"
+    , intercalate "/" parts
+    , "?"
+    , query
+    ]
 
 tryHttp :: MonadCatch m => m a -> m (Either HttpException a)
 tryHttp = Catch.try

@@ -8,6 +8,7 @@ import Data.List (find)
 import Data.Char (isUpper)
 import Data.Version
 import Data.Maybe (fromJust)
+import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Map as M
 import GHC.Generics (Generic)
@@ -25,7 +26,7 @@ data LinksContext = LinksContext
   , ctxResolvedDependencies :: [(PackageName, Version)]
   , ctxPackageName          :: PackageName
   , ctxVersion              :: Version
-  , ctxVersionTag           :: String
+  , ctxVersionTag           :: Text
   }
   deriving (Show, Eq, Ord)
 
@@ -38,7 +39,7 @@ instance NFData TypeOrValue
 
 data DocLink = DocLink
   { linkLocation    :: LinkLocation
-  , linkTitle       :: String
+  , linkTitle       :: Text
   , linkTypeOrValue :: TypeOrValue
   }
   deriving (Show, Eq, Ord)
@@ -60,7 +61,7 @@ data LinkLocation
 
 -- | Given a links context, a thing to link to (either a value or a type), and
 -- its containing module, attempt to create a DocLink.
-getLink :: LinksContext -> P.ModuleName -> String -> ContainingModule -> Maybe DocLink
+getLink :: LinksContext -> P.ModuleName -> Text -> ContainingModule -> Maybe DocLink
 getLink LinksContext{..} curMn target containingMod = do
   let bookmark' = (fromContainingModule curMn containingMod, target)
   bookmark <- find ((bookmark' ==) . ignorePackage) ctxBookmarks
@@ -83,7 +84,7 @@ getLink LinksContext{..} curMn target containingMod = do
             pkgVersion <- lookup pkgName ctxResolvedDependencies
             return $ DepsModule curMn pkgName pkgVersion destMn
 
-  typeOrValue = case target of
+  typeOrValue = case T.unpack target of
     [] ->
       Type -- should never happen, but this will do
     (t:_) ->
@@ -109,7 +110,7 @@ primPackageName = x
 
 primBookmarks :: [Bookmark]
 primBookmarks =
-  map (FromDep primPackageName . second (T.unpack . P.runProperName) . toPair . fst) $ M.toList P.primTypes
+  map (FromDep primPackageName . second P.runProperName . toPair . fst) $ M.toList P.primTypes
   where
   toPair (P.Qualified mn x) = (fromJust mn, x)
 

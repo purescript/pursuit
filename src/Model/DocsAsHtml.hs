@@ -21,7 +21,7 @@ module Model.DocsAsHtml (
 import Prelude
 import Control.Arrow (second)
 import Control.Category ((>>>))
-import Control.Monad (unless)
+import Control.Monad (unless, guard)
 import Data.Char (toUpper)
 import Data.Ord (comparing)
 import Data.Monoid ((<>))
@@ -34,6 +34,7 @@ import Data.String (fromString)
 import qualified Data.Map as M
 
 import qualified Data.Text.Lazy as LT
+import Data.Text (Text)
 import qualified Data.Text as T
 
 import Lucid hiding (for_)
@@ -74,9 +75,9 @@ data HtmlOutputModule a = HtmlOutputModule
 
 data HtmlRenderContext = HtmlRenderContext
   { currentModuleName :: P.ModuleName
-  , buildDocLink :: String -> ContainingModule -> Maybe DocLink
-  , renderDocLink :: DocLink -> T.Text
-  , renderSourceLink :: P.SourceSpan -> T.Text
+  , buildDocLink :: Text -> ContainingModule -> Maybe DocLink
+  , renderDocLink :: DocLink -> Text
+  , renderSourceLink :: P.SourceSpan -> Text
   }
 
 -- |
@@ -114,17 +115,22 @@ renderIndex LinksContext{..} = go ctxBookmarks
      >>> groupIndex getIndex renderEntry
      >>> map (second (ul_ . mconcat))
 
-  getIndex (_, ((toUpper -> c) :_))
-    | c `elem` ['A'..'Z'] = Just c
-    | otherwise = Nothing
-  getIndex _ = Nothing
+  getIndex (_, title) = do
+    c <- textHeadMay title
+    guard (toUpper c `elem` ['A'..'Z'])
+    pure c
+
+  textHeadMay t =
+    case T.length t of
+      0 -> Nothing
+      _ -> Just (T.index t 0)
 
   renderEntry (mn, title) =
     li_ $ do
-      let url = T.pack ((filePathFor mn `relativeTo` "index") ++ "#" ++ title)
+      let url = T.pack (filePathFor mn `relativeTo` "index") <> "#" <> title
       code_ (a_ [href_ url] (text title))
       sp
-      text ("(" ++ show mn ++ ")")
+      text ("(" <> P.runModuleName mn <> ")")
 
   groupIndex :: Ord i => (a -> Maybe i) -> (a -> b) -> [a] -> [(Maybe i, [b])]
   groupIndex f g =
@@ -138,7 +144,7 @@ renderIndex LinksContext{..} = go ctxBookmarks
 
 declAsHtml :: HtmlRenderContext -> Declaration -> Html ()
 declAsHtml r d@Declaration{..} = do
-  let declFragment = T.pack $ makeFragment (declTypeOrValue d) declTitle
+  let declFragment = makeFragment (declTypeOrValue d) declTitle
   div_ [class_ "decl", id_ (T.drop 1 declFragment)] $ do
     linkTo declFragment $
       h3_ (text declTitle)
@@ -174,7 +180,7 @@ renderChildren r xs = ul_ $ mapM_ go xs
   where
   go decl = item decl . code_ . codeAsHtml r . Render.renderChildDeclaration $ decl
   item decl = let fragment = makeFragment (cdeclTypeOrValue decl) (cdeclTitle decl)
-              in  li_ [id_ (T.pack (drop 1 fragment))]
+              in  li_ [id_ (T.drop 1 fragment)]
 
 cdeclTypeOrValue :: ChildDeclaration -> TypeOrValue
 cdeclTypeOrValue decl = case cdeclInfo decl of
@@ -203,7 +209,7 @@ codeAsHtml r = outputWith elemAsHtml
 
 renderLink :: HtmlRenderContext -> DocLink -> Html () -> Html ()
 renderLink r link@DocLink{..} =
-  a_ [ href_ (renderDocLink r link <> T.pack (fragmentFor link))
+  a_ [ href_ (renderDocLink r link <> fragmentFor link)
      , title_ fullyQualifiedName
      ]
   where
@@ -212,18 +218,18 @@ renderLink r link@DocLink{..} =
     LocalModule _ modName     -> fq modName linkTitle
     DepsModule _ _ _ modName  -> fq modName linkTitle
 
-  fq mn str = P.runModuleName mn <> "." <> T.pack str
+  fq mn str = P.runModuleName mn <> "." <> str
 
 -- TODO: escaping?
-makeFragment :: TypeOrValue -> String -> String
-makeFragment Type  = ("#t:" ++)
-makeFragment Value = ("#v:" ++)
+makeFragment :: TypeOrValue -> Text -> Text
+makeFragment Type  = ("#t:" <>)
+makeFragment Value = ("#v:" <>)
 
-fragmentFor :: DocLink -> String
+fragmentFor :: DocLink -> Text
 fragmentFor l = makeFragment (linkTypeOrValue l) (linkTitle l)
 
 linkToDeclaration :: HtmlRenderContext ->
-                     String ->
+                     Text ->
                      ContainingModule ->
                      Html () ->
                      Html ()
@@ -238,7 +244,7 @@ renderAlias :: P.Fixity -> FixityAlias -> Html ()
 renderAlias (P.Fixity associativity precedence) alias =
   p_ $ do
     toHtml $ "Operator alias for " <> P.showQualified showAliasName alias <> " "
-    em_ (text ("(" <> associativityStr <> " / precedence " <> show precedence <> ")"))
+    em_ (text ("(" <> associativityStr <> " / precedence " <> T.pack (show precedence) <> ")"))
   where
   showAliasName (Left valueAlias) = P.runProperName valueAlias
   showAliasName (Right typeAlias) = case typeAlias of
@@ -250,8 +256,8 @@ renderAlias (P.Fixity associativity precedence) alias =
     P.Infix  -> "non-associative"
 
 -- TODO: use GitHub API instead?
-renderComments :: String -> Html ()
-renderComments = toHtmlRaw . H.renderHtml . H.toHtml . Cheapskate.markdown opts . T.pack
+renderComments :: Text -> Html ()
+renderComments = toHtmlRaw . H.renderHtml . H.toHtml . Cheapskate.markdown opts
   where
   opts = def { Cheapskate.allowRawHtml = False }
 
@@ -275,7 +281,7 @@ filePathFor (P.ModuleName parts) = go parts
   go [] = "index.html"
   go (x : xs) = show x </> go xs
 
-text :: String -> Html ()
+text :: Text -> Html ()
 text = toHtml
 
 sp :: Html ()
@@ -284,7 +290,7 @@ sp = text " "
 withClass :: String -> Html () -> Html ()
 withClass className content = span_ [class_ (fromString className)] content
 
-linkTo :: T.Text -> Html () -> Html ()
+linkTo :: Text -> Html () -> Html ()
 linkTo href inner = a_ [href_ href] inner
 
 partitionChildren ::
