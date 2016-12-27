@@ -5,7 +5,7 @@
         <a .pursuit href=@{HomeR}>Pursuit
 
       <form .banner-item role="search" action=@{SearchR} method="get">
-        <label .sr-only for="q">Search for packages, types, and functions
+        <label .hide-visually for="q">Search for packages, types, and functions
         <input .form-control #search-input type="text" name="q" :isSearch:autofocus
           data-focus-placeholder="Search for packages, functions..."
           data-normal-placeholder="Search for packages, functions... (S to focus)"

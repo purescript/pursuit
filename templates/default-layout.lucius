@@ -25,7 +25,8 @@ body {
   clear: both;
 }
 
-.sr-only {
+/* Content hidden like will be read by a screen reader */
+.hide-visually {
   position: absolute;
   left: -10000px;
   top: auto;
@@ -233,7 +234,7 @@ ol li {
 }
 
 /* Tables */
-table {
+table { /* FIXME: possibly wrap table in div */
   /* Seemingly necessary for the ".col table" rule above to work */
   display: block;
 }
@@ -323,7 +324,7 @@ img {
   padding: 5px 0;
 }
 
-.help h3 {
+.help h3 { /* FIXME: target with class */
   margin-top: 16px;
 }
 
@@ -331,6 +332,7 @@ img {
 code, pre {
   color: #{Css.codeForeground};
   background-color: #{Css.codeBackground};
+  font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
   white-space: pre-wrap;
   word-wrap: break-word;
 }
