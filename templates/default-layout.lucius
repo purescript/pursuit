@@ -2,9 +2,7 @@
  * ========================================================================== */
 
 html {
-  overflow-y: scroll;
   box-sizing: border-box;
-  color: #000;
 }
 
 *, *:before, *:after {
@@ -13,6 +11,7 @@ html {
 
 body {
   background-color: #{Css.backgroundColor};
+  color: #000;
   font-family: "Roboto", sans-serif;
   line-height: 1.563em;
 }
@@ -31,7 +30,7 @@ body {
   clear: both;
 }
 
-/* Content hidden like will be read by a screen reader */
+/* Content hidden like this will still be read by a screen reader */
 .hide-visually {
   position: absolute;
   left: -10000px;
@@ -129,8 +128,8 @@ html, body {
  * ========================================================================== */
 
 :target {
-    border-radius: 5px;
-    background-color: #{Css.codeBackground};
+  background-color: #{Css.codeBackground};
+  border-radius: 5px;
 }
 
 a, a:visited {
@@ -148,6 +147,22 @@ a.weight-normal:hover {
   font-weight: normal;
 }
 
+h1 {
+  font-size: 3.814em;
+  font-weight: 300;
+  letter-spacing: -0.5px;
+  line-height: 1.125;
+}
+
+h2 {
+  font-size: 1.953em;
+  font-weight: normal;
+}
+
+h3 {
+  font-size: 1.563em;
+}
+
 hr {
   border: none;
   height: 1px;
@@ -156,6 +171,17 @@ hr {
 
 img {
   max-width: 100%;
+}
+
+p {
+  font-size: 1em;
+
+  /*
+  Useful for narrow screens, such as mobiles. Documentation often contains URLs
+  which would otherwise force the page to become wider, and force creation of
+  horizontal scrollbars. Yuck.
+  */
+  word-wrap: break-word;
 }
 
 
@@ -336,35 +362,8 @@ img {
  * Font sizes are based on a major third scale (1:1.250)
  * ========================================================================== */
 
-h1 {
-  font-size: 3.814em;
-  font-weight: 300;
-  letter-spacing: -0.5px;
-  line-height: 1.125;
-}
-
-h2 {
-  font-size: 1.953em;
-  font-weight: normal;
-}
-
-h3 {
-  font-size: 1.563em;
-}
-
 a h2 { /* FIXME: target with class name instead */
   margin-top: 0.83em;
-}
-
-p {
-  font-size: 1em;
-
-  /*
-  Useful for narrow screens, such as mobiles. Documentation often contains URLs
-  which would otherwise force the page to become wider, and force creation of
-  horizontal scrollbars. Yuck.
-  */
-  word-wrap: break-word;
 }
 
 ul {
