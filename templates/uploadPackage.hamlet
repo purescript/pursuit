@@ -1,4 +1,4 @@
-<div .col.col-main>
+<div .col.col--main>
   <h2>Upload a package
 
   <div .message .message--not-available>

@@ -1,4 +1,4 @@
-<div .col .col-single>
+<div .col>
   <h2>Search results: #{query}
   $if null results
     <p>No results for "#{query}", sorry.

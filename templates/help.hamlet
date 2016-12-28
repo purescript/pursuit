@@ -1,4 +1,4 @@
-<div .col.col-main>
+<div .col.col--main>
   <div .help>
     <h2>Help!
     <p>

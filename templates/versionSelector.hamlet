@@ -1,4 +1,4 @@
-<div .col.col-aside>
+<div .col.col--aside>
   <p .version-selector-container>
     <select id=#{versionSelectorIdent} .version-selector>
       <option id="placeholder" disabled="disabled">

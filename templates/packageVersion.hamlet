@@ -1,12 +1,12 @@
 <div .clearfix>
-  <div .col.col-main>
+  <div .col.col--main>
     <h1>
       <span .package-label>Package
       #{runPackageName pkgName}
 
   ^{versionSelector pkgName pkgVersion}
 
-<div .col.col-aside>
+<div .col.col--aside>
   <p>#{linkToGithub pkgGithub} on github
   <hr>
   $maybe licenses <- joinLicenses (bowerLicense pkgMeta)
@@ -27,7 +27,7 @@
   <p>uploaded by #{linkToGithubUser pkgUploader}
   <hr>
 
-<div .col.col-main>
+<div .col.col--main>
   #{renderReadme ereadme}
   <hr>
   <h2>

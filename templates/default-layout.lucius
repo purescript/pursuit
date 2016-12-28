@@ -13,7 +13,14 @@ body {
   background-color: #{Css.backgroundColor};
   color: #000;
   font-family: "Roboto", sans-serif;
+  font-size: 87.5%;
   line-height: 1.563em;
+}
+
+@media (min-width: 38em) {
+  body {
+    font-size: 100%;
+  }
 }
 
 
@@ -45,49 +52,41 @@ body {
  * ========================================================================== */
 
 .container {
-  max-width: 1060px;
+  display: block;
+  max-width: 66em;
   margin-left: auto;
   margin-right: auto;
-  padding: 7px;
+  padding-left: 20px;
+  padding-right: 20px;
 }
 
-.col h1,
-.col h2,
-.col h3,
-.col h4,
-.col h5,
-.col h6,
-.col p,
-.col ul,
-.col ol,
-.col pre,
-.col .version-selector.container,
-.col form,
-.col table,
 .col {
-  padding: 0 10px;
+  display: block;
+  width: 100%;
 }
 
-@media (min-width: 50em) {
-  .col {
-    width: 70%
+@media (min-width: 52em) {
+  .container {
+    padding-left: 30px;
+    padding-right: 30px;
   }
 
-  .col-single {
-    width: 100%;
-    margin-right: auto;
-    margin-left: auto;
-  }
-}
-
-@media (min-width: 70em) {
-  .col.col-main {
+  .col.col--main {
     float: left;
+    width: 67%
   }
 
-  .col.col-aside {
-    width: 30%;
+  .col.col--aside {
     float: right;
+    font-size: 87.5%;
+    padding-left: 30px;
+    width: 33%;
+  }
+}
+
+@media (min-width: 66em) {
+  .col.col--aside {
+    font-size: inherit;
   }
 }
 
@@ -288,7 +287,7 @@ p {
   font-size: 150%;
 }
 
-@media (min-width: 50em) {
+@media (min-width: 52em) {
   .top-banner .banner-item {
     float: left;
   }
@@ -368,6 +367,7 @@ a h2 { /* FIXME: target with class name instead */
 
 ul {
   list-style-type: none;
+  padding-left: 0;
 }
 
 ul li {
@@ -385,7 +385,7 @@ ul li:before {
 }
 
 ol {
-
+  padding-left: 0;
 }
 
 ol li {
@@ -398,9 +398,7 @@ h2.re-exports {
 
 
 /* Tables */
-table { /* FIXME: possibly wrap table in div */
-  /* Seemingly necessary for the ".col table" rule above to work */
-  display: block;
+table {
 }
 
 td, th {
