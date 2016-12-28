@@ -1,4 +1,5 @@
-<h2>
-  module #
-  <strong>#{insertBreaks mn}
+<h1>
+  <span .package-label>Module
+  #{insertBreaks mn}
+
 #{htmlDocs}

@@ -1,7 +1,9 @@
-<div .col.col--main>
+<div .col>
   <h1>
     <strong>Pursuit
     is the home of PureScript documentation.
+
+<div .col.col--main>
   <p>
     Pursuit hosts generated API documentation for PureScript packages.
   <p>

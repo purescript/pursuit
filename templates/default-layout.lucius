@@ -225,6 +225,36 @@ p {
 }
 
 
+/* Component: Page Title
+ * -------------------------------------------------------------------------- */
+
+.page-title {
+  border-bottom: 1px solid #{Css.darken20 Css.backgroundColor};
+  margin: 2.44em 0 3.05em;
+  padding-bottom: 1.25em;
+  position: relative;
+}
+
+.page-title__title {
+  float: left;
+  margin: 0;
+}
+
+.page-title__version-selector {
+  position: absolute;
+  top: -1em;
+  right: 0;
+}
+
+@media (min-width: 52em) {
+  .page-title__version-selector {
+    position: static;
+    float: right;
+    margin-top: 2.6em;
+  }
+}
+
+
 /* Component: Package Label
  * -------------------------------------------------------------------------- */
 
@@ -344,17 +374,7 @@ p {
 /* Component: Version Selector
  * -------------------------------------------------------------------------- */
 
-.version-selector {
-  float: left;
-  width: auto;
-  min-width: 20%;
-}
-
-@media (min-width: 70em) {
-  .version-selector {
-    margin-top: 1em;
-  }
-}
+.version-selector { /* No styles at the moment */ }
 
 
 /* Section: Typography

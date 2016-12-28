@@ -212,13 +212,12 @@ documentationPage ::
 documentationPage pkg@D.Package{..} widget =
   let pkgName = D.packageName pkg
   in [whamlet|
-    <div .clearfix>
-      <div .col.col--main>
-        <h1>
-          package
-          <a href=@{packageRoute pkg}>#{runPackageName pkgName}
-
-      ^{versionSelector pkgName pkgVersion}
+    <div .page-title .clearfix>
+      <h1 .page-title__title>
+        <span .package-label>Package
+        <a href=@{packageRoute pkg}>#{runPackageName pkgName}
+      <div .page-title__version-selector>
+        ^{versionSelector pkgName pkgVersion}
 
     <div .col.col--main>
       ^{widget}
