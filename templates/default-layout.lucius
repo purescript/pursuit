@@ -266,20 +266,18 @@ p {
 }
 
 .page-title__title {
-  margin: 0;
+  margin: 0 0 0 -0.05em; /* Visually align on left edge */
 }
 
-
-/* Component: Package Label
- * -------------------------------------------------------------------------- */
-
-.package-label {
+.page-title__label {
+  position: relative;
   color: #{Css.lightTypeColor};
-  display: block;
   font-size: 0.8rem;
+  font-weight: 300;
   letter-spacing: 1px;
-  margin-bottom: -0.41em;
+  margin-bottom: -0.8em;
   text-transform: uppercase;
+  z-index: 1;
 }
 
 

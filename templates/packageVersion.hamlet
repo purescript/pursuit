@@ -1,7 +1,6 @@
 <div .page-title .clearfix>
-  <h1 .page-title__title>
-    <span .package-label>Package
-    #{runPackageName pkgName}
+  <div .page-title__label>Package
+  <h1 .page-title__title>#{runPackageName pkgName}
 
 <div .col.col--main>
   ^{versionSelector pkgName pkgVersion}
