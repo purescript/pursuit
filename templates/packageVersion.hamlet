@@ -2,33 +2,31 @@
   <h1 .page-title__title>
     <span .package-label>Package
     #{runPackageName pkgName}
-  <div .page-title__version-selector>
-    ^{versionSelector pkgName pkgVersion}
-
-<div .col.col--aside>
-  <p>#{linkToGithub pkgGithub} on github
-  <hr>
-  $maybe licenses <- joinLicenses (bowerLicense pkgMeta)
-    <p>#{licenses} licensed
-    <hr>
-  <p>
-    $if null dependencies
-      <strong>No dependencies
-    $else
-      <strong>Dependencies
-      <ul>
-        $forall (depPkg, versionRange) <- dependencies
-          <li>
-            <div .deplink>
-              <a .deplink__link href=@{packageNameRoute depPkg}>#{runPackageName depPkg}
-              <span .deplink__version>#{renderVersionRange versionRange}
-    <hr>
-  <p>uploaded by #{linkToGithubUser pkgUploader}
-  <hr>
 
 <div .col.col--main>
+  ^{versionSelector pkgName pkgVersion}
+
+  <dl .grouped-list>
+    <dt .grouped-list__title>Repository
+    <dd .grouped-list__item>#{linkToGithub pkgGithub}
+    $maybe licenses <- joinLicenses (bowerLicense pkgMeta)
+      <dt .grouped-list__title>License
+      <dd .grouped-list__item>#{licenses}
+    <dt .grouped-list__title>Uploaded by
+    <dd .grouped-list__item>#{linkToGithubUser pkgUploader}
+
   #{renderReadme ereadme}
-  <hr>
-  <h2>
-    <strong>Modules
+
+<div .col.col--aside>
   #{moduleList}
+
+  <dl .grouped-list>
+    <dt .grouped-list__title>Dependencies
+    $if null dependencies
+      <dd .grouped-list__item>No dependencies
+    $else
+      $forall (depPkg, versionRange) <- dependencies
+        <dd .grouped-list__item>
+          <div .deplink>
+            <a .deplink__link href=@{packageNameRoute depPkg}>#{runPackageName depPkg}
+            <span .deplink__version>#{renderVersionRange versionRange}

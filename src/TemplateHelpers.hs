@@ -31,7 +31,7 @@ linkToGithub (user, repo) =
 joinLicenses :: [Text] -> Maybe Html
 joinLicenses ls
   | null ls   = Nothing
-  | otherwise = Just (strong (toHtml (intercalate "/" ls)))
+  | otherwise = Just (toHtml (intercalate "/" ls))
 
 renderVersionRange :: Bower.VersionRange -> Html
 renderVersionRange = toHtml . Bower.runVersionRange
@@ -71,9 +71,10 @@ renderModuleList pkg = do
   moduleLinks <- traverse (linkToModule pkg . D.Local) moduleNames
 
   withUrlRenderer [hamlet|
-    <ul .documentation-contents>
+    <dl .grouped-list>
+      <dt .grouped-list__title>Modules
       $forall link <- moduleLinks
-        <li>#{link}
+        <dd .grouped-list__item>#{link}
     |]
 
 -- | Insert <wbr> elements in between elements of a module name, in order to

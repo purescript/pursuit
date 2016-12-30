@@ -62,7 +62,16 @@ body {
 
 .col {
   display: block;
+  position: relative;
   width: 100%;
+}
+
+.col.col--main {
+  margin-bottom: 3.08em;
+}
+
+.col.col--aside {
+  margin-bottom: 2.44em;
 }
 
 @media (min-width: 52em) {
@@ -205,6 +214,28 @@ p {
 }
 
 
+/* Component: Grouped List
+ * -------------------------------------------------------------------------- */
+
+.grouped-list {
+  border-top: 1px solid #{Css.darken20 Css.backgroundColor};
+  margin: 0 0 2.44em 0;
+}
+
+.grouped-list__title {
+  color: #{Css.lightTypeColor};
+  font-size: 0.8em;
+  font-weight: 300;
+  letter-spacing: 1px;
+  margin: 0.8em 0 -0.1em 0;
+  text-transform: uppercase;
+}
+
+.grouped-list__item {
+  margin: 0;
+}
+
+
 /* Component: Message
  * -------------------------------------------------------------------------- */
 
@@ -229,29 +260,13 @@ p {
  * -------------------------------------------------------------------------- */
 
 .page-title {
-  border-bottom: 1px solid #{Css.darken20 Css.backgroundColor};
-  margin: 2.44em 0 3.05em;
+  margin: 4.77em 0 1.56em;
   padding-bottom: 1.25em;
   position: relative;
 }
 
 .page-title__title {
-  float: left;
   margin: 0;
-}
-
-.page-title__version-selector {
-  position: absolute;
-  top: -1em;
-  right: 0;
-}
-
-@media (min-width: 52em) {
-  .page-title__version-selector {
-    position: static;
-    float: right;
-    margin-top: 2.6em;
-  }
 }
 
 
@@ -374,7 +389,17 @@ p {
 /* Component: Version Selector
  * -------------------------------------------------------------------------- */
 
-.version-selector { /* No styles at the moment */ }
+.version-selector {
+  position: absolute;
+  top: 0.512em;
+  right: 0;
+}
+
+@media (min-width: 38em) {
+  .version-selector {
+    top: 1em;
+  }
+}
 
 
 /* Section: Typography
@@ -494,8 +519,4 @@ code, pre {
 
 .decl-inner {
     padding: 0 0.9em;
-}
-
-.documentation-contents li {
-    font-size: 1.3em;
 }
