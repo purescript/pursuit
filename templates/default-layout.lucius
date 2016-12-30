@@ -147,7 +147,8 @@ a, a:visited {
 }
 
 a:hover {
-  text-decoration: underline;
+  color: #{Css.linkActiveColor};
+  text-decoration: none;
 }
 
 h1 {
@@ -296,7 +297,7 @@ p {
 }
 
 .top-banner__logo:hover {
-  color: #DCAB4E; /* FIXME: define color from color scheme */
+  color: #{Css.linkColor};
   text-decoration: none;
 }
 
@@ -328,6 +329,15 @@ p {
 
 .top-banner__actions__item:first-child {
   padding-left: 0;
+}
+
+.top-banner__actions__item a,
+.top-banner__actions__item a:visited {
+  color: #{Css.darkForeground}
+}
+
+.top-banner__actions__item a:hover {
+  color: #{Css.linkColor}
 }
 
 @media (min-width: 38em) {
