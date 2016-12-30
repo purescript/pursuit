@@ -11,7 +11,7 @@
 
       <form .top-banner__form role="search" action=@{SearchR} method="get">
         <label .hide-visually for="search-input">Search for packages, types, and functions
-        <input #search-input type="text" name="search-input" :isSearch:autofocus
+        <input #search-input type="text" name="q" :isSearch:autofocus
           data-focus-placeholder="Search for packages, functions …"
           data-normal-placeholder="Search for packages, functions … (S to focus)"
           placeholder="Search for packages, types, functions … (S to focus)"
