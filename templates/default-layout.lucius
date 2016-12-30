@@ -287,64 +287,70 @@ p {
 .top-banner {
   background-color: #{Css.bannerBackground};
   color: #{Css.darkForeground};
-  font-weight: lighter;
-  line-height: 3.5em;
-  padding: 5px 0;
-  text-decoration: none;
-  vertical-align: middle;
+  font-weight: normal;
 }
 
-.top-banner a,
-.top-banner a:visited {
-  background-color: #{Css.bannerBackground};
+.top-banner__logo,
+.top-banner__logo:visited {
+  float: left;
   color: #{Css.darkForeground};
+  font-size: 2.44em;
+  font-weight: 300;
+  line-height: 90px;
+  margin: 0;
+}
+
+.top-banner__logo:hover {
+  color: #DCAB4E; /* FIXME: define color from color scheme */
   text-decoration: none;
-  font-weight: lighter;
-  padding: 5px 0;
 }
 
-.top-banner a:hover {
-  background-color: #{Css.lighten10 Css.bannerBackground};
+.top-banner__form {
+  margin-bottom: 1.25em;
 }
 
-.top-banner .pursuit {
-  font-size: 150%;
-}
-
-.top-banner form {
-  color: #{Css.bannerBackground};
-}
-
-.top-banner input {
-  width: 100%;
-  line-height: 1.5em;
-  padding: 0.2em;
+.top-banner__form input {
+  border: 1px solid #{Css.bannerBackground};
   border-radius: 3px;
+  color: #{Css.bannerBackground};
+  font-weight: 300;
+  line-height: 2;
+  padding: 0.21em 0.512em;
+  width: 100%;
 }
 
-.top-banner .banner-item {
-  padding: 0 17px;
+.top-banner__actions {
+  float: right;
+  text-align: right;
 }
 
-.top-banner .banner-item.upload {
-  font-size: 150%;
+.top-banner__actions__item {
+  display: inline-block;
+  line-height: 90px;
+  margin: 0;
+  padding-left: 1.25em;
 }
 
-@media (min-width: 52em) {
-  .top-banner .banner-item {
+.top-banner__actions__item:first-child {
+  padding-left: 0;
+}
+
+@media (min-width: 38em) {
+  .top-banner__logo {
     float: left;
+    width: 25%;
   }
 
-  .top-banner .banner-item.pursuit {
-    margin-right: 3em;
-  }
-
-  .top-banner form.banner-item {
+  .top-banner__form {
+    float: left;
+    line-height: 90px;
+    margin-bottom: 0;
     width: 50%;
   }
 
-  .top-banner .banner-item.upload {
+  .top-banner__actions {
     float: right;
+    width: 25%;
   }
 }
 
