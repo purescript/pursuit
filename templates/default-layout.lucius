@@ -150,11 +150,6 @@ a:hover {
   text-decoration: underline;
 }
 
-a.weight-normal,
-a.weight-normal:hover {
-  font-weight: normal;
-}
-
 h1 {
   font-size: 3.814em;
   font-weight: 300;
@@ -410,9 +405,6 @@ p {
  * Font sizes are based on a major third scale (1:1.250)
  * ========================================================================== */
 
-a h2 { /* FIXME: target with class name instead */
-  margin-top: 0.83em;
-}
 
 ul {
   list-style-type: none;
