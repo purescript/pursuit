@@ -188,6 +188,56 @@ p {
   word-wrap: break-word;
 }
 
+table {
+  border-bottom: 1px solid #{Css.darken20 Css.backgroundColor};
+  width: 100%;
+}
+
+td, th {
+  text-align: left;
+  padding: 0.41em 0.51em;
+}
+
+td {
+  border-top: 1px solid #{Css.darken20 Css.backgroundColor};
+}
+
+td:first-child, th:first-child {
+  padding-left: 0;
+}
+
+td:last-child, th:last-child {
+  padding-right: 0;
+}
+
+ul {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+ul li {
+  position: relative;
+  padding-left: 1.250em;
+}
+
+ul li:before {
+  position: absolute;
+  color: #{Css.lightGlyphColor};
+  content: "–";
+  display: inline-block;
+  margin-left: -1.250em;
+  width: 1.250em;
+}
+
+ol {
+  padding-left: 1.250em;
+}
+
+ol li {
+  position: relative;
+  padding-left: 0;
+}
+
 
 /* Section: Components
  * ========================================================================== */
@@ -415,49 +465,14 @@ p {
  * Font sizes are based on a major third scale (1:1.250)
  * ========================================================================== */
 
-
-ul {
-  list-style-type: none;
-  padding-left: 0;
 }
 
-ul li {
-  position: relative;
-  padding-left: 1.250em;
 }
 
-ul li:before {
-  position: absolute;
-  color: #{Css.lightGlyphColor};
-  content: "–";
-  display: inline-block;
-  margin-left: -1.250em;
-  width: 1.250em;
-}
-
-ol {
-  padding-left: 0;
-}
-
-ol li {
-}
 
 
 h2.re-exports {
   padding-top: 0.5em;
-}
-
-
-/* Tables */
-table {
-}
-
-td, th {
-  padding: 0.4em;
-}
-
-tbody tr:nth-child(odd) {
-  background-color: #eee;
 }
 
 
