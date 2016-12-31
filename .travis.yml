@@ -1,15 +1,15 @@
 # Adapted from FPComplete's Haskell Travis Config:
 #   https://www.fpcomplete.com/blog/2016/02/updated-haskell-travis-config
 
-sudo: false
-
 # Choose a lightweight base image; we provide our own tools.
 language: c
 
+# The following two lines seem to improve performance.
+dist: trusty
+sudo: required
+
 cache:
   directories:
-    - $HOME/.ghc
-    - $HOME/.cabal
     - $HOME/.stack
 
 addons:
