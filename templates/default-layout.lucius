@@ -5,7 +5,7 @@ html {
   box-sizing: border-box;
 }
 
-*, *:before, *:after {
+*, *::before, *::after {
   box-sizing: inherit;
 }
 
@@ -27,13 +27,13 @@ body {
 /* Section: Utility Classes
  * ========================================================================== */
 
-.clearfix:before,
-.clearfix:after {
+.clearfix::before,
+.clearfix::after {
   content: " ";
   display: table;
 }
 
-.clearfix:after {
+.clearfix::after {
   clear: both;
 }
 
@@ -220,7 +220,7 @@ ul li {
   padding-left: 1.250em;
 }
 
-ul li:before {
+ul li::before {
   position: absolute;
   color: #{Css.lightGlyphColor};
   content: "–";
