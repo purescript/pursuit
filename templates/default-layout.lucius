@@ -151,6 +151,68 @@ a:hover {
   text-decoration: none;
 }
 
+code, pre {
+  background-color: #{Css.codeBackground};
+  border-radius: 3px;
+  color: #{Css.codeForeground};
+  font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
+  font-size: 87.5%;
+}
+
+code {
+  padding: 0.2em 0;
+  margin: 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+code::before,
+code::after {
+  letter-spacing: -0.2em;
+  content: "\00a0";
+}
+
+a > code {
+  font-weight: normal;
+}
+
+a > code::before {
+  content: "🡒";
+  letter-spacing: 0.33em;
+}
+
+a:hover > code {
+  color: #{Css.linkColor};
+}
+
+pre {
+  margin-top: 0;
+  margin-bottom: 0;
+  padding: 1em 1.25rem; /* Using rem here to align with lists etc. */
+  overflow: auto;
+  white-space: pre;
+  word-wrap: normal;
+}
+
+pre code {
+  background-color: transparent;
+  border: 0;
+  font-size: 100%;
+  max-width: auto;
+  padding: 0;
+  margin: 0;
+  overflow: visible;
+  line-height: inherit;
+  white-space: pre;
+  word-break: normal;
+  word-wrap: normal;
+}
+
+pre code::before,
+pre code::after {
+  content: normal;
+}
+
 h1 {
   font-size: 3.814em;
   font-weight: 300;
@@ -174,22 +236,18 @@ hr {
 }
 
 img {
+  border-style: none;
   max-width: 100%;
 }
 
 p {
   font-size: 1em;
-
-  /*
-  Useful for narrow screens, such as mobiles. Documentation often contains URLs
-  which would otherwise force the page to become wider, and force creation of
-  horizontal scrollbars. Yuck.
-  */
-  word-wrap: break-word;
 }
 
 table {
   border-bottom: 1px solid #{Css.darken20 Css.backgroundColor};
+  border-collapse: collapse;
+  border-spacing: 0;
   width: 100%;
 }
 
@@ -461,25 +519,9 @@ ol li {
 }
 
 
-/* Section: Typography
- * Font sizes are based on a major third scale (1:1.250)
+/* Section: FIXME
+ * These styles should be cleaned up
  * ========================================================================== */
-
-}
-
-}
-
-
-
-h2.re-exports {
-  padding-top: 0.5em;
-}
-
-
-/* GitHub rendered README */
-.entry-content p:first-child {
-  margin-top: 0;
-}
 
 /* Help paragraphs */
 .help {
@@ -490,13 +532,10 @@ h2.re-exports {
   margin-top: 16px;
 }
 
-/* Code */
-code, pre {
-  color: #{Css.codeForeground};
-  background-color: #{Css.codeBackground};
-  font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
-  white-space: pre-wrap;
-  word-wrap: break-word;
+
+
+h2.re-exports {
+  padding-top: 0.5em;
 }
 
 .code-block {
@@ -504,30 +543,6 @@ code, pre {
   padding: 0.5em 1em;
 }
 
-/* Code highlighting */
-.keyword, .syntax, .pl-k {
-  color: #a0a0a0;
-}
-
-.pl-c1, .pl-en {
-  /* Not really sure what this is */
-  color: #39d;
-}
-
-.pl-s {
-  /* String literals */
-  color: #1a1;
-}
-
-.pl-cce {
-  /* String literal escape sequences */
-  color: #921;
-}
-
-.pl-smi {
-  /* type variables? */
-  color: #62b;
-}
 
 /* Everything else */
 .decl {
@@ -540,4 +555,82 @@ code, pre {
 
 .decl-inner {
     padding: 0 0.9em;
+}
+
+/* Code highlighting */
+.keyword, .syntax {
+  color: #a0a0a0;
+}
+
+
+/* Section: Markdown
+ * Github rendered README
+ * ========================================================================== */
+
+.markdown-body {
+  /*
+  Useful for narrow screens, such as mobiles. Documentation often contains URLs
+  which would otherwise force the page to become wider, and force creation of
+  horizontal scrollbars. Yuck.
+  */
+  word-wrap: break-word;
+}
+
+.markdown-body>*:first-child {
+  margin-top: 0 !important;
+}
+
+.markdown-body>*:last-child {
+  margin-bottom: 0 !important;
+}
+
+.markdown-body a:not([href]) {
+  color: inherit;
+  text-decoration: none;
+}
+
+.markdown-body blockquote {
+  margin: 0;
+  padding: 0 1em;
+  color: #777;
+  border-left: 0.25em solid #ddd;
+}
+
+.markdown-body blockquote>:first-child {
+  margin-top: 0;
+}
+
+.markdown-body blockquote>:last-child {
+  margin-bottom: 0;
+}
+
+.markdown-body .anchor {
+  /* We hide the anchor because the link doesn't point to a valid location */
+  display: none;
+}
+
+.markdown-body .pl-k {
+  /* Keyword */
+  color: #a0a0a0;
+}
+
+.markdown-body .pl-c1,
+.markdown-body .pl-en {
+  /* Not really sure what this is */
+  color: #39d;
+}
+
+.markdown-body .pl-s {
+  /* String literals */
+  color: #1a1;
+}
+
+.markdown-body .pl-cce {
+  /* String literal escape sequences */
+  color: #921;
+}
+
+.markdown-body .pl-smi {
+  /* type variables? */
+  color: #62b;
 }
