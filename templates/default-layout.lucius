@@ -135,6 +135,14 @@ html, body {
  * influence every component hereafter.
  * ========================================================================== */
 
+:target {
+  background-color: #{Css.codeBackground};
+  margin-left: -100%;
+  margin-right: -100%;
+  padding-left: 100%;
+  padding-right: 100%;
+}
+
 a, a:visited {
   color: #{Css.linkColor};
   text-decoration: none;
@@ -152,6 +160,11 @@ code, pre {
   color: #{Css.codeForeground};
   font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
   font-size: 87.5%;
+}
+
+:target code,
+:target pre {
+  background-color: #{Css.darken5 Css.codeBackground};
 }
 
 code {
@@ -552,14 +565,6 @@ ol li {
 
 .decl {}
 
-.decl:target {
-  background-color: #{Css.codeBackground};
-  margin-left: -100%;
-  margin-right: -100%;
-  padding-left: 100%;
-  padding-right: 100%;
-}
-
 .decl__title {
   position: relative;
   padding-bottom: 0.328em;
@@ -597,6 +602,12 @@ ol li {
   padding-left: 2.441em;
   text-indent: -2.441em;
   white-space: normal;
+}
+
+:target .decl__signature,
+:target .decl__signature code {
+  /* We want the background to be transparent, even when the parent is a target */
+  background-color: transparent;
 }
 
 .decl__body .keyword,
