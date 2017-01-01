@@ -14,7 +14,7 @@ body {
   color: #000;
   font-family: "Roboto", sans-serif;
   font-size: 87.5%;
-  line-height: 1.563em;
+  line-height: 1.563;
 }
 
 @media (min-width: 38em) {
@@ -213,21 +213,40 @@ h1 {
   font-weight: 300;
   letter-spacing: -0.5px;
   line-height: 1.125;
+  margin-top: 5.96rem;
+  margin-bottom: 1.25rem;
 }
 
 h2 {
   font-size: 1.953em;
   font-weight: normal;
+  line-height: 1.250;
+  margin-top: 3.052rem;
+  margin-bottom: 1rem;
 }
 
 h3 {
   font-size: 1.563em;
   font-weight: normal;
+  line-height: 1.250;
+  margin-top: 2.441rem;
+  margin-bottom: 1rem;
 }
 
 h4 {
   font-size: 1.25em;
   font-weight: normal;
+  margin-top: 2.441rem;
+  margin-bottom: 1rem;
+}
+
+h1 + h2,
+h1 + h3,
+h1 + h4,
+h2 + h3,
+h2 + h4,
+h3 + h4 {
+  margin-top: 1rem;
 }
 
 hr {
@@ -243,12 +262,16 @@ img {
 
 p {
   font-size: 1em;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
 }
 
 table {
   border-bottom: 1px solid #{Css.darken20 Css.backgroundColor};
   border-collapse: collapse;
   border-spacing: 0;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
   width: 100%;
 }
 
@@ -271,6 +294,8 @@ td:last-child, th:last-child {
 
 ul {
   list-style-type: none;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
   padding-left: 0;
 }
 
@@ -289,6 +314,8 @@ ul li::before {
 }
 
 ol {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
   padding-left: 1.250em;
 }
 
@@ -536,7 +563,7 @@ ol li {
 .decl__title {
   position: relative;
   padding-bottom: 0.328em;
-  margin: 2.44em 0 0.262em 0;
+  margin-bottom: 0.262em;
 }
 
 .decl__source {
