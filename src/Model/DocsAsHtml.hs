@@ -147,14 +147,17 @@ declAsHtml :: HtmlRenderContext -> Declaration -> Html ()
 declAsHtml r d@Declaration{..} = do
   let declFragment = makeFragment (declNamespace d) declTitle
   div_ [class_ "decl", id_ (T.drop 1 declFragment)] $ do
-    linkTo declFragment $
-      h3_ (text declTitle)
-    div_ [class_ "decl-inner"] $ do
+    h3_ [class_ "decl__title clearfix"] $ do
+      a_ [class_ "decl__anchor", href_ declFragment] "#"
+      text declTitle
+      for_ declSourceSpan (linkToSource r)
+
+    div_ [class_ "decl__body"] $ do
       case declInfo of
         AliasDeclaration fixity alias ->
           renderAlias fixity alias
         _ ->
-          code_ [class_ "code-block"] $
+          pre_ [class_ "decl__signature"] $ code_ $
             codeAsHtml r (Render.renderDeclaration d)
 
       for_ declComments renderComments
@@ -172,8 +175,10 @@ declAsHtml r d@Declaration{..} = do
       unless (null instances) $ do
         h4_ "Instances"
         renderChildren r instances
-
-      for_ declSourceSpan (linkToSource r)
+  where
+    linkToSource :: HtmlRenderContext -> P.SourceSpan -> Html ()
+    linkToSource r srcspan =
+      span_ [class_ "decl__source"] (linkTo (renderSourceLink r srcspan) (text "Source"))
 
 renderChildren :: HtmlRenderContext -> [ChildDeclaration] -> Html ()
 renderChildren _ [] = return ()
@@ -243,10 +248,6 @@ linkToDeclaration :: HtmlRenderContext ->
                      Html ()
 linkToDeclaration r target containMn =
   maybe id (renderLink r) (buildDocLink r target containMn)
-
-linkToSource :: HtmlRenderContext -> P.SourceSpan -> Html ()
-linkToSource r srcspan =
-  p_ (linkTo (renderSourceLink r srcspan) (text "Source"))
 
 renderAlias :: P.Fixity -> FixityAlias -> Html ()
 renderAlias (P.Fixity associativity precedence) alias =

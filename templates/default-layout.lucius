@@ -135,11 +135,6 @@ html, body {
  * influence every component hereafter.
  * ========================================================================== */
 
-:target {
-  background-color: #{Css.codeBackground};
-  border-radius: 5px;
-}
-
 a, a:visited {
   color: #{Css.linkColor};
   text-decoration: none;
@@ -227,6 +222,12 @@ h2 {
 
 h3 {
   font-size: 1.563em;
+  font-weight: normal;
+}
+
+h4 {
+  font-size: 1.25em;
+  font-weight: normal;
 }
 
 hr {
@@ -519,6 +520,63 @@ ol li {
 }
 
 
+/* Component: Declarations
+ * -------------------------------------------------------------------------- */
+
+.decl {}
+
+.decl:target {
+  background-color: #{Css.codeBackground};
+  margin-left: -100%;
+  margin-right: -100%;
+  padding-left: 100%;
+  padding-right: 100%;
+}
+
+.decl__title {
+  position: relative;
+  padding-bottom: 0.328em;
+  margin: 2.44em 0 0.262em 0;
+}
+
+.decl__source {
+  display: block;
+  float: right;
+  font-size: 1rem;
+  line-height: 2;
+}
+
+.decl__anchor, .decl__anchor:visited {
+  position: absolute;
+  left: -0.8em;
+  color: #{Css.lighten10 Css.lightGlyphColor};
+}
+
+.decl__anchor:hover {
+  color: #{Css.linkColor};
+}
+
+.decl__signature {
+  background-color: transparent;
+  border-radius: 0;
+  border-top: 1px solid #{Css.darken20 Css.backgroundColor};
+  border-bottom: 1px solid #{Css.darken20 Css.backgroundColor};
+  padding: 0.328em 0 0 0;
+}
+
+.decl__signature code {
+  display: block;
+  padding-left: 2.441em;
+  text-indent: -2.441em;
+  white-space: normal;
+}
+
+.decl__body .keyword,
+.decl__body .syntax {
+  color: #a0a0a0;
+}
+
+
 /* Section: FIXME
  * These styles should be cleaned up
  * ========================================================================== */
@@ -530,36 +588,6 @@ ol li {
 
 .help h3 { /* FIXME: target with class */
   margin-top: 16px;
-}
-
-
-
-h2.re-exports {
-  padding-top: 0.5em;
-}
-
-.code-block {
-  display: block;
-  padding: 0.5em 1em;
-}
-
-
-/* Everything else */
-.decl {
-    margin-top: 2em;
-}
-
-.decl h3 {
-    padding-top: 0.4em;
-}
-
-.decl-inner {
-    padding: 0 0.9em;
-}
-
-/* Code highlighting */
-.keyword, .syntax {
-  color: #a0a0a0;
 }
 
 
