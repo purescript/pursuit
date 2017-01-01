@@ -145,6 +145,7 @@ getPackageVersionDocsR (PathPackageName pkgName) (PathVersion version) =
 getPackageVersionModuleDocsR :: PathPackageName -> PathVersion -> Text -> Handler Html
 getPackageVersionModuleDocsR (PathPackageName pkgName) (PathVersion version) mnString =
   cacheHtml $ findPackage pkgName version $ \pkg@D.Package{..} -> do
+    moduleList <- renderModuleList pkg
     mhtmlDocs <- renderHtmlDocs pkg mnString
     case mhtmlDocs of
       Nothing -> notFound
@@ -152,8 +153,7 @@ getPackageVersionModuleDocsR (PathPackageName pkgName) (PathVersion version) mnS
         defaultLayout $ do
           let mn = P.moduleNameFromString mnString
           setTitle (toHtml (mnString <> " - " <> runPackageName pkgName))
-          documentationPage pkg $
-            $(widgetFile "packageVersionModuleDocs")
+          $(widgetFile "packageVersionModuleDocs")
 
 getBuiltinDocsR :: Text -> Handler Html
 getBuiltinDocsR mnString = do
@@ -206,22 +206,6 @@ versionSelector pkgName version = do
   let route = PackageAvailableVersionsR (PathPackageName pkgName)
   availableVersionsUrl <- getUrlRender <*> pure route
   $(widgetFile "versionSelector")
-
-documentationPage ::
-  D.VerifiedPackage -> WidgetT App IO () -> WidgetT App IO ()
-documentationPage pkg@D.Package{..} widget =
-  let pkgName = D.packageName pkg
-  in [whamlet|
-    <div .page-title .clearfix>
-      <div .page-title__label>Package
-      <h1 .page-title__title>
-        <a href=@{packageRoute pkg}>#{runPackageName pkgName}
-      <div .page-title__version-selector>
-        ^{versionSelector pkgName pkgVersion}
-
-    <div .col.col--main>
-      ^{widget}
-    |]
 
 uploadPackageForm :: Html -> MForm Handler (FormResult FileInfo, Widget)
 uploadPackageForm = renderDivs $ areq fileField settings Nothing

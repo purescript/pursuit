@@ -2,4 +2,17 @@
   <div .page-title__label>Module
   <h1 .page-title__title>#{insertBreaks mn}
 
-#{htmlDocs}
+<div .col.col--main>
+  ^{versionSelector pkgName pkgVersion}
+
+  <dl .grouped-list>
+    <dt .grouped-list__title>Package
+    <dd .grouped-list__item><a href=@{packageRoute pkg}>#{runPackageName pkgName}</a>
+    <dt .grouped-list__title>Repository
+    <dd .grouped-list__item>#{linkToGithub pkgGithub}
+
+  #{htmlDocs}
+
+
+<div .col.col--aside>
+  #{moduleList}
