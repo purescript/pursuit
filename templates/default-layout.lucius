@@ -137,10 +137,6 @@ html, body {
 
 :target {
   background-color: #{Css.codeBackground};
-  margin-left: -100%;
-  margin-right: -100%;
-  padding-left: 100%;
-  padding-right: 100%;
 }
 
 a, a:visited {
