@@ -226,9 +226,9 @@ makeFragment :: Namespace -> Text -> Text
 makeFragment ns = (prefix <>) . escape
   where
   prefix = case ns of
-    TypeNS -> "t:"
-    ValueNS -> "v:"
-    KindNS -> "k:"
+    TypeNS -> "#t:"
+    ValueNS -> "#v:"
+    KindNS -> "#k:"
 
   -- TODO
   escape = id
