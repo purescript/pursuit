@@ -337,6 +337,90 @@ ol li {
 /* Section: Components
  * ========================================================================== */
 
+/* Component: Badge
+ * -------------------------------------------------------------------------- */
+
+.badge {
+  position: relative;
+  top: -0.1em;
+  display: inline-block;
+  background-color: #000;
+  border-radius: 1.3em;
+  color: #fff;
+  font-size: 77%;
+  font-weight: bold;
+  line-height: 1.563;
+  text-align: center;
+  height: 1.5em;
+  width: 1.5em;
+}
+
+.badge.badge--package {
+  background-color: #{Css.linkColor};
+  letter-spacing: -0.1em;
+}
+
+.badge.badge--module {
+  background-color: #75B134;
+}
+
+
+/* Component: Declarations
+ * -------------------------------------------------------------------------- */
+
+.decl {}
+
+.decl__title {
+  position: relative;
+  padding-bottom: 0.328em;
+  margin-bottom: 0.262em;
+}
+
+.decl__source {
+  display: block;
+  float: right;
+  font-size: 64%;
+  position: relative;
+  top: 0.57em;
+}
+
+.decl__anchor, .decl__anchor:visited {
+  position: absolute;
+  left: -0.8em;
+  color: #{Css.lighten10 Css.lightGlyphColor};
+}
+
+.decl__anchor:hover {
+  color: #{Css.linkColor};
+}
+
+.decl__signature {
+  background-color: transparent;
+  border-radius: 0;
+  border-top: 1px solid #{Css.darken20 Css.backgroundColor};
+  border-bottom: 1px solid #{Css.darken20 Css.backgroundColor};
+  padding: 0.328em 0 0 0;
+}
+
+.decl__signature code {
+  display: block;
+  padding-left: 2.441em;
+  text-indent: -2.441em;
+  white-space: normal;
+}
+
+:target .decl__signature,
+:target .decl__signature code {
+  /* We want the background to be transparent, even when the parent is a target */
+  background-color: transparent;
+}
+
+.decl__body .keyword,
+.decl__body .syntax {
+  color: #a0a0a0;
+}
+
+
 /* Component: Dependency Link
  * -------------------------------------------------------------------------- */
 
@@ -508,35 +592,54 @@ ol li {
 /* Component: Search Results
  * -------------------------------------------------------------------------- */
 
-.search-result {
+.result {}
+
+.result.result--empty {
+  font-size: 1.25em;
+}
+
+.result__title {
+  font-size: 1.25em;
+  margin-bottom: 0.2rem;
+}
+
+.result__badge {
+  margin-left: -0.1em;
+}
+
+.result__body > *:first-child {
+  margin-top: 0!important;
+}
+
+.result__body > *:last-child {
+  margin-bottom: 0!important;
+}
+
+.result__signature {
+  background-color: transparent;
+  border-radius: 0;
+  border-top: 1px solid #{Css.darken20 Css.backgroundColor};
+  border-bottom: 1px solid #{Css.darken20 Css.backgroundColor};
+  padding: 0.328em 0 0 0;
+}
+
+.result__signature code {
   display: block;
-  background: #{Css.codeBackground};
-  padding: 0.2em 1em;
-  margin-bottom: 1em;
-  color: #000;
-  font-weight: normal;
-  border: 1px solid #{Css.codeBackground};
-  border-radius: 5px;
+  padding-left: 2.441em;
+  text-indent: -2.441em;
+  white-space: normal;
 }
 
-.search-result .highlight {
-  color: #{Css.linkColor};
+.result__actions {
+  margin-top: 0.2rem;
 }
 
-.search-result p:first-child {
-  margin-bottom: 0.5em;
+.result__actions__item {
+  font-size: 80%;
 }
 
-.search-result p:nth-child(2) {
-  margin-top: 0.5em;
-}
-
-.search-result:hover,
-.search-result:focus {
-  text-decoration: none;
-  background: #{Css.lighten5 Css.codeBackground};
-  border: 1px solid #{Css.codeForeground};
-  outline: none;
+.result__actions__item + .result__actions__item {
+  margin-left: 0.65em;
 }
 
 
@@ -553,62 +656,6 @@ ol li {
   .version-selector {
     top: 1em;
   }
-}
-
-
-/* Component: Declarations
- * -------------------------------------------------------------------------- */
-
-.decl {}
-
-.decl__title {
-  position: relative;
-  padding-bottom: 0.328em;
-  margin-bottom: 0.262em;
-}
-
-.decl__source {
-  display: block;
-  float: right;
-  font-size: 64%;
-  position: relative;
-  top: 0.57em;
-}
-
-.decl__anchor, .decl__anchor:visited {
-  position: absolute;
-  left: -0.8em;
-  color: #{Css.lighten10 Css.lightGlyphColor};
-}
-
-.decl__anchor:hover {
-  color: #{Css.linkColor};
-}
-
-.decl__signature {
-  background-color: transparent;
-  border-radius: 0;
-  border-top: 1px solid #{Css.darken20 Css.backgroundColor};
-  border-bottom: 1px solid #{Css.darken20 Css.backgroundColor};
-  padding: 0.328em 0 0 0;
-}
-
-.decl__signature code {
-  display: block;
-  padding-left: 2.441em;
-  text-indent: -2.441em;
-  white-space: normal;
-}
-
-:target .decl__signature,
-:target .decl__signature code {
-  /* We want the background to be transparent, even when the parent is a target */
-  background-color: transparent;
-}
-
-.decl__body .keyword,
-.decl__body .syntax {
-  color: #a0a0a0;
 }
 
 

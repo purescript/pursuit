@@ -1,28 +1,46 @@
-<div .col>
-  <h2>Search results: #{query}
+<div .col.col--main>
+  <h1>Search results
+
   $if null results
-    <p>No results for "#{query}", sorry.
+    <div .result.result--empty>
+      Your search for <strong>#{query}</strong> did not yield any results.
   $forall r <- results
-    <a .search-result href=#{fr $ routeResult r}>
+    <div .result>
+      <h3 .result__title>
+        $case hrInfo r
+          $of PackageResult
+            <span .result__badge.badge.badge--package title="Package">P
+            <a .result__link href=#{fr $ routeResult r}>
+              #{Bower.runPackageName $ hrPkgName r}
+          $of ModuleResult moduleName
+            <span .badge.badge--module title="Module">M
+            <a .result__link href=#{fr $ routeResult r}>
+              #{moduleName}
+          $of DeclarationResult _ _ name typ
+            <a .result__link href=#{fr $ routeResult r}>
+              #{name}
+
+    <div .result__body>
       $case hrInfo r
         $of PackageResult
-          <p>#{Bower.runPackageName $ hrPkgName r}
         $of ModuleResult moduleName
-          <p>#{moduleName} (#{Bower.runPackageName $ hrPkgName r})
         $of DeclarationResult _ _ name typ
-          <p>#{name}
-            $maybe typeValue <- typ
-              <span> ::
-              <code>#{typeValue}
+          $maybe typeValue <- typ
+            <pre .result__signature><code>#{name} :: #{typeValue}</code></pre>
 
-      <p>
-        #{renderCommentsNoLinks $ hrComments r}
+      #{renderCommentsNoLinks $ hrComments r}
 
+    <div .result__actions>
       $case hrInfo r
         $of PackageResult
-          <p>
-        $of ModuleResult _
-          <p>
-        $of DeclarationResult _ modName _ _
-          <p>
-            #{modName} (#{Bower.runPackageName $ hrPkgName r})
+        $of ModuleResult moduleName
+          <span .result__actions__item>
+            <span .badge.badge--package title="Package">P
+            #{Bower.runPackageName $ hrPkgName r}
+        $of DeclarationResult _ moduleName _ _
+          <span .result__actions__item>
+            <span .badge.badge--package title="Package">P
+            #{Bower.runPackageName $ hrPkgName r}
+          <span .result__actions__item>
+            <span .badge.badge--module title="Module">M
+            #{moduleName}
