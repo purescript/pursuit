@@ -12,7 +12,7 @@ module Model.DocsAsHtml (
   HtmlOutputModule(..),
   HtmlRenderContext(..),
   nullRenderContext,
-  declTypeOrValue,
+  declNamespace,
   packageAsHtml,
   moduleAsHtml,
   makeFragment
@@ -52,14 +52,15 @@ import qualified Language.PureScript.Docs.Render as Render
 
 import Model.DocLinks
 
-declTypeOrValue :: Declaration -> TypeOrValue
-declTypeOrValue decl = case declInfo decl of
-  ValueDeclaration{}       -> Value
-  AliasDeclaration{}       -> Value
-  DataDeclaration{}        -> Type
-  ExternDataDeclaration{}  -> Type
-  TypeSynonymDeclaration{} -> Type
-  TypeClassDeclaration{}   -> Type
+declNamespace :: Declaration -> Namespace
+declNamespace decl = case declInfo decl of
+  ValueDeclaration{}       -> ValueNS
+  AliasDeclaration{}       -> ValueNS
+  DataDeclaration{}        -> TypeNS
+  ExternDataDeclaration{}  -> TypeNS
+  TypeSynonymDeclaration{} -> TypeNS
+  TypeClassDeclaration{}   -> TypeNS
+  ExternKindDeclaration{}  -> KindNS
 
 data HtmlOutput a = HtmlOutput
   { htmlIndex     :: [(Maybe Char, a)]
@@ -144,7 +145,7 @@ renderIndex LinksContext{..} = go ctxBookmarks
 
 declAsHtml :: HtmlRenderContext -> Declaration -> Html ()
 declAsHtml r d@Declaration{..} = do
-  let declFragment = makeFragment (declTypeOrValue d) declTitle
+  let declFragment = makeFragment (declNamespace d) declTitle
   div_ [class_ "decl", id_ (T.drop 1 declFragment)] $ do
     linkTo declFragment $
       h3_ (text declTitle)
@@ -179,14 +180,14 @@ renderChildren _ [] = return ()
 renderChildren r xs = ul_ $ mapM_ go xs
   where
   go decl = item decl . code_ . codeAsHtml r . Render.renderChildDeclaration $ decl
-  item decl = let fragment = makeFragment (cdeclTypeOrValue decl) (cdeclTitle decl)
+  item decl = let fragment = makeFragment (cdeclNamespace decl) (cdeclTitle decl)
               in  li_ [id_ (T.drop 1 fragment)]
 
-cdeclTypeOrValue :: ChildDeclaration -> TypeOrValue
-cdeclTypeOrValue decl = case cdeclInfo decl of
-  ChildInstance _ _      -> Value
-  ChildDataConstructor _ -> Value
-  ChildTypeClassMember _ -> Value
+cdeclNamespace :: ChildDeclaration -> Namespace
+cdeclNamespace decl = case cdeclInfo decl of
+  ChildInstance{}        -> ValueNS
+  ChildDataConstructor{} -> ValueNS
+  ChildTypeClassMember{} -> ValueNS
 
 codeAsHtml :: HtmlRenderContext -> RenderedCode -> Html ()
 codeAsHtml r = outputWith elemAsHtml
@@ -221,13 +222,19 @@ renderLink r link@DocLink{..} =
 
   fq mn str = P.runModuleName mn <> "." <> str
 
--- TODO: escaping?
-makeFragment :: TypeOrValue -> Text -> Text
-makeFragment Type  = ("#t:" <>)
-makeFragment Value = ("#v:" <>)
+makeFragment :: Namespace -> Text -> Text
+makeFragment ns = (prefix <>) . escape
+  where
+  prefix = case ns of
+    TypeNS -> "t:"
+    ValueNS -> "v:"
+    KindNS -> "k:"
+
+  -- TODO
+  escape = id
 
 fragmentFor :: DocLink -> Text
-fragmentFor l = makeFragment (linkTypeOrValue l) (linkTitle l)
+fragmentFor l = makeFragment (linkNamespace l) (linkTitle l)
 
 linkToDeclaration :: HtmlRenderContext ->
                      Text ->

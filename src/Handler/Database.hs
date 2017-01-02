@@ -21,7 +21,7 @@ import qualified Data.Trie as Trie
 import Data.Version (Version, showVersion)
 import System.Directory (getDirectoryContents, getModificationTime, doesDirectoryExist)
 
-import Model.DocLinks (TypeOrValue(..))
+import Model.DocLinks (Namespace(..))
 import Web.Bower.PackageMeta (PackageName, bowerName, bowerDescription,
                               mkPackageName, runPackageName)
 import qualified Language.PureScript as P
@@ -103,17 +103,18 @@ createDatabase = do
             )
       moduleEntry : do
         D.Declaration{..} <- modDeclarations
-        let (typeOrValue, typeOrKind) =
+        let (ns, typeOrKind) =
+              -- TODO: should one branch return KindNS?
               case declInfo of
-                D.ValueDeclaration ty -> (Value, Just ty)
-                D.AliasDeclaration{} -> (Value, Nothing)
-                _ -> (Type, Nothing)
+                D.ValueDeclaration ty -> (ValueNS, Just ty)
+                D.AliasDeclaration{} -> (ValueNS, Nothing)
+                _ -> (TypeNS, Nothing)
             declEntry =
                ( fromText (T.toLower declTitle)
                , ( SearchResult (bowerName pkgMeta)
                                 pkgVersion
                                 (fromMaybe "" declComments)
-                                (DeclarationResult typeOrValue (P.runModuleName modName) declTitle (fmap (outputWith renderText . renderType) typeOrKind))
+                                (DeclarationResult ns (P.runModuleName modName) declTitle (fmap (outputWith renderText . renderType) typeOrKind))
                  , typeOrKind
                  )
                )
@@ -123,7 +124,7 @@ createDatabase = do
                  , ( SearchResult (bowerName pkgMeta)
                                   pkgVersion
                                   (fromMaybe "" cdeclComments)
-                                  (DeclarationResult Value (P.runModuleName modName) cdeclTitle Nothing)
+                                  (DeclarationResult ValueNS (P.runModuleName modName) cdeclTitle Nothing)
                    , Nothing
                    )
                  )

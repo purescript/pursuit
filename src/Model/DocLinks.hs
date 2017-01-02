@@ -29,17 +29,20 @@ data LinksContext = LinksContext
   }
   deriving (Show, Eq, Ord)
 
-data TypeOrValue
-  = Type
-  | Value
+-- | The NS suffix helps avoid clashes with constructors from the purescript
+-- compiler library.
+data Namespace
+  = TypeNS
+  | ValueNS
+  | KindNS
   deriving (Show, Eq, Enum, Ord, Generic)
 
-instance NFData TypeOrValue
+instance NFData Namespace
 
 data DocLink = DocLink
-  { linkLocation    :: LinkLocation
-  , linkTitle       :: Text
-  , linkTypeOrValue :: TypeOrValue
+  { linkLocation  :: LinkLocation
+  , linkTitle     :: Text
+  , linkNamespace :: Namespace
   }
   deriving (Show, Eq, Ord)
 
@@ -71,7 +74,7 @@ getLink LinksContext{..} curMn target containingMod = do
   return DocLink
     { linkLocation = location
     , linkTitle = target
-    , linkTypeOrValue = typeOrValue
+    , linkNamespace = namespace
     }
 
   where
@@ -100,14 +103,14 @@ getLink LinksContext{..} curMn target containingMod = do
     -- TODO: ensure the declaration exists in the builtin module too
     return $ BuiltinModule primMn
 
-  typeOrValue = case T.unpack target of
+  -- TODO: fix this, it's not correct.
+  namespace = case T.unpack target of
     [] ->
-      Type -- should never happen, but this will do
+      TypeNS -- should never happen, but this will do
     (t:_) ->
-      -- TODO: fix this, it's not correct.
       if isUpper t
-        then Type
-        else Value
+        then TypeNS
+        else ValueNS
 
 getLinksContext :: Package a -> LinksContext
 getLinksContext Package{..} =
