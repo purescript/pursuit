@@ -163,10 +163,12 @@ getBuiltinDocsR mnString = do
         setTitle (toHtml mnString)
         let mn = P.moduleNameFromString mnString
         let htmlDocs = primDocs
-        let widget = $(widgetFile "packageVersionModuleDocs")
         [whamlet|
-          <div .col.col-main>
-            ^{widget}
+          <div .col.col--main>
+            <div .page-title.clearfix>
+              <div .page-title__label>Builtin
+              <h1 .page-title__title>#{insertBreaks mn}
+            #{htmlDocs}
           |]
     _ ->
       defaultLayout404 $ [whamlet|
