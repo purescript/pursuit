@@ -462,7 +462,7 @@ ol li {
 
 .decl__body .keyword,
 .decl__body .syntax {
-  color: #a0a0a0;
+  color: #0B71B4;
 }
 
 
