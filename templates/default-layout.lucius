@@ -1,3 +1,31 @@
+/** ************************************************************************* *
+ ** Pursuit CSS
+ **
+ ** This CSS file is structured into several sections, from general to
+ ** specific, and (mostly) alphabetically within the sections.
+ **
+ ** Several global element styles are used. This is not encouraged and should
+ ** be kept to a minimum. If you want to add new styles you'll most likely
+ ** want to add a new CSS component. See the Components section for examples.
+ **
+ ** CSS components use three simple naming ideas from the BEM system:
+ **   - Block:    `.my-component`
+ **   - Element:  `.my-component__item`
+ **   - Modifier: `.my-component.my-component--highlighted`
+ **
+ **   Example:
+ **   <div .my-component>
+ **     <div .my-component__item>
+ **     <div .my-component__item>
+ **   ...
+ **   <div .my-component.my-component--highlighted>
+ **     <div .my-component__item>
+ **     <div .my-component__item>
+ **
+ ** Components can be nested.
+ ** ************************************************************************* */
+
+
 /* Section: Document Styles
  * ========================================================================== */
 
