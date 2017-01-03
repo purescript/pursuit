@@ -27,6 +27,10 @@ body {
 /* Section: Utility Classes
  * ========================================================================== */
 
+.clear-floats {
+  clear: both;
+}
+
 .clearfix::before,
 .clearfix::after {
   content: " ";
@@ -82,14 +86,13 @@ body {
 
   .col.col--main {
     float: left;
-    width: 67%
+    width: 63.655%; /* 66.6…% - 30px */
   }
 
   .col.col--aside {
     float: right;
     font-size: 87.5%;
-    padding-left: 30px;
-    width: 33%;
+    width: 33.333333%;
   }
 }
 
@@ -218,12 +221,19 @@ pre code::after {
 }
 
 h1 {
-  font-size: 3.814em;
+  font-size: 3.052em;
   font-weight: 300;
   letter-spacing: -0.5px;
   line-height: 1.125;
-  margin-top: 5.96rem;
+  margin-top: 1.563rem;
   margin-bottom: 1.25rem;
+}
+
+@media (min-width: 52em) {
+  h1 {
+    font-size: 3.814em;
+    margin-top: 5.96rem;
+  }
 }
 
 h2 {
@@ -320,6 +330,13 @@ ul li::before {
   display: inline-block;
   margin-left: -1.250em;
   width: 1.250em;
+}
+
+/* Tying this tightly to ul at the moment because it's a slight variation thereof */
+ul.ul--search li::before {
+  content: "⚲";
+  top: -0.2em;
+  transform: rotate(-45deg);
 }
 
 ol {
@@ -478,6 +495,44 @@ ol li {
 .message.message--not-available {
   background-color: #{Css.notAvailableBackgroundColor};
   border-color: #{Css.darken20 Css.notAvailableBackgroundColor};
+}
+
+
+/* Component: Multi Col
+ * Multiple columns side by side
+ * -------------------------------------------------------------------------- */
+
+.multi-col {
+  margin-bottom: 2.44em;
+}
+
+.multi-col__col {
+  display: block;
+  padding-right: 1em;
+  position: relative;
+  width: 100%;
+}
+
+@media (min-width: 38em) and (max-width: 51.999999em) {
+  .multi-col__col {
+    float: left;
+    width: 50%;
+  }
+
+  .multi-col__col:nth-child(2n+3) {
+    clear: both;
+  }
+}
+
+@media (min-width: 52em) {
+  .multi-col__col {
+    float: left;
+    width: 33.333333%;
+  }
+
+  .multi-col__col:nth-child(3n+4) {
+    clear: both;
+  }
 }
 
 
