@@ -42,7 +42,7 @@ getHomeR =
     let firstLetter :: PackageName -> Maybe FirstLetter
         firstLetter = fmap FirstLetter . headMay . stripIntro . runPackageName
 
-        stripIntro :: String -> String
+        stripIntro :: Text -> Text
         stripIntro s = fromMaybe s (stripPrefix "purescript-" s)
 
         pkgNamesByLetter :: [[PackageName]]
@@ -89,7 +89,7 @@ getPackageIndexR =
     provideRep . cacheJSON . map toJSON  $ pkgNames
   where
   pkgNames :: Handler [TL.Text]
-  pkgNames = map (pack . runPackageName) <$> getAllPackageNames
+  pkgNames = map (fromStrict . runPackageName) <$> getAllPackageNames
 
 postPackageIndexR :: Handler Value
 postPackageIndexR = do
@@ -151,7 +151,7 @@ getPackageVersionModuleDocsR (PathPackageName pkgName) (PathVersion version) mnS
       Just htmlDocs ->
         defaultLayout $ do
           let mn = P.moduleNameFromString mnString
-          setTitle (toHtml (mnString <> " - " <> pack (runPackageName pkgName)))
+          setTitle (toHtml (mnString <> " - " <> runPackageName pkgName))
           documentationPage pkg $
             $(widgetFile "packageVersionModuleDocs")
 

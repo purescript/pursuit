@@ -32,15 +32,15 @@ newtype PathPackageName =
 
 instance Read PathPackageName where
   readsPrec _ str =
-    case parsePackageName str of
+    case parsePackageName (pack str) of
       Right n -> [(PathPackageName n, "")]
       Left _ -> []
 
 instance PathPiece PathPackageName where
   toPathPiece =
-    T.pack . runPackageName . runPathPackageName
+    runPackageName . runPathPackageName
   fromPathPiece =
-    fmap PathPackageName . either (const Nothing) Just . parsePackageName . T.unpack
+    fmap PathPackageName . either (const Nothing) Just . parsePackageName
 
 newtype PathVersion =
   PathVersion { runPathVersion :: Version }

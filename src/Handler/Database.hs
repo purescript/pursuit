@@ -36,7 +36,7 @@ getAllPackageNames :: Handler [PackageName]
 getAllPackageNames = do
   dir <- getDataDir
   contents <- liftIO $ getDirectoryContents (dir ++ "/verified/")
-  return . sort . rights $ map mkPackageName contents
+  return . sort . rights $ map (mkPackageName . pack) contents
 
 getLatestPackages :: Handler [(PackageName, Version)]
 getLatestPackages = do
@@ -61,8 +61,8 @@ getAllPackages = do
   withVersion name = (map . map) (name,) (getLatestVersionFor name)
   lookupPackageMay = map (either (const Nothing) Just) . uncurry lookupPackage
 
-tryStripPrefix :: String -> String -> String
-tryStripPrefix pre s = fromMaybe s (stripPrefix pre s)
+tryStripPrefix :: Text -> Text -> Text
+tryStripPrefix pre s = fromMaybe s (T.stripPrefix pre s)
 
 renderText :: RenderedCodeElement -> Text
 renderText str = case str of
@@ -82,10 +82,10 @@ createDatabase = do
   return . fromListWithDuplicates $ do
     D.Package{..} <- pkgs
     let packageEntry =
-          ( fromString (tryStripPrefix "purescript-" (toLower (runPackageName (bowerName pkgMeta))))
+          ( fromText (tryStripPrefix "purescript-" (T.toLower (runPackageName (bowerName pkgMeta))))
           , ( SearchResult (bowerName pkgMeta)
                          pkgVersion
-                         (maybe "" pack (bowerDescription pkgMeta))
+                         (fromMaybe "" (bowerDescription pkgMeta))
                          PackageResult
             , Nothing
             )
@@ -179,7 +179,7 @@ insertPackage pkg@D.Package{..} = do
 packageDirFor :: PackageName -> Handler String
 packageDirFor pkgName = do
   dir <- getDataDir
-  return (dir ++ "/verified/" ++ runPackageName pkgName)
+  return (dir ++ "/verified/" ++ unpack (runPackageName pkgName))
 
 packageVersionFileFor :: PackageName -> Version -> Handler String
 packageVersionFileFor pkgName version = do

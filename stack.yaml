@@ -4,6 +4,12 @@ flags:
     dev: true
 packages:
 - '.'
+# Replace this once 0.10.5 is released
+- location:
+    git: https://github.com/purescript/purescript.git
+    commit: 16c6aaeb6d47d1f4f4c220b28793cd2b11c7bde8
+  extra-dep: true
 extra-deps:
 - barrier-0.1.1
 - purescript-0.10.4
+- bower-json-1.0.0.1

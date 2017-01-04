@@ -88,8 +88,8 @@ cacheText = cache LTE.encodeUtf8 "index.txt"
 -- available-versions JSON object, or the SVG badge.
 clearCache :: PackageName -> Version -> Handler ()
 clearCache pkgName version = do
-  $logDebug (pack $ "clearing cache for: " ++ runPackageName pkgName ++
-                    ", at version: " ++ showVersion version)
+  $logDebug ("clearing cache for: " <> runPackageName pkgName <>
+                    ", at version: " <> pack (showVersion version))
 
   -- TODO: hack, this should be improved. Not quite sure how, though.
   removeSpecific

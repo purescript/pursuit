@@ -28,7 +28,7 @@ linkToGithub (user, repo) =
   in a ! href (toValue ("https://github.com/" <> path)) $ do
     toHtml path
 
-joinLicenses :: [String] -> Maybe Html
+joinLicenses :: [Text] -> Maybe Html
 joinLicenses ls
   | null ls   = Nothing
   | otherwise = Just (strong (toHtml (intercalate "/" ls)))

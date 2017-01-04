@@ -103,8 +103,8 @@ library
                  , containers
                  , vector
                  , time
-                 , purescript >= 0.9.1
-                 , bower-json >= 0.8.1
+                 , purescript >= 0.10.0
+                 , bower-json >= 1.0.0.1
                  , lucid
                  , blaze-builder
                  , blaze-markup
