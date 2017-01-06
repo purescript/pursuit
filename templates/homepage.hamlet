@@ -1,30 +1,53 @@
-<div .col .col-main>
-  <h2>
+<div .col>
+  <h1>
     <strong>Pursuit
-    is the home of PureScript documentation.
-  <p>
-    Pursuit hosts generated API documentation for PureScript packages.
-  <p>
-    If you are a package author looking for information on how to publish your
-    packages, see the <a href=@{HelpR}>Help page</a>.
-  <p>
-    Pursuit is free and open-source software, and the code is hosted on GitHub.
-    Contributions are welcome: <a href="https://github.com/purescript/pursuit">https://github.com/purescript/pursuit</a>.
+    is the home of PureScript documentation
 
+<div .col.col--main>
+  <p>
+    Pursuit hosts API documentation for <a href="http://www.purescript.org/">PureScript</a> packages. It lets you search by package, module, and function names, as well as approximate type signatures.
+
+  <p>
+    To get started, have a look around the <a href="/packages/purescript-prelude">Prelude</a> – PureScript’s standard library – or try one of these example searches:
+
+  <ul .ul--search>
+    <li><a href="/search?q=map">map</a></li>
+    <li><a href="/search?q=%28a+->+b%29+->+f+a+->+f+b">(a -> b) -> f a -> f b</a></li>
+    <li><a href="/search?q=Data.List">Data.List</a></li>
+
+<div .col.col--aside>
+  <dl .grouped-list style="margin-top: 0.6em">
+    <dt .grouped-list__title>Publish
+    <dd .grouped-list__item>
+      If you are a package author looking for information on how to publish your
+      packages on Pursuit, see the <a href=@{HelpR}>Help page</a>.
+
+  <dl .grouped-list>
+    <dt .grouped-list__title>Contribute
+    <dd .grouped-list__item>
+      Pursuit is free and open-source software, and the code is hosted on GitHub.
+      Contributions are welcome: <a href="https://github.com/purescript/pursuit">https://github.com/purescript/pursuit</a>.
+
+<div .clear-floats>
+  <h2>Package Index
   $if null pkgNames
-    <h2>No packages uploaded yet.
+    <p>No packages uploaded yet.
   $else
-    <h2>Latest Uploads
-    <ul>
-      $forall (pkgName, version) <- latest
-        <li>
-          <a href=@{PackageVersionR (PathPackageName pkgName) (PathVersion version)}>
-            #{runPackageName pkgName} - #{showVersion version}
-    <h2>Packages:
-      $forall pkgs <- pkgNamesByLetter
-        $forall letter <- headMay pkgs >>= firstLetter
-          <h3>#{letter}
+    <div .multi-col .clearfix style="margin-top: -2.441em">
+      <div .multi-col__col>
+        <h3>Latest uploads
         <ul>
-          $forall pkgName <- pkgs
+          $forall (pkgName, version) <- latest
             <li>
-              <a href=@{PackageR (PathPackageName pkgName)}>#{runPackageName pkgName}
+              <div .deplink>
+                <a .deplink__link href=@{PackageVersionR (PathPackageName pkgName) (PathVersion version)}>#{runPackageName pkgName}
+                <span .deplink__version>#{showVersion version}
+
+      $forall pkgs <- pkgNamesByLetter
+        <div .multi-col__col>
+          $forall letter <- headMay pkgs >>= firstLetter
+            <h3>#{letter}
+          <ul>
+            $forall pkgName <- pkgs
+              <li>
+                <a href=@{PackageR (PathPackageName pkgName)}>#{runPackageName pkgName}

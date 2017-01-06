@@ -75,14 +75,14 @@ darkForeground = fromRGB 240 240 240
 linkColor :: HSV
 linkColor = fromRGB 196 149 58
 
+linkActiveColor :: HSV
+linkActiveColor = fromRGB 123 89 4
+
 errorBackgroundColor :: HSV
 errorBackgroundColor = fromRGB 255 240 240
 
 errorBorderColor :: HSV
 errorBorderColor = fromRGB 200 80 80
-
-successBackgroundColor :: HSV
-successBackgroundColor = fromRGB 150 240 150
 
 notAvailableBackgroundColor :: HSV
 notAvailableBackgroundColor = fromRGB 240 240 150
@@ -92,3 +92,9 @@ codeForeground = fromRGB 25 74 91
 
 codeBackground :: HSV
 codeBackground = fromRGB 241 245 249
+
+lightGlyphColor :: HSV
+lightGlyphColor = fromRGB 160 160 160
+
+lightTypeColor :: HSV
+lightTypeColor = fromRGB 102 102 102

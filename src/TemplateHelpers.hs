@@ -31,7 +31,7 @@ linkToGithub (user, repo) =
 joinLicenses :: [Text] -> Maybe Html
 joinLicenses ls
   | null ls   = Nothing
-  | otherwise = Just (strong (toHtml (intercalate "/" ls)))
+  | otherwise = Just (toHtml (intercalate "/" ls))
 
 renderVersionRange :: Bower.VersionRange -> Html
 renderVersionRange = toHtml . Bower.runVersionRange
@@ -71,9 +71,10 @@ renderModuleList pkg = do
   moduleLinks <- traverse (linkToModule pkg . D.Local) moduleNames
 
   withUrlRenderer [hamlet|
-    <ul .documentation-contents>
+    <dl .grouped-list>
+      <dt .grouped-list__title>Modules
       $forall link <- moduleLinks
-        <li>#{link}
+        <dd .grouped-list__item>#{link}
     |]
 
 -- | Insert <wbr> elements in between elements of a module name, in order to
@@ -105,18 +106,18 @@ renderReadme = \case
     html'
   Left APIRateLimited ->
     [shamlet|
-      <div .message .not-available>
+      <div .message .message--not-available>
         No readme available (due to rate limiting). Please try again later.
     |]
   Left ReadmeNotFound ->
     [shamlet|
-      <div .message .not-available>
+      <div .message .message--not-available>
         No readme found in the repository at this tag. If you are the maintainer,
         perhaps consider adding one in the next release.
     |]
   Left (OtherReason _) ->
     [shamlet|
-      <div .message .not-available>
+      <div .message .message--not-available>
         No readme available, for some unexpected reason (which has been logged).
         Perhaps
         <a href="https://github.com/purescript/pursuit/issues/new">

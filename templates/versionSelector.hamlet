@@ -1,5 +1,3 @@
-<div .col.col-aside>
-  <p .version-selector-container>
-    <select id=#{versionSelectorIdent} .version-selector>
-      <option id="placeholder" disabled="disabled">
-        Loading...
+<select id=#{versionSelectorIdent} .version-selector>
+  <option id="placeholder" disabled="disabled">
+    Loading …
