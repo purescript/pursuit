@@ -29,13 +29,13 @@
       Contributions are welcome: <a href="https://github.com/purescript/pursuit">https://github.com/purescript/pursuit</a>.
 
 <div .clear-floats>
+  <h2>Package Index
   $if null pkgNames
-    <h2>Package index
     <p>No packages uploaded yet.
   $else
-    <div .multi-col .clearfix>
+    <div .multi-col .clearfix style="margin-top: -2.441em">
       <div .multi-col__col>
-        <h3>Latest packages
+        <h3>Latest uploads
         <ul>
           $forall (pkgName, version) <- latest
             <li>
