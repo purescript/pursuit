@@ -177,8 +177,8 @@ declAsHtml r d@Declaration{..} = do
         renderChildren r instances
   where
     linkToSource :: HtmlRenderContext -> P.SourceSpan -> Html ()
-    linkToSource r srcspan =
-      span_ [class_ "decl__source"] (linkTo (renderSourceLink r srcspan) (text "Source"))
+    linkToSource ctx srcspan =
+      span_ [class_ "decl__source"] (linkTo (renderSourceLink ctx srcspan) (text "Source"))
 
 renderChildren :: HtmlRenderContext -> [ChildDeclaration] -> Html ()
 renderChildren _ [] = return ()
