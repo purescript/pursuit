@@ -31,6 +31,11 @@
 
 html {
   box-sizing: border-box;
+
+  /* This overflow rule prevents everything from shifting slightly to the side
+     when moving from a page which isn't large enough to generate a scrollbar
+     to one that is. */
+  overflow-y: scroll;
 }
 
 *, *::before, *::after {
