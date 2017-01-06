@@ -166,7 +166,7 @@ getBuiltinDocsR mnString = do
         [whamlet|
           <div .col.col--main>
             <div .page-title.clearfix>
-              <div .page-title__label>Builtin
+              <div .page-title__label>Module
               <h1 .page-title__title>#{insertBreaks mn}
             #{htmlDocs}
           |]
