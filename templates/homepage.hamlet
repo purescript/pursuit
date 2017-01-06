@@ -20,7 +20,7 @@
     <dt .grouped-list__title>Publish
     <dd .grouped-list__item>
       If you are a package author looking for information on how to publish your
-      packages, see the <a href=@{HelpR}>Help page</a>.
+      packages on Pursuit, see the <a href=@{HelpR}>Help page</a>.
 
   <dl .grouped-list>
     <dt .grouped-list__title>Contribute
