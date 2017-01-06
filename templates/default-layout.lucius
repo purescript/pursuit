@@ -1,6 +1,8 @@
 /** ************************************************************************* *
  ** Pursuit CSS
  **
+ ** STRUCTURE
+ **
  ** This CSS file is structured into several sections, from general to
  ** specific, and (mostly) alphabetically within the sections.
  **
@@ -23,6 +25,16 @@
  **     <div .my-component__item>
  **
  ** Components can be nested.
+ **
+ **
+ ** TYPOGRAPHY
+ **
+ ** Typographic choices for sizes, line-heights and margins are based on a
+ ** musical major third scale (4:5). This gives us a way to find numbers
+ ** and relationships between them that are perceived as harmonic.
+ **
+ ** To make use of this modular scale, follow this formula:
+ **   (5/4)^n | n ∈ [-6, 8]
  ** ************************************************************************* */
 
 
