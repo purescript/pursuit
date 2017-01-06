@@ -747,14 +747,15 @@ ol li {
  * -------------------------------------------------------------------------- */
 
 .version-selector {
-  position: absolute;
-  top: 0.512em;
-  right: 0;
+  margin-bottom: 0.8em;
 }
 
 @media (min-width: 38em) {
   .version-selector {
-    top: 1em;
+    position: absolute;
+    top: 0.8em;
+    right: 0;
+    margin-bottom: 0;
   }
 }
 
