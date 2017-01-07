@@ -7,9 +7,8 @@ import Import
 -- These handlers embed files in the executable at compile time to avoid a
 -- runtime dependency, and for efficiency.
 
--- TODO: favicon
 getFaviconR :: Handler TypedContent
-getFaviconR = notFound
+getFaviconR = sendFile "image/png" "config/favicon.png"
 
 getRobotsR :: Handler TypedContent
 getRobotsR = return $ TypedContent typePlain
