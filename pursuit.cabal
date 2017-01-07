@@ -105,7 +105,6 @@ library
                  , time
                  , purescript >= 0.10.0
                  , bower-json >= 1.0.0.1
-                 , lucid
                  , blaze-builder
                  , blaze-markup
                  , blaze-html

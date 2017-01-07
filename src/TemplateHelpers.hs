@@ -4,10 +4,8 @@ import Import hiding (span)
 import qualified Data.List.Split as List
 import Data.Version (Version)
 import Data.Text (splitOn)
-import qualified Data.Text.Lazy as LT
 import Text.Blaze.Html5 as H hiding (map, link)
 import Text.Blaze.Html5.Attributes as A hiding (span, name, start)
-import qualified Lucid
 import qualified Web.Bower.PackageMeta as Bower
 import qualified Language.PureScript as P
 import qualified Language.PureScript.Docs as D
@@ -132,28 +130,27 @@ renderHtmlDocs pkg mnString = do
   traverse render $ lookup mn (htmlModules docsOutput)
 
   where
-  render :: HtmlOutputModule LT.Text -> Handler Html
+  render :: HtmlOutputModule Html -> Handler Html
   render HtmlOutputModule{..} = do
-    let locals = preEscapedToHtml htmlOutputModuleLocals
     reexports <- traverse renderReExports htmlOutputModuleReExports
-    return (locals *> mconcat reexports)
+    return (htmlOutputModuleLocals *> mconcat reexports)
 
-  renderReExports :: (D.InPackage P.ModuleName, LT.Text) -> Handler Html
+  renderReExports :: (D.InPackage P.ModuleName, Html) -> Handler Html
   renderReExports (mn, decls) = do
     moduleLink <- linkToModule pkg mn
-    pure ((h2 ! class_ "re-exports" $
-            (text "Re-exports from " *> strong moduleLink))
-          *> preEscapedToHtml decls)
+    pure $ do
+      h2 ! class_ "re-exports" $ do
+        text "Re-exports from "
+        strong moduleLink
+      decls
 
 primDocs :: Html
 primDocs =
-  preEscapedToHtml $
-    Lucid.renderText $
-      htmlOutputModuleLocals $
-        snd $
-          moduleAsHtml
-            (nullRenderContext (P.moduleNameFromString "Prim"))
-            D.primDocsModule
+  htmlOutputModuleLocals $
+    snd $
+      moduleAsHtml
+        (nullRenderContext (P.moduleNameFromString "Prim"))
+        D.primDocsModule
 
 -- | Produce a Route for a given DocLink.
 docLinkRoute :: LinksContext -> P.ModuleName -> DocLink -> Route App

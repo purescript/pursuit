@@ -33,13 +33,11 @@ import Data.Default (def)
 import Data.String (fromString)
 import qualified Data.Map as M
 
-import qualified Data.Text.Lazy as LT
 import Data.Text (Text)
 import qualified Data.Text as T
 
-import Lucid hiding (for_)
-import qualified Text.Blaze.Html as H
-import qualified Text.Blaze.Html.Renderer.Text as H
+import Text.Blaze.Html5 as H hiding (map)
+import qualified Text.Blaze.Html5.Attributes as A
 import qualified Cheapskate
 
 import System.FilePath ((</>))
@@ -91,33 +89,33 @@ nullRenderContext mn = HtmlRenderContext
   , renderSourceLink = const ""
   }
 
-packageAsHtml :: (P.ModuleName -> HtmlRenderContext) -> Package a -> HtmlOutput LT.Text
+packageAsHtml :: (P.ModuleName -> HtmlRenderContext) -> Package a -> HtmlOutput Html
 packageAsHtml getHtmlCtx pkg@Package{..} =
-  fmap renderText (HtmlOutput indexFile modules)
+  HtmlOutput indexFile modules
   where
   linksCtx = getLinksContext pkg
   indexFile = renderIndex linksCtx
   modules = map (\m -> moduleAsHtml (getHtmlCtx (modName m)) m) pkgModules
 
-moduleAsHtml :: HtmlRenderContext -> Module -> (P.ModuleName, HtmlOutputModule (Html ()))
-moduleAsHtml r Module{..} = (modName, HtmlOutputModule html reexports)
+moduleAsHtml :: HtmlRenderContext -> Module -> (P.ModuleName, HtmlOutputModule Html)
+moduleAsHtml r Module{..} = (modName, HtmlOutputModule modHtml reexports)
   where
   renderDecl = declAsHtml r
-  html = do
+  modHtml = do
     for_ modComments renderComments
     for_ modDeclarations renderDecl
   reexports =
     map (second (foldMap renderDecl)) modReExports
 
-renderIndex :: LinksContext -> [(Maybe Char, Html ())]
+renderIndex :: LinksContext -> [(Maybe Char, Html)]
 renderIndex LinksContext{..} = go ctxBookmarks
   where
   go = takeLocals
      >>> groupIndex getIndex renderEntry
-     >>> map (second (ul_ . mconcat))
+     >>> map (second (ul . mconcat))
 
-  getIndex (_, title) = do
-    c <- textHeadMay title
+  getIndex (_, title_) = do
+    c <- textHeadMay title_
     guard (toUpper c `elem` ['A'..'Z'])
     pure c
 
@@ -126,10 +124,11 @@ renderIndex LinksContext{..} = go ctxBookmarks
       0 -> Nothing
       _ -> Just (T.index t 0)
 
-  renderEntry (mn, title) =
-    li_ $ do
-      let url = T.pack (filePathFor mn `relativeTo` "index") <> "#" <> title
-      code_ (a_ [href_ url] (text title))
+  renderEntry (mn, title_) =
+    li $ do
+      let url = T.pack (filePathFor mn `relativeTo` "index") <> "#" <> title_
+      code $
+        a ! A.href (v url) $ text title_
       sp
       text ("(" <> P.runModuleName mn <> ")")
 
@@ -143,21 +142,21 @@ renderIndex LinksContext{..} = go ctxBookmarks
           new = DList.snoc cur val
       in  M.insert idx new m
 
-declAsHtml :: HtmlRenderContext -> Declaration -> Html ()
+declAsHtml :: HtmlRenderContext -> Declaration -> Html
 declAsHtml r d@Declaration{..} = do
   let declFragment = makeFragment (declNamespace d) declTitle
-  div_ [class_ "decl", id_ (T.drop 1 declFragment)] $ do
-    h3_ [class_ "decl__title clearfix"] $ do
-      a_ [class_ "decl__anchor", href_ declFragment] "#"
+  H.div ! A.class_ "decl" ! A.id (v (T.drop 1 declFragment)) $ do
+    h3 ! A.class_ "decl__title clearfix" $ do
+      a ! A.class_ "decl__anchor" ! A.href (v declFragment) $ "#"
       text declTitle
       for_ declSourceSpan (linkToSource r)
 
-    div_ [class_ "decl__body"] $ do
+    H.div ! A.class_ "decl__body" $ do
       case declInfo of
         AliasDeclaration fixity alias ->
           renderAlias fixity alias
         _ ->
-          pre_ [class_ "decl__signature"] $ code_ $
+          pre ! A.class_ "decl__signature" $ code $
             codeAsHtml r (Render.renderDeclaration d)
 
       for_ declComments renderComments
@@ -165,28 +164,29 @@ declAsHtml r d@Declaration{..} = do
       let (instances, dctors, members) = partitionChildren declChildren
 
       unless (null dctors) $ do
-        h4_ "Constructors"
+        h4 "Constructors"
         renderChildren r dctors
 
       unless (null members) $ do
-        h4_ "Members"
+        h4 "Members"
         renderChildren r members
 
       unless (null instances) $ do
-        h4_ "Instances"
+        h4 "Instances"
         renderChildren r instances
   where
-    linkToSource :: HtmlRenderContext -> P.SourceSpan -> Html ()
+    linkToSource :: HtmlRenderContext -> P.SourceSpan -> Html
     linkToSource ctx srcspan =
-      span_ [class_ "decl__source"] (linkTo (renderSourceLink ctx srcspan) (text "Source"))
+      H.span ! A.class_ "decl__source" $
+        a ! A.href (v (renderSourceLink ctx srcspan)) $ text "Source"
 
-renderChildren :: HtmlRenderContext -> [ChildDeclaration] -> Html ()
+renderChildren :: HtmlRenderContext -> [ChildDeclaration] -> Html
 renderChildren _ [] = return ()
-renderChildren r xs = ul_ $ mapM_ go xs
+renderChildren r xs = ul $ mapM_ go xs
   where
-  go decl = item decl . code_ . codeAsHtml r . Render.renderChildDeclaration $ decl
+  go decl = item decl . code . codeAsHtml r . Render.renderChildDeclaration $ decl
   item decl = let fragment = makeFragment (cdeclNamespace decl) (cdeclTitle decl)
-              in  li_ [id_ (T.drop 1 fragment)]
+              in  li ! A.id (v (T.drop 1 fragment))
 
 cdeclNamespace :: ChildDeclaration -> Namespace
 cdeclNamespace decl = case cdeclInfo decl of
@@ -194,7 +194,7 @@ cdeclNamespace decl = case cdeclInfo decl of
   ChildDataConstructor{} -> ValueNS
   ChildTypeClassMember{} -> ValueNS
 
-codeAsHtml :: HtmlRenderContext -> RenderedCode -> Html ()
+codeAsHtml :: HtmlRenderContext -> RenderedCode -> Html
 codeAsHtml r = outputWith elemAsHtml
   where
   elemAsHtml e = case e of
@@ -213,11 +213,10 @@ codeAsHtml r = outputWith elemAsHtml
 
   linkToDecl = linkToDeclaration r
 
-renderLink :: HtmlRenderContext -> DocLink -> Html () -> Html ()
-renderLink r link@DocLink{..} =
-  a_ [ href_ (renderDocLink r link <> fragmentFor link)
-     , title_ fullyQualifiedName
-     ]
+renderLink :: HtmlRenderContext -> DocLink -> Html -> Html
+renderLink r link_@DocLink{..} =
+  a ! A.href (v (renderDocLink r link_ <> fragmentFor link_))
+    ! A.title (v fullyQualifiedName)
   where
   fullyQualifiedName = case linkLocation of
     SameModule                -> fq (currentModuleName r) linkTitle
@@ -244,16 +243,17 @@ fragmentFor l = makeFragment (linkNamespace l) (linkTitle l)
 linkToDeclaration :: HtmlRenderContext ->
                      Text ->
                      ContainingModule ->
-                     Html () ->
-                     Html ()
+                     Html ->
+                     Html
 linkToDeclaration r target containMn =
   maybe id (renderLink r) (buildDocLink r target containMn)
 
-renderAlias :: P.Fixity -> FixityAlias -> Html ()
+renderAlias :: P.Fixity -> FixityAlias -> Html
 renderAlias (P.Fixity associativity precedence) alias =
-  p_ $ do
+  p $ do
     toHtml $ "Operator alias for " <> P.showQualified showAliasName alias <> " "
-    em_ (text ("(" <> associativityStr <> " / precedence " <> T.pack (show precedence) <> ")"))
+    em $
+      text ("(" <> associativityStr <> " / precedence " <> T.pack (show precedence) <> ")")
   where
   showAliasName (Left valueAlias) = P.runProperName valueAlias
   showAliasName (Right typeAlias) = case typeAlias of
@@ -265,8 +265,8 @@ renderAlias (P.Fixity associativity precedence) alias =
     P.Infix  -> "non-associative"
 
 -- TODO: use GitHub API instead?
-renderComments :: Text -> Html ()
-renderComments = toHtmlRaw . H.renderHtml . H.toHtml . Cheapskate.markdown opts
+renderComments :: Text -> Html
+renderComments = H.toHtml . Cheapskate.markdown opts
   where
   opts = def { Cheapskate.allowRawHtml = False }
 
@@ -290,17 +290,14 @@ filePathFor (P.ModuleName parts) = go parts
   go [] = "index.html"
   go (x : xs) = show x </> go xs
 
-text :: Text -> Html ()
-text = toHtml
-
-sp :: Html ()
+sp :: Html
 sp = text " "
 
-withClass :: String -> Html () -> Html ()
-withClass className content = span_ [class_ (fromString className)] content
+v :: Text -> AttributeValue
+v = toValue
 
-linkTo :: Text -> Html () -> Html ()
-linkTo href inner = a_ [href_ href] inner
+withClass :: String -> Html -> Html
+withClass className content = H.span ! A.class_ (fromString className) $ content
 
 partitionChildren ::
   [ChildDeclaration] ->
