@@ -39,3 +39,32 @@ replaceLinks :: LA XmlTree XmlTree
 replaceLinks =
   processTopDown $
     setElemName (mkName "span") `HXT.when` (isElem >>> hasName "a")
+
+-- | Replace all <a> elements with relative URLs for href attributes with
+-- <span> elements.
+replaceRelativeLinks :: LA XmlTree XmlTree
+replaceRelativeLinks =
+  processTopDown $
+    setElemName (mkName "span") `HXT.when` isRelative
+
+  where
+  isRelative :: LA XmlTree XmlTree
+  isRelative =
+    isElem
+    >>> hasName "a"
+    >>> filterA (getAttrValue "href" >>> isA isRelativeURI)
+
+-- |
+-- See Section 4.2 of RFC 3986:
+-- https://tools.ietf.org/html/rfc3986#section-4.2
+--
+-- >>> isRelativeURI "http://example.com/" == False
+-- >>> isRelativeURI "mailto:me@example.com" == False
+-- >>> isRelativeURI "foo/bar" == True
+-- >>> isRelativeURI "/bar" == True
+-- >>> isRelativeURI "./bar" == True
+--
+isRelativeURI :: String -> Bool
+isRelativeURI =
+  takeWhile (/= '/')
+  >>> (\segment -> ':' `notElem` segment)

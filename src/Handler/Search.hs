@@ -9,10 +9,9 @@ import Data.Trie (elems, submap)
 import Data.Version (showVersion)
 import qualified Web.Bower.PackageMeta as Bower
 
-import Model.DocsAsHtml (makeFragment)
+import Model.DocsAsHtml (makeFragment, renderComments, renderMarkdown)
 import TemplateHelpers (getFragmentRender)
 
-import Cheapskate (allowRawHtml, markdown)
 import qualified Text.Blaze as Blaze
 import qualified Text.Blaze.Html5 as Html5
 import qualified Text.Blaze.Renderer.Text as BlazeT
@@ -157,14 +156,9 @@ searchForType ty = do
     compareQual (P.Qualified (Just mn1) a1) (P.Qualified (Just mn2) a2) = mn1 == mn2 && a1 == a2
     compareQual (P.Qualified _ a1) (P.Qualified _ a2) = a1 == a2
 
-renderComments :: Text -> Html
-renderComments = Blaze.toMarkup . markdown opts
-  where
-    opts = def { allowRawHtml = False }
-
 renderCommentsNoLinks :: Text -> Html
 renderCommentsNoLinks =
-  renderComments
+  renderMarkdown
   -- Wrapping in a div is necessary because of how XML arrows work
   >>> Html5.div
   >>> XMLArrows.run XMLArrows.replaceLinks

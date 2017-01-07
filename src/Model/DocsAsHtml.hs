@@ -15,7 +15,9 @@ module Model.DocsAsHtml (
   declNamespace,
   packageAsHtml,
   moduleAsHtml,
-  makeFragment
+  makeFragment,
+  renderMarkdown,
+  renderComments
 ) where
 
 import Prelude
@@ -49,6 +51,7 @@ import Language.PureScript.Docs.RenderedCode hiding (sp)
 import qualified Language.PureScript.Docs.Render as Render
 
 import Model.DocLinks
+import qualified XMLArrows
 
 declNamespace :: Declaration -> Namespace
 declNamespace decl = case declInfo decl of
@@ -264,11 +267,16 @@ renderAlias (P.Fixity associativity precedence) alias =
     P.Infixr -> "right-associative"
     P.Infix  -> "non-associative"
 
--- TODO: use GitHub API instead?
-renderComments :: Text -> Html
-renderComments = H.toHtml . Cheapskate.markdown opts
+-- | Render Markdown to HTML. Safe for untrusted input.
+renderMarkdown :: Text -> H.Html
+renderMarkdown = H.toMarkup . Cheapskate.markdown opts
   where
   opts = def { Cheapskate.allowRawHtml = False }
+
+renderComments :: Text -> H.Html
+renderComments =
+  renderMarkdown
+  >>> XMLArrows.run XMLArrows.replaceRelativeLinks
 
 -- | if `to` and `from` are both files in the current package, generate a
 -- FilePath for `to` relative to `from`.
