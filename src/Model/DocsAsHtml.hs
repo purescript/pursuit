@@ -56,6 +56,7 @@ import qualified XMLArrows
 declNamespace :: Declaration -> Namespace
 declNamespace decl = case declInfo decl of
   ValueDeclaration{}       -> ValueNS
+  -- TODO: This could be a type alias too.
   AliasDeclaration{}       -> ValueNS
   DataDeclaration{}        -> TypeNS
   ExternDataDeclaration{}  -> TypeNS
@@ -254,6 +255,7 @@ linkToDeclaration r target containMn =
 renderAlias :: P.Fixity -> FixityAlias -> Html
 renderAlias (P.Fixity associativity precedence) alias =
   p $ do
+    -- TODO: Render a link
     toHtml $ "Operator alias for " <> P.showQualified showAliasName alias <> " "
     em $
       text ("(" <> associativityStr <> " / precedence " <> T.pack (show precedence) <> ")")

@@ -3,6 +3,8 @@
 {-# LANGUAGE NoDisambiguateRecordFields #-}
 {-# LANGUAGE PackageImports #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
+-- We disable the orphan instance warning because mkYesodDispatch defines an
+-- orphan instance for the App type.
 module Application
     ( getApplicationDev
     , appMain
@@ -16,10 +18,8 @@ module Application
     ) where
 
 import Import
-import "monad-logger" Control.Monad.Logger
-  (liftLoc)
-import Language.Haskell.TH.Syntax
-  (qLocation)
+import "monad-logger" Control.Monad.Logger (liftLoc)
+import Language.Haskell.TH.Syntax (qLocation)
 import Control.Concurrent (forkIO)
 import Control.Parallel.Strategies (withStrategy, evalTraversable, rdeepseq)
 import qualified Data.Trie as Trie
