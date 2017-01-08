@@ -278,6 +278,8 @@ renderMarkdown = H.toMarkup . Cheapskate.markdown opts
 renderComments :: Text -> H.Html
 renderComments =
   renderMarkdown
+  -- We need to wrap it in a div because of how XMLArrows work
+  >>> H.div
   >>> XMLArrows.run XMLArrows.replaceRelativeLinks
 
 -- | if `to` and `from` are both files in the current package, generate a
