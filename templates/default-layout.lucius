@@ -202,7 +202,7 @@ code, pre {
   background-color: #{Css.codeBackground};
   border-radius: 3px;
   color: #{Css.codeForeground};
-  font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
+  font-family: "Roboto Mono", monospace;
   font-size: 87.5%;
 }
 
