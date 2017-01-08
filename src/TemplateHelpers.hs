@@ -9,9 +9,8 @@ import Text.Blaze.Html5.Attributes as A hiding (span, name, start)
 import qualified Web.Bower.PackageMeta as Bower
 import qualified Language.PureScript as P
 import qualified Language.PureScript.Docs as D
+import Language.PureScript.Docs.AsHtml
 
-import Model.DocsAsHtml
-import Model.DocLinks
 import GithubAPI (ReadmeMissing(..))
 import qualified GithubAPI
 
@@ -153,15 +152,15 @@ primDocs =
         D.primDocsModule
 
 -- | Produce a Route for a given DocLink.
-docLinkRoute :: LinksContext -> P.ModuleName -> DocLink -> Route App
-docLinkRoute LinksContext{..} srcModule link = case linkLocation link of
-  SameModule ->
+docLinkRoute :: D.LinksContext -> P.ModuleName -> D.DocLink -> Route App
+docLinkRoute D.LinksContext{..} srcModule link = case D.linkLocation link of
+  D.SameModule ->
     mkRoute ctxPackageName ctxVersion srcModule
-  LocalModule _ otherModule ->
+  D.LocalModule _ otherModule ->
     mkRoute ctxPackageName ctxVersion otherModule
-  DepsModule _ otherPackageName otherVersion otherModule ->
+  D.DepsModule _ otherPackageName otherVersion otherModule ->
     mkRoute otherPackageName otherVersion otherModule
-  BuiltinModule otherModule ->
+  D.BuiltinModule otherModule ->
     BuiltinDocsR (P.runModuleName otherModule)
   where
   mkRoute pkgName version modName =
@@ -175,17 +174,17 @@ getHtmlRenderContext = do
   renderUrl <- getUrlRender
   return $ \pkg currentMn ->
     let
-      linksContext = getLinksContext pkg
+      linksContext = D.getLinksContext pkg
     in
       HtmlRenderContext
         { currentModuleName = currentMn
-        , buildDocLink = getLink linksContext currentMn
+        , buildDocLink = D.getLink linksContext currentMn
         , renderDocLink = renderUrl . docLinkRoute linksContext currentMn
         , renderSourceLink = renderSourceLink' linksContext
         }
 
-renderSourceLink' :: LinksContext -> P.SourceSpan -> Text
-renderSourceLink' LinksContext{..} (P.SourceSpan name start end) =
+renderSourceLink' :: D.LinksContext -> P.SourceSpan -> Text
+renderSourceLink' D.LinksContext{..} (P.SourceSpan name start end) =
   concat
     [ githubBaseUrl
     , "/blob/"

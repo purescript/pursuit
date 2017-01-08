@@ -31,8 +31,6 @@ library
                      Handler.Utils
                      Import
                      Import.NoFoundation
-                     Model.DocLinks
-                     Model.DocsAsHtml
                      Settings
                      TemplateHelpers
                      TimeUtils

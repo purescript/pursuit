@@ -9,7 +9,7 @@ import Data.Trie (elems, submap)
 import Data.Version (showVersion)
 import qualified Web.Bower.PackageMeta as Bower
 
-import Model.DocsAsHtml (makeFragment, renderComments, renderMarkdown)
+import Language.PureScript.Docs.AsHtml (makeFragment, renderMarkdown)
 import TemplateHelpers (getFragmentRender)
 
 import qualified Text.Blaze as Blaze
@@ -55,7 +55,7 @@ getSearchR = do
 searchResultToJSON :: SearchResult -> Handler Value
 searchResultToJSON result@SearchResult{..} = do
   url <- getFragmentRender <*> pure (routeResult result)
-  let html = renderComments hrComments
+  let html = renderMarkdown hrComments
   return $
     object [ "package" .= hrPkgName
            , "version" .= showVersion hrPkgVersion
@@ -156,8 +156,8 @@ searchForType ty = do
     compareQual (P.Qualified (Just mn1) a1) (P.Qualified (Just mn2) a2) = mn1 == mn2 && a1 == a2
     compareQual (P.Qualified _ a1) (P.Qualified _ a2) = a1 == a2
 
-renderCommentsNoLinks :: Text -> Html
-renderCommentsNoLinks =
+renderMarkdownNoLinks :: Text -> Html
+renderMarkdownNoLinks =
   renderMarkdown
   -- Wrapping in a div is necessary because of how XML arrows work
   >>> Html5.div

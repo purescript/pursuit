@@ -21,13 +21,11 @@ import qualified Data.Trie as Trie
 import Data.Version (Version, showVersion)
 import System.Directory (getDirectoryContents, getModificationTime, doesDirectoryExist)
 
-import Model.DocLinks (Namespace(..))
 import Web.Bower.PackageMeta (PackageName, bowerName, bowerDescription,
                               mkPackageName, runPackageName)
 import qualified Language.PureScript as P
 import qualified Language.PureScript.Docs as D
-import Language.PureScript.Docs.RenderedCode.Render (renderType)
-import Language.PureScript.Docs.RenderedCode.Types (RenderedCodeElement(..), outputWith)
+import Language.PureScript.Docs.RenderedCode (renderType, RenderedCodeElement(..), Namespace(..), outputWith)
 
 import Handler.Utils
 import Handler.Caching (clearCache)
@@ -67,11 +65,9 @@ tryStripPrefix pre s = fromMaybe s (T.stripPrefix pre s)
 renderText :: RenderedCodeElement -> Text
 renderText str = case str of
   Syntax s -> s
-  Ident s _ -> s
-  Ctor s _ -> s
-  Kind s -> s
   Keyword s -> s
   Space -> " "
+  Symbol _ s _ -> s
 
 fromText :: Text -> ByteString
 fromText = TE.encodeUtf8
@@ -103,19 +99,17 @@ createDatabase = do
             )
       moduleEntry : do
         D.Declaration{..} <- modDeclarations
-        let (ns, typeOrKind) =
-              -- TODO: should one branch return KindNS?
-              case declInfo of
-                D.ValueDeclaration ty -> (ValueNS, Just ty)
-                D.AliasDeclaration{} -> (ValueNS, Nothing)
-                _ -> (TypeNS, Nothing)
+        let ty = case declInfo of
+                    D.ValueDeclaration t -> Just t
+                    _ -> Nothing
+            ns = D.declInfoNamespace declInfo
             declEntry =
                ( fromText (T.toLower declTitle)
                , ( SearchResult (bowerName pkgMeta)
                                 pkgVersion
                                 (fromMaybe "" declComments)
-                                (DeclarationResult ns (P.runModuleName modName) declTitle (fmap (outputWith renderText . renderType) typeOrKind))
-                 , typeOrKind
+                                (DeclarationResult ns (P.runModuleName modName) declTitle (fmap (outputWith renderText . renderType) ty))
+                 , ty
                  )
                )
         declEntry : do
@@ -124,7 +118,7 @@ createDatabase = do
                  , ( SearchResult (bowerName pkgMeta)
                                   pkgVersion
                                   (fromMaybe "" cdeclComments)
-                                  (DeclarationResult ValueNS (P.runModuleName modName) cdeclTitle Nothing)
+                                  (DeclarationResult ValueLevel (P.runModuleName modName) cdeclTitle Nothing)
                    , Nothing
                    )
                  )
