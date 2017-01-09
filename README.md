@@ -90,7 +90,7 @@ All configuration is done at startup via environment variables. The relevant
 code is in the Settings module.
 
 All configuration variable names start with `PURSUIT_` (eg,
-`PURSUIT_STATIC_DIR`). All configuration variables are optional; for
+`PURSUIT_APPROOT`). All configuration variables are optional; for
 development, it is fine to just run `stack exec pursuit` leaving them all
 unset.
   in.
