@@ -6,8 +6,6 @@
       <div .top-banner__actions>
         <div .top-banner__actions__item>
           <a href=@{HelpR}>Help
-        <div .top-banner__actions__item>
-          <a href=@{UploadPackageR}>Publish
 
       <form .top-banner__form role="search" action=@{SearchR} method="get">
         <label .hide-visually for="search-input">Search for packages, types, and functions

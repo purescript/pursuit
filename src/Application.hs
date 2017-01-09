@@ -31,7 +31,6 @@ import Network.Wai.Middleware.RequestLogger
   mkRequestLogger, outputFormat)
 import System.Log.FastLogger
   (defaultBufSize, newStdoutLoggerSet, toLogStr)
-import Crypto.Random
 import qualified Yesod.Core.Unsafe as Unsafe
 
 -- Import all relevant handler modules here.
@@ -41,7 +40,6 @@ import Handler.Database
 import Handler.Packages
 import Handler.Search
 import Handler.PackageBadges
-import Handler.GithubOAuth
 import Handler.Help
 
 -- This line actually creates our YesodDispatch instance. It is the second half
@@ -60,7 +58,6 @@ makeFoundation appSettings = do
     putStrLn $ "Starting in " <> mode <> " mode"
     appHttpManager <- newManager
     appLogger <- newStdoutLoggerSet defaultBufSize >>= makeYesodLogger
-    appCPRNG <- (cprgCreate <$> createEntropyPool) >>= newTVarIO
     appDatabase <- newTVarIO Trie.empty
     let foundation = App{..}
     void (startRegenThread foundation)

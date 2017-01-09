@@ -45,17 +45,12 @@ data AppSettings = AppSettings
     , appSkipCombining          :: Bool
     -- ^ Perform no stylesheet/script combining
 
-    -- Example app-specific configuration values.
     , appAnalytics              :: Maybe Text
     -- ^ Google Analytics code
     , appGithubAuthToken        :: Maybe GithubAuthToken
     -- ^ Github OAuth token (for fetching READMEs).
     , appDataDir                :: String
     -- ^ Directory where package data is kept.
-    , appGithubClientID         :: ByteString
-    -- ^ GitHub OAuth client ID
-    , appGithubClientSecret     :: ByteString
-    -- ^ GitHub OAuth client secret
     , appMinimumCompilerVersion :: Version
     -- ^ The minimum version of the compiler that may be used to generate data
     -- to be uploaded.
@@ -101,18 +96,13 @@ getAppSettings = do
         pErr  "[Error] Refusing to run in production mode."
         exitFailure
 
-  appGithubClientID     <- fromString <$> env' "GITHUB_CLIENT_ID"
-  appGithubClientSecret <- fromString <$> env' "GITHUB_CLIENT_SECRET"
-
   appMinimumCompilerVersion <- envP parseVersion' "MINIMUM_COMPILER_VERSION" .!= Version [0,0,0,0] []
 
   return AppSettings {..}
 
   where
-  env  = lookupEnvironment hackyRead . ("PURSUIT_" ++)
-  env' = getEnvironment    hackyRead . ("PURSUIT_" ++)
-
   envP p = lookupEnvironment p . ("PURSUIT_" ++)
+  env = envP hackyRead
 
   -- sorry about this
   hackyRead str = readMay str <|> readMay ("\"" ++ str ++ "\"")

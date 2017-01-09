@@ -3,8 +3,6 @@ module Handler.Packages where
 import Import
 import Text.Julius (rawJS)
 import Text.Blaze (ToMarkup, toMarkup)
-import Control.Monad.Except (ExceptT(..), runExceptT)
-import Control.Monad.Error.Class (throwError)
 import qualified Data.Char as Char
 import Data.Version
 import qualified Data.Text.Lazy as TL
@@ -17,7 +15,6 @@ import qualified Language.PureScript as P
 
 import Handler.Database
 import Handler.Caching
-import Handler.GithubOAuth
 import Handler.Utils
 import TemplateHelpers
 import qualified GithubAPI
@@ -208,58 +205,6 @@ versionSelector pkgName version = do
   let route = PackageAvailableVersionsR (PathPackageName pkgName)
   availableVersionsUrl <- getUrlRender <*> pure route
   $(widgetFile "versionSelector")
-
-uploadPackageForm :: Html -> MForm Handler (FormResult FileInfo, Widget)
-uploadPackageForm = renderDivs $ areq fileField settings Nothing
-  where
-  -- This should make the file selection dialog only display json files.
-  settings = (fromString "") { fsAttrs = [("accept", "application/json")] }
-
-renderUploadPackageForm :: Widget -> Enctype -> Maybe [Text] -> Handler Html
-renderUploadPackageForm widget enctype merror = do
-  fr <- getFragmentRender
-  defaultLayout $(widgetFile "uploadPackage")
-
-getUploadPackageR :: Handler Html
-getUploadPackageR = do
-  requireAuthentication $ \_ -> do
-    (widget, enctype) <- generateFormPost uploadPackageForm
-    renderUploadPackageForm widget enctype Nothing
-
-postUploadPackageR :: Handler Html
-postUploadPackageR =
-  requireAuthentication $ \user -> do
-    ((result, widget), enctype) <- runFormPost uploadPackageForm
-    either (renderUploadPackageForm widget enctype) pure =<< handleFormResult user result
-
-  where
-  handleFormResult ::
-    D.GithubUser ->
-    FormResult FileInfo ->
-    Handler (Either (Maybe [Text]) Html)
-  handleFormResult user result = runExceptT $ do
-    file <- ExceptT . pure . unpackResult $ result
-    bytes <- lift . runResourceT $ fileSource file $$ sinkLazy
-    value <- ExceptT . pure . bimap (Just . (:[]) . pack) id $ Aeson.eitherDecode bytes
-    pkg <- ExceptT . onError (displayJsonError value) $ parseUploadedPackage value
-
-    when (null (bowerLicense (D.pkgMeta pkg))) $
-      throwError (Just ["No license specified. Packages must specify their " ++
-                        "license in bower.json."])
-
-    let pkg' = D.verifyPackage user pkg
-    lift $ do
-      insertPackage pkg'
-      setCookieMessage "Your package was uploaded successfully."
-      redirect (packageRoute pkg')
-
-  unpackResult r = case r of
-    FormSuccess file ->
-      Right file
-    _ ->
-      Left Nothing
-
-  onError f = fmap (first (Just . f))
 
 -- | Try to parse a D.UploadedPackage from a JSON Value.
 parseUploadedPackage ::
