@@ -69,92 +69,6 @@ function initializeVersionSelector(args) {
   })
 }
 
-/* Initializes client-side code to handle events concerning the uploading form
- * on /upload:
- * - On change, attempt to parse the file as JSON on the client side first
- * - If successful, try to extract the name and version of the package, and
- *   display those (to help reassure the user that they selected the right
- *   file)
- * - If unsuccessful, display a warning.
- */
-function initializeUploadForm() {
-  function notUndefined(x) {
-    if (x === undefined) {
-      throw new Error('notUndefined: got undefined')
-    }
-    return x
-  }
-
-  var statusElement = document.getElementById('upload-form-status')
-
-  function onInputChange(event) {
-    var file = event.target.files[0]
-
-    // remove previous error messages. Having one rendered by the server on the
-    // page at the same time as one rendered client-side is a bit weird.
-    var errors = document.querySelectorAll('div.message.message--error')
-    Array.prototype.forEach.call(errors,
-      function(el) {
-        el.parentNode.removeChild(el)
-      })
-
-    var reader = new FileReader
-    reader.onload = function(e) {
-      var jsonString = e.target.result
-      var info = showPackageInformation(jsonString)
-      var el = info === null
-                ? invalidUpload
-                : info
-      replaceChild(statusElement, el)
-    }
-    reader.readAsText(file)
-  }
-
-  document.querySelector('input[type="file"]')
-    .addEventListener('change', onInputChange)
-
-  function tryGetPackageNameAndVersion(jsonString) {
-    try {
-      var package     = JSON.parse(jsonString)
-      var packageMeta = notUndefined(package.packageMeta)
-      var name        = notUndefined(packageMeta.name)
-      var version     = notUndefined(package.version)
-      return { name: name, version: version }
-    } catch(e) {
-      return null
-    }
-  }
-
-  var M = window.Markup
-
-  // String                  -- ^ encoded JSON
-  // -> Nullable HtmlElement -- ^ HTML to be displayed. Null means not JSON
-  //                         --   or missing required properties.
-  function showPackageInformation(str) {
-    var pkg = tryGetPackageNameAndVersion(str)
-    if (pkg === null) {
-      return null;
-    }
-
-    return M.p({class: 'message success'},
-      "You're uploading ", M.strong(pkg.name), " at version ",
-      M.strong(pkg.version), ".")
-  }
-
-  var invalidUpload = M.p({class: 'message error'},
-      "The file you selected could not be parsed. Make sure you select a file",
-      " which was produced by ", M.code("psc-publish"), ". See the ",
-      M.a({href: '/help#submitting-packages'}, "package uploading guide"),
-      " for details.")
-
-  function replaceChild(el, child) {
-    while (el.firstChild) {
-      el.removeChild(el.firstChild)
-    }
-    el.appendChild(child)
-  }
-}
-
 function initializeSearchForm() {
   var searchInput = document.getElementById('search-input')
 
@@ -207,7 +121,6 @@ function initializeSearchForm() {
 
 window.Pursuit = {
   initializeVersionSelector: initializeVersionSelector,
-  initializeUploadForm: initializeUploadForm,
   initializeSearchForm: initializeSearchForm,
 }
 })()

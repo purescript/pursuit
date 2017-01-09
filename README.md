@@ -90,15 +90,9 @@ All configuration is done at startup via environment variables. The relevant
 code is in the Settings module.
 
 All configuration variable names start with `PURSUIT_` (eg,
-`PURSUIT_STATIC_DIR`). Most environment variables are not required, and have
-sensible defaults if not specified. The ones which _are_ required are:
-
-* `PURSUIT_GITHUB_CLIENT_ID`: Github OAuth client id, for signing users in.
-* `PURSUIT_GITHUB_CLIENT_SECRET`: Github OAuth client secret, for signing users
+`PURSUIT_STATIC_DIR`). All configuration variables are optional; for
+development, it is fine to just run `stack exec pursuit` leaving them all
+unset.
   in.
 
 See `src/Settings.hs` for more details.
-
-One way to supply the application with environment variables (if you are on a
-system which uses Bash) is to use a script like the one in
-`config/development.env`.

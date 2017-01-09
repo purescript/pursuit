@@ -24,7 +24,6 @@ library
                      Handler.Caching
                      Handler.Common
                      Handler.Database
-                     Handler.GithubOAuth
                      Handler.Help
                      Handler.PackageBadges
                      Handler.Packages
@@ -117,7 +116,6 @@ library
                  , shakespeare
                  , colour
                  , hxt
-                 , crypto-random
                  , base64-bytestring
                  , http-types
                  , case-insensitive

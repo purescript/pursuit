@@ -15,7 +15,6 @@ import Text.Julius                 (rawJS)
 import Yesod.Core.Types            (Logger)
 import Yesod.EmbeddedStatic        (EmbeddedStatic, embedStaticContent)
 import qualified Yesod.Core.Unsafe as Unsafe
-import Crypto.Random
 
 import Web.Bower.PackageMeta (PackageName, parsePackageName, runPackageName)
 import qualified Data.Trie as Trie
@@ -112,8 +111,6 @@ data App = App
     -- ^ Settings for static file serving.
     , appHttpManager    :: Manager
     , appLogger         :: Logger
-    , appCPRNG          :: TVar SystemRNG
-    -- ^ Random number generator, used for OAuth
     , appDatabase       :: TVar (Trie.Trie [(SearchResult, Maybe P.Type)])
     }
 
@@ -227,16 +224,6 @@ substituteVersion route version' =
       PackageVersionModuleDocsR pkgName version modName
     other ->
       other
-
--- | Generate the given number of random bytes.
-generateBytes :: Int -> Handler ByteString
-generateBytes len = do
-  genVar <- appCPRNG <$> getYesod
-  liftIO $ atomically $ do
-    gen <- readTVar genVar
-    let (bytes, gen') = cprgGenerate len gen
-    writeTVar genVar gen'
-    return bytes
 
 -- | Check whether the current route satisfies a predicate
 testCurrentRoute :: (Route App -> Bool) -> Handler Bool
