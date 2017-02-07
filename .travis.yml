@@ -24,7 +24,8 @@ before_install:
 
 
 install:
-  - stack --no-terminal -j1 --install-ghc build --only-dependencies
+  - timeout 40m stack --no-terminal -j1 --install-ghc build --only-dependencies || true
+  # - stack --no-terminal -j1 --install-ghc build --only-dependencies
 
 script:
   - true
