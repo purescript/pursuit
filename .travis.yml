@@ -23,11 +23,7 @@ before_install:
   - curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
 
 script:
-  - echo "Building dependencies with a timeout of 40 minutes:"
-  - echo "(Note that a timeout is signaled by an exit code of 124)"
-  - timeout 40m stack --no-terminal -j1 --install-ghc build --only-dependencies
-  - echo "Installed dependencies successfully."
-  - stack --no-terminal -j1 build --flag pursuit:-dev --pedantic
+  - ./travis-script.sh
 
 notifications:
   email: true
