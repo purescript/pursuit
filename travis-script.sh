@@ -10,7 +10,7 @@ case "$ret" in
     ;;
   124)
     echo "Timed out while installing dependencies."
-    echo "Try restarting the build."
+    echo "Try building again by pushing a new commit."
     exit 1
     ;;
   *)
