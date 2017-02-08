@@ -19,7 +19,6 @@ import qualified Yesod.Core.Unsafe as Unsafe
 import Web.Bower.PackageMeta (PackageName, parsePackageName, runPackageName)
 import qualified Data.Trie as Trie
 import Data.Version
-import Model.DocLinks (Namespace(..))
 import qualified Css
 import qualified Language.PureScript as P
 import qualified Language.PureScript.Docs as D
@@ -73,7 +72,7 @@ data SearchResultInfo
   = PackageResult
   | ModuleResult Text
   -- ^ Module name
-  | DeclarationResult Namespace Text Text (Maybe Text)
+  | DeclarationResult D.Namespace Text Text (Maybe Text)
   -- ^ Module name & declaration title & type if value
   deriving (Show, Eq, Generic)
 

@@ -28,7 +28,7 @@
           $maybe typeValue <- typ
             <pre .result__signature><code>#{name} :: #{typeValue}</code></pre>
 
-      #{renderCommentsNoLinks $ hrComments r}
+      #{renderMarkdownNoLinks $ hrComments r}
 
     <div .result__actions>
       $case hrInfo r
