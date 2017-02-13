@@ -85,15 +85,14 @@ getAppSettings = do
   appGithubAuthToken <- map (GithubAuthToken . fromString) <$> env "GITHUB_AUTH_TOKEN"
   when (isNothing appGithubAuthToken) $
     let message = "No GitHub auth token configured (environment variable is: PURSUIT_GITHUB_AUTH_TOKEN)"
-        pErr = hPutStrLn stderr :: Text -> IO ()
     in if isDevelopment
       then do
-        pErr ("[Warn] " <> message)
-        pErr  "[Warn] Requests to the GitHub API will be performed with no authentication."
-        pErr  "[Warn] This will probably result in rate limiting."
+        sayErr ("[Warn] " <> message)
+        sayErr  "[Warn] Requests to the GitHub API will be performed with no authentication."
+        sayErr  "[Warn] This will probably result in rate limiting."
       else do
-        pErr ("[Error] " <> message)
-        pErr  "[Error] Refusing to run in production mode."
+        sayErr ("[Error] " <> message)
+        sayErr  "[Error] Refusing to run in production mode."
         exitFailure
 
   appMinimumCompilerVersion <- envP parseVersion' "MINIMUM_COMPILER_VERSION" .!= Version [0,0,0,0] []

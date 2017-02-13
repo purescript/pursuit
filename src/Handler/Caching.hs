@@ -13,9 +13,7 @@ module Handler.Caching
 
 import Import
 import Data.Version (Version, showVersion)
-import qualified Data.ByteString.Lazy as LB
 import qualified Data.Text.Lazy as LT
-import qualified Data.Text.Lazy.Encoding as LTE
 import Text.Blaze.Html.Renderer.Utf8 (renderHtml)
 import Text.Blaze.Svg11 (Svg)
 import Text.Blaze.Svg.Renderer.Utf8 (renderSvg)
@@ -40,7 +38,7 @@ data OkToCache
 -- never reached if the inner handler generates an internal server error, or a
 -- client error such as a 404 (in which case the response should not be
 -- cached).
-cacheConditional :: (a -> LB.ByteString) -> String -> Handler (OkToCache, a) -> Handler a
+cacheConditional :: (a -> ByteString) -> String -> Handler (OkToCache, a) -> Handler a
 cacheConditional toLbs basename action = do
   (status, body) <- action
   case status of
@@ -60,24 +58,24 @@ cacheConditional toLbs basename action = do
 
 -- | A variant of cache' to be used when the response is always cacheable
 -- (assuming the inner handler completes and returns a value).
-cache :: (a -> LB.ByteString) -> String -> Handler a -> Handler a
+cache :: (a -> ByteString) -> String -> Handler a -> Handler a
 cache toLbs basename action =
   cacheConditional toLbs basename ((OkToCache,) <$> action)
 
 cacheHtml :: Handler Html -> Handler Html
-cacheHtml = cache renderHtml "index.html"
+cacheHtml = cache (toStrict . renderHtml) "index.html"
 
 cacheHtmlConditional :: Handler (OkToCache, Html) -> Handler Html
-cacheHtmlConditional = cacheConditional renderHtml "index.html"
+cacheHtmlConditional = cacheConditional (toStrict . renderHtml) "index.html"
 
 cacheSvg :: Handler Svg -> Handler Svg
-cacheSvg = cache renderSvg "index.svg"
+cacheSvg = cache (toStrict . renderSvg) "index.svg"
 
 cacheJSON :: Handler Value -> Handler Value
-cacheJSON = cache encode "index.json"
+cacheJSON = cache (toStrict . encode) "index.json"
 
 cacheText :: Handler LT.Text -> Handler LT.Text
-cacheText = cache LTE.encodeUtf8 "index.txt"
+cacheText = cache (toStrict . encodeUtf8) "index.txt"
 
 -- | Clear the whole cache for a particular package at a particular version.
 -- Called whenever a new version of a package is uploaded.
