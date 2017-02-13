@@ -13,7 +13,6 @@ module Handler.Database
 
 import Import
 import qualified Data.Aeson as A
-import qualified Data.ByteString.Lazy as BL
 import qualified Data.NonNull as NN
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
@@ -168,7 +167,7 @@ insertPackage pkg@D.Package{..} = do
   let pkgName = D.packageName pkg
   file <- packageVersionFileFor pkgName pkgVersion
   clearCache pkgName pkgVersion
-  writeFileWithParents file (A.encode pkg)
+  writeFileWithParents file (toStrict (A.encode pkg))
 
 packageDirFor :: PackageName -> Handler String
 packageDirFor pkgName = do
@@ -180,14 +179,14 @@ packageVersionFileFor pkgName version = do
   dir <- packageDirFor pkgName
   return (dir ++ "/" ++ showVersion version ++ ".json")
 
-decodeVerifiedPackageFile :: String -> BL.ByteString -> Handler D.VerifiedPackage
+decodeVerifiedPackageFile :: String -> ByteString -> Handler D.VerifiedPackage
 decodeVerifiedPackageFile filepath contents =
   decodePackageFile filepath contents
 
 -- | Prefer decodeVerifiedPackageFile to this function, where possible.
-decodePackageFile :: (A.FromJSON a) => String -> BL.ByteString -> Handler (D.Package a)
+decodePackageFile :: (A.FromJSON a) => String -> ByteString -> Handler (D.Package a)
 decodePackageFile filepath contents = do
-  case A.eitherDecode contents of
+  case A.eitherDecodeStrict contents of
     Left err -> do
       $logError (T.pack ("Invalid JSON in: " ++ show filepath ++
                          ", error: " ++ show err))
