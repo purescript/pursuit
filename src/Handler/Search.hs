@@ -105,7 +105,7 @@ searchForType ty = do
     -- or Nothing otherwise. Lower scores are better.
     compareTypes :: P.Type -> P.Type -> Maybe Int
     compareTypes (P.TypeVar _) (P.TypeVar _) = Just 0
-    compareTypes t (P.TypeVar _) = Just (typeComplexity t)
+    compareTypes t (P.TypeVar _) = Just (1 + typeComplexity t)
     compareTypes (P.TypeLevelString s1) (P.TypeLevelString s2) | s1 == s2 = Just 0
     compareTypes (P.TypeWildcard _) t = Just (typeComplexity t)
     compareTypes (P.TypeConstructor q1) (P.TypeConstructor q2) | compareQual q1 q2 = Just 0
