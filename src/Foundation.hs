@@ -19,7 +19,6 @@ import qualified Yesod.Core.Unsafe as Unsafe
 import Web.Bower.PackageMeta (PackageName, parsePackageName, runPackageName)
 import qualified Data.Trie as Trie
 import Data.Version
-import qualified Css
 import qualified Language.PureScript as P
 import qualified Language.PureScript.Docs as D
 import qualified Paths_pursuit as Paths
