@@ -18,7 +18,6 @@ Flag library-only
 library
     hs-source-dirs: src, app
     exposed-modules: Application
-                     Css
                      Foundation
                      GithubAPI
                      Handler.Caching
