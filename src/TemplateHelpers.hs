@@ -180,7 +180,7 @@ getHtmlRenderContext = do
         { currentModuleName = currentMn
         , buildDocLink = D.getLink linksContext currentMn
         , renderDocLink = renderUrl . docLinkRoute linksContext currentMn
-        , renderSourceLink = renderSourceLink' linksContext
+        , renderSourceLink = Just . renderSourceLink' linksContext
         }
 
 renderSourceLink' :: D.LinksContext -> P.SourceSpan -> Text

@@ -11,8 +11,8 @@ extra-deps:
 - http-client-0.4.31.2
 - http-client-tls-0.2.4.1
 - http-conduit-2.1.11
-- optparse-applicative-0.13.0.0
+- optparse-applicative-0.13.2.0
 - pipes-4.2.0
 - pipes-http-1.0.5
-- purescript-0.10.7
+- purescript-0.11.1
 - websockets-0.9.8.2

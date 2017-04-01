@@ -1,5 +1,5 @@
 name:              pursuit
-version:           0.4.13
+version:           0.5.0
 cabal-version:     >= 1.8
 build-type:        Simple
 license:           MIT
@@ -99,7 +99,7 @@ library
                  , containers
                  , vector
                  , time
-                 , purescript >= 0.10.7
+                 , purescript >= 0.11.1
                  , bower-json >= 1.0.0.1
                  , blaze-builder
                  , blaze-markup

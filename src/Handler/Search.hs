@@ -145,7 +145,7 @@ searchForType ty = do
     typeComplexity :: P.Type -> Int
     typeComplexity (P.TypeApp a b) = 1 + typeComplexity a + typeComplexity b
     typeComplexity (P.ForAll _ t _) = 1 + typeComplexity t
-    typeComplexity (P.ConstrainedType cs t) = typeComplexity t + length cs
+    typeComplexity (P.ConstrainedType _ t) = typeComplexity t + 1
     typeComplexity P.REmpty = 0
     typeComplexity (P.RCons _ t r) = 1 + typeComplexity t + typeComplexity r
     typeComplexity (P.KindedType t _) = typeComplexity t
