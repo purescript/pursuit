@@ -77,11 +77,6 @@ data SearchResultInfo
 
 instance NFData SearchResultInfo
 
--- Orphan instances which belong elsewhere
-
-instance NFData P.Type where
-  rnf _ = ()
-
 instance ToJSON SearchResultInfo where
   toJSON i = object $ case i of
     PackageResult ->
