@@ -255,3 +255,8 @@ displayJsonError value e = case e of
         ]
       _ ->
         []
+
+versionSeries :: Version -> String
+versionSeries (Version (0:x:_) _) = "0." ++ show x ++ ".x"
+versionSeries (Version (x:_) _) = show x ++ ".x"
+versionSeries _ = "*"
