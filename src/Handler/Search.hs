@@ -28,7 +28,7 @@ getSearchR = do
     Nothing -> redirect HomeR
     Just query -> do
       results <- case tryParseType query of
-        Just ty | not (isSimpleType ty) -> searchForType ty
+        Just ty | not (isSimpleType ty) -> searchForType ty query
         _ -> searchForName (toLower query)
       selectRep $ do
         provideRep (htmlOutput query results)
@@ -89,16 +89,18 @@ searchForName query = do
   db <- atomically . readTVar =<< (appDatabase <$> getYesod)
   return (map fst (take 50 (concat (elems (submap (encodeUtf8 query) db)))))
 
-searchForType :: P.Type -> Handler [SearchResult]
-searchForType ty = do
+searchForType :: P.Type -> Text -> Handler [SearchResult]
+searchForType ty query = do
     db <- atomically . readTVar =<< (appDatabase <$> getYesod)
-    return (map fst (take 50 (sortBy (comparing snd) (mapMaybe (matches ty) (concat (elems db))))))
+    return (map fst (take 50 (sortBy (comparing snd) (mapMaybe matches (concat (elems db))))))
   where
-    matches :: P.Type -> (a, Maybe P.Type) -> Maybe (a, Int)
-    matches ty1 (a, Just ty2) = do
-      score <- compareTypes ty1 ty2
-      return (a, score)
-    matches _ _ = Nothing
+
+    matches :: (SearchResult, Maybe P.Type) -> Maybe (SearchResult, Int)
+    matches (result, Just ty2) = do
+      typeScore <- compareTypes ty ty2
+      let searchScore = typeScore + typeTextScore result
+      return (result, searchScore)
+    matches _ = Nothing
 
     -- This is an approximation to type subsumption / unification.
     -- This function returns Just a score if there is a possible match,
@@ -155,6 +157,13 @@ searchForType ty = do
     compareQual :: Eq a => P.Qualified a -> P.Qualified a -> Bool
     compareQual (P.Qualified (Just mn1) a1) (P.Qualified (Just mn2) a2) = mn1 == mn2 && a1 == a2
     compareQual (P.Qualified _ a1) (P.Qualified _ a2) = a1 == a2
+
+    -- a cheap hack to promote exact type matches
+    typeTextScore :: SearchResult -> Int
+    typeTextScore r = case hrInfo r of
+      DeclarationResult _ _ _ (Just typeText)
+        | toLower typeText == toLower query -> 0
+      _ -> 1
 
 renderMarkdownNoLinks :: Text -> Html
 renderMarkdownNoLinks =
