@@ -1,6 +1,5 @@
 /static StaticR EmbeddedStatic appStatic
 
-/favicon.png FaviconR GET
 /robots.txt RobotsR GET
 
 / HomeR GET
