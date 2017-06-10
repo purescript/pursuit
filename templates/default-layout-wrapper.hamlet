@@ -9,6 +9,7 @@ $doctype 5
     <link rel="apple-touch-icon" sizes="180x180" href=@{StaticR favicon_apple_touch_icon_png}>
     <link rel="icon" type="image/png" href=@{StaticR favicon_favicon_32x32_png} sizes="32x32">
     <link rel="icon" type="image/png" href=@{StaticR favicon_favicon_16x16_png} sizes="16x16">
+    <link rel="manifest" href=@{ManifestR}>
     <link rel="mask-icon" href=@{StaticR favicon_safari_pinned_tab_svg} color="#000000">
     <link rel="shortcut icon" href=@{StaticR favicon_favicon_ico}>
     <meta name="apple-mobile-web-app-title" content="Pursuit">

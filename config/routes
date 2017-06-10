@@ -1,6 +1,7 @@
 /static StaticR EmbeddedStatic appStatic
 
-/robots.txt RobotsR GET
+/manifest.json   ManifestR   GET
+/robots.txt      RobotsR     GET
 
 / HomeR GET
 
