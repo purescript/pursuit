@@ -14,6 +14,7 @@ $doctype 5
     <link rel="shortcut icon" href=@{StaticR favicon_favicon_ico}>
     <meta name="apple-mobile-web-app-title" content="Pursuit">
     <meta name="application-name" content="Pursuit">
+    <meta name="msapplication-config" content=@{BrowserConfigR}>
     <meta name="theme-color" content="#000000">
 
     <link href="https://fonts.googleapis.com/css?family=Roboto+Mono|Roboto:300,400,400i,700,700i" type="text/css" rel="stylesheet">

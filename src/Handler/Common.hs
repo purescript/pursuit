@@ -4,9 +4,30 @@ module Handler.Common where
 import Data.Aeson (Value)
 import Data.Aeson.TH (deriveJSON, defaultOptions, fieldLabelModifier)
 import Data.FileEmbed (embedFile)
+import Text.Blaze.Html.Renderer.String (renderHtml)
+import Text.Hamlet (Render, xhamlet)
 import Yesod.Core (renderRoute)
 import Yesod.Core.Json (returnJson)
 import Import
+
+-- Create a browserconfig.xml to declare the tile pictures and color for Internet Explorer 11.
+
+getBrowserConfigR :: Handler TypedContent
+getBrowserConfigR = return $ TypedContent typeXml $ toContent $ renderHtml ([xhamlet|
+  <browserconfig>
+    <msapplication>
+      <tile>
+        <square70x70logo src=@{StaticR favicon_mstile_150x150_png}>
+        <square150x150logo src=@{StaticR favicon_mstile_150x150_png}>
+        <wide310x150logo src=@{StaticR favicon_mstile_310x150_png}>
+        <square310x310logo src=@{StaticR favicon_mstile_310x310_png}>
+        <TileColor>#000000
+        <TileImage src=@{StaticR favicon_mstile_150x150_png}>
+  |] render)
+  where
+    render :: Render (Route App)
+    render x _ = (mappend $ pack "/") . (intercalate "/") . fst . renderRoute $ x
+
 
 -- Create a Web Application Manifest as defined by the W3C. We use this to declare the
 -- "Add to home screen" icons and other settings for Android Chrome.
