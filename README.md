@@ -51,16 +51,17 @@ To run the web server on <http://localhost:3000>:
 $ stack exec pursuit
 ```
 
-Make sure you have content in your `data/verified` directory (see
-[Database](#database)), otherwise you will not be able to browse any packages. The
-database will be regenerated from this data source before the server starts
-listening; this can take a short time depending on how much data you have.
+You might want to add some content to the database (see [Database](#database)),
+otherwise you will not be able to browse any packages. The database will be
+regenerated from this data source before the server starts listening; this
+can take a short time depending on how much data you have.
 
 ## Database
 
 Pursuit currently uses the filesystem as a database, since it requires no setup
 and it makes it easy to use Git and GitHub for backing up. The data directory
-is set via an environment variable (see [Configuration](#configuration)).
+is set via an environment variable (see [Configuration](#configuration), the
+default is `data`).
 
 If you need some sample packages to work with, you can clone the
 [pursuit-backups][pursuit-backups] repo and copy the packages you want to the
@@ -69,9 +70,9 @@ package.
 
 [pursuit-backups]: https://github.com/purescript/pursuit-backups
 
-## Database structure
+### Database structure
 
-The database lives in the `data` directory, its structure is as follows:
+The database structure is as follows:
 
 ```
 /
