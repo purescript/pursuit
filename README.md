@@ -1,14 +1,14 @@
 # Pursuit
 
-[![Build Status](https://api.travis-ci.org/purescript/pursuit.svg?branch=master)](http://travis-ci.org/purescript/pursuit)
+[![Build Status](https://api.travis-ci.org/purescript/pursuit.svg?branch=master)](https://travis-ci.org/purescript/pursuit)
 
 Pursuit is a web application which hosts documentation for PureScript packages,
 and lets you search for code by names or types.
 
-Pursuit is currently deployed at <http://pursuit.purescript.org>.
+Pursuit is currently deployed at <https://pursuit.purescript.org>.
 
 Information for package authors can be found at
-<http://pursuit.purescript.org/help>.
+<https://pursuit.purescript.org/help>.
 
 ## Development
 
@@ -93,6 +93,5 @@ All configuration variable names start with `PURSUIT_` (eg,
 `PURSUIT_APPROOT`). All configuration variables are optional; for
 development, it is fine to just run `stack exec pursuit` leaving them all
 unset.
-  in.
 
 See `src/Settings.hs` for more details.
