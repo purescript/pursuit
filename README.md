@@ -2,8 +2,8 @@
 
 [![Build Status](https://api.travis-ci.org/purescript/pursuit.svg?branch=master)](http://travis-ci.org/purescript/pursuit)
 
-Pursuit is a web application which hosts documentation for PureScript packages,
-and lets you search for code by names or types.
+Pursuit hosts API documentation for PureScript packages. It lets you search by
+package, module, and function names, as well as approximate type signatures.
 
 Pursuit is currently deployed at <http://pursuit.purescript.org>.
 
@@ -14,23 +14,13 @@ Information for package authors can be found at
 
 It's recommended to use `stack`: <http://docs.haskellstack.org>.
 
+### Build
+
 To build in development mode:
 
 ```
 $ stack build
 ```
-
-To run the server:
-
-```
-$ stack exec pursuit
-```
-
-If you have content in your data directory
-(see [Database structure](#database-structure)) then the database will
-be regenerated before the server starts listening - this can take a short time
-depending on how much data you have.  The site should then be available at
-`http://localhost:3000`.
 
 To build in production mode:
 
@@ -38,13 +28,50 @@ To build in production mode:
 $ stack build --flag pursuit:-dev
 ```
 
-## Database structure
+### Develop
+
+To iterate quickly during development, you can use `ghci`:
+
+```
+$ stack ghci
+```
+
+Once the REPL has loaded, you can reload the code and then update the web server:
+
+```
+> :l DevelMain
+> update
+```
+
+### Web server
+
+To run the web server on <http://localhost:3000>:
+
+```
+$ stack exec pursuit
+```
+
+Make sure you have content in your `data/verified` directory (see
+[Database](#database)), otherwise you will not be able to browse any packages. The
+database will be regenerated from this data source before the server starts
+listening; this can take a short time depending on how much data you have.
+
+## Database
 
 Pursuit currently uses the filesystem as a database, since it requires no setup
 and it makes it easy to use Git and GitHub for backing up. The data directory
 is set via an environment variable (see [Configuration](#configuration)).
 
-The structure is as follows:
+If you need some sample packages to work with, you can clone the
+[pursuit-backups][pursuit-backups] repo and copy the packages you want to the
+`verified/` directory. This is more convenient than manually uploading each
+package.
+
+[pursuit-backups]: https://github.com/purescript/pursuit-backups
+
+## Database structure
+
+The database lives in the `data` directory, its structure is as follows:
 
 ```
 /
@@ -74,15 +101,6 @@ Language.PureScript.Docs.Types in the compiler for details about these types.
 
 The backup process simply involves rsyncing everything in the `verified/`
 directory into a git repository, making a commit, and pushing it to GitHub.
-
-## Database setup
-
-If you need some sample packages to work with, you can clone the
-[pursuit-backups][pursuit-backups] repo and copy the packages you want to the
-`verified/` directory. This is more convenient than manually uploading each
-package.
-
-[pursuit-backups]: https://github.com/purescript/pursuit-backups
 
 ## Configuration
 
