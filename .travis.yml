@@ -16,6 +16,8 @@ addons:
   apt:
     packages:
       - libgmp-dev
+      - alex
+      - happy
 
 before_install:
   - mkdir -p ~/.local/bin
