@@ -96,3 +96,7 @@ unset.
   in.
 
 See `src/Settings.hs` for more details.
+
+## Assets
+
+The favicon assets in `static/favicon` were taken from the [Purescript Logo](https://github.com/purescript/logo) repository.

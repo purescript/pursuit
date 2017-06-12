@@ -1,7 +1,5 @@
 /static StaticR EmbeddedStatic appStatic
 
-/browserconfig.xml   BrowserConfigR   GET
-/manifest.json       ManifestR   GET
 /robots.txt          RobotsR     GET
 
 / HomeR GET
