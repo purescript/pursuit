@@ -114,3 +114,7 @@ development, it is fine to just run `stack exec pursuit` leaving them all
 unset.
 
 See `src/Settings.hs` for more details.
+
+## Assets
+
+The favicon assets in `static/favicon` were taken from the [Purescript Logo](https://github.com/purescript/logo) repository.

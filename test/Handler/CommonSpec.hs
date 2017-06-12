@@ -13,5 +13,5 @@ spec = withApp $ do
             bodyContains "User-agent: *"
     describe "favicon.ico" $ do
         it "gives a 200" $ do
-            get FaviconR
+            get (StaticR favicon_favicon_ico)
             statusIs 200
