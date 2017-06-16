@@ -8,7 +8,7 @@
     Pursuit hosts API documentation for <a href="http://www.purescript.org/">PureScript</a> packages. It lets you search by package, module, and function names, as well as approximate type signatures.
 
   <p>
-    To get started, have a look around the <a href="/packages/purescript-prelude">Prelude</a> – PureScript’s standard library – or try one of these example searches:
+    To get started, have a look around the <a href="/packages/purescript-prelude">Prelude</a>, or try one of these example searches:
 
   <ul .ul--search>
     <li><a href="/search?q=map">map</a></li>
