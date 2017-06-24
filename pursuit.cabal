@@ -125,6 +125,8 @@ library
                  , barrier ==0.1.*
                  , mono-traversable
                  , streaming-commons
+                 , happy
+                 , alex
 
     if flag(dev)
       build-depends: foreign-store
