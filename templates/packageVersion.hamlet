@@ -13,6 +13,9 @@
       <dd .grouped-list__item>#{licenses}
     <dt .grouped-list__title>Uploaded by
     <dd .grouped-list__item>#{linkToGithubUser pkgUploader}
+    $maybe date <- pkgTagTime
+      <dt .grouped-list__title>Published on
+      <dd .grouped-list__item>#{formatDate date}
 
   #{renderReadme ereadme}
 
