@@ -4,6 +4,7 @@ import Import hiding (span)
 import qualified Data.List.Split as List
 import Data.Version (Version)
 import Data.Text (splitOn)
+import Data.Time.Format as TimeFormat
 import Text.Blaze.Html5 as H hiding (map, link)
 import Text.Blaze.Html5.Attributes as A hiding (span, name, start)
 import qualified Web.Bower.PackageMeta as Bower
@@ -215,3 +216,9 @@ getFragmentRender :: Handler ((Route App, Maybe Text) -> Text)
 getFragmentRender = do
   render <- getUrlRender
   return $ \(route, fragment) -> render route ++ maybe "" ("#" ++) fragment
+
+formatDate :: UTCTime -> String
+formatDate =
+  TimeFormat.formatTime
+    TimeFormat.defaultTimeLocale
+    (TimeFormat.iso8601DateFormat Nothing)
