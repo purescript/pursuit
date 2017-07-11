@@ -2,7 +2,7 @@
 
 set -x
 
-timeout 40m stack --no-terminal --jobs=1 --install-ghc build --only-dependencies
+timeout 40m stack --no-terminal --jobs=1 build --only-dependencies
 ret=$?
 case "$ret" in
   0)
