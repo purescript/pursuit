@@ -12,6 +12,14 @@ cache:
   directories:
     - $HOME/.stack
 
+branches:
+  # Only build master and tagged versions, i.e. not feature branches; feature
+  # branches already get built after opening a pull request.
+  only:
+    - master
+    - /^v\d+\.\d+(\.\d+)?(-\S*)?$/
+
+
 addons:
   apt:
     packages:
