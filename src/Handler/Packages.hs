@@ -46,12 +46,22 @@ getHomeR =
         pkgNamesByLetter = groupBy ((==) `on` (firstLetter )) pkgNames
     defaultLayout $(widgetFile "homepage")
 
-getPackageR :: PathPackageName -> Handler Html
-getPackageR ppkgName@(PathPackageName pkgName) = do
+latestVersionOr404 :: PackageName -> Handler Version
+latestVersionOr404 pkgName = do
   v <- getLatestVersionFor pkgName
   case v of
     Nothing -> packageNotFound pkgName
-    Just v' -> redirect (PackageVersionR ppkgName (PathVersion v'))
+    Just v' -> pure v'
+
+getPackageR :: PathPackageName -> Handler Html
+getPackageR ppkgName@(PathPackageName pkgName) = do
+  v <- latestVersionOr404 pkgName
+  redirect (PackageVersionR ppkgName (PathVersion v))
+
+getPackageModuleDocsR :: PathPackageName -> Text -> Handler Html
+getPackageModuleDocsR ppkgName@(PathPackageName pkgName) mnString = do
+  v <- latestVersionOr404 pkgName
+  redirect (PackageVersionModuleDocsR ppkgName (PathVersion v) mnString)
 
 getPackageAvailableVersionsR :: PathPackageName -> Handler Value
 getPackageAvailableVersionsR (PathPackageName pkgName) =
