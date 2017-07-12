@@ -619,6 +619,18 @@ ol li {
 .result__actions__item + .result__actions__item {
   margin-left: 0.65em;
 }
+/* Component: Pagination
+ * -------------------------------------------------------------------------- */
+ul.pagination li {
+  float: left;
+  padding-left: 0.6em;
+}
+ul.pagination li.active {
+  text-decoration: underline;
+}
+ul.pagination li::before {
+  content: inherit;
+}
 /* Component: Version Selector
  * -------------------------------------------------------------------------- */
 .version-selector {

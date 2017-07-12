@@ -7,6 +7,10 @@ module Handler.Search
 import Import
 import Data.Trie (elems, submap)
 import Data.Version (showVersion)
+import qualified Data.Map.Strict as Map
+import qualified Data.Text as T
+import Text.Read (readMaybe)
+import Control.Monad.Trans.Maybe (runMaybeT, MaybeT(..))
 import qualified Web.Bower.PackageMeta as Bower
 
 import Language.PureScript.Docs.AsHtml (makeFragment, renderMarkdown)
@@ -21,22 +25,53 @@ import qualified Language.PureScript as P
 
 import qualified XMLArrows
 
+resultsPerPage :: Int
+resultsPerPage = 5
+
 getSearchR :: Handler TypedContent
 getSearchR = do
   mquery <- lookupGetParam "q"
+  page <- maybe 1 (max 1) . ((readMaybe . T.unpack) =<<) <$> lookupGetParam "page"
+
   case mquery of
     Nothing -> redirect HomeR
     Just query -> do
-      results <- case tryParseType query of
+      (results, nPages) <- applyPagination page <$> case tryParseType query of
         Just ty | not (isSimpleType ty) -> searchForType ty
         _ -> searchForName (toLower query)
       selectRep $ do
-        provideRep (htmlOutput query results)
+        provideRep (htmlOutput query results page nPages)
         provideRep (jsonOutput results)
   where
-    htmlOutput :: Text -> [SearchResult] -> Handler Html
-    htmlOutput query results = do
+    applyPagination :: Int -> [a] -> ([a], Int)
+    applyPagination page xs =
+      let zs = drop ((page - 1) * resultsPerPage) xs
+          tot = length xs
+          nPages = tot `div` resultsPerPage
+       in (take resultsPerPage zs, nPages)
+
+    mkPaginationW :: Int -> Int -> Handler (Maybe Widget)
+    mkPaginationW page nPages = runMaybeT $ do
+      cr <- MaybeT getCurrentRoute
+      MaybeT $ do
+        urp <- getUrlRenderParams
+        getParams <- Map.fromList . reqGetParams <$> getRequest
+        let mkPageLink :: Int -> Text
+            mkPageLink p = urp cr $ do
+                Map.toList $ Map.insert "page" (pack $ show p) getParams
+            hasNextPage = page < nPages
+            hasPrevPage = page > 1
+            allPages :: [Int] = [1 .. nPages]
+
+        if nPages <= 1
+            then pure Nothing
+            else pure . Just $ do
+              $(widgetFile "pagination")
+
+    htmlOutput :: Text -> [SearchResult] -> Int -> Int -> Handler Html
+    htmlOutput query results page nPages = do
       fr <- getFragmentRender
+      mPaginationW <- mkPaginationW page nPages
       content <- defaultLayout $(widgetFile "search")
       sendResponseStatus ok200 content
 
@@ -87,12 +122,12 @@ routeResult SearchResult{..} =
 searchForName :: Text -> Handler [SearchResult]
 searchForName query = do
   db <- atomically . readTVar =<< (appDatabase <$> getYesod)
-  return (map fst (take 50 (concat (elems (submap (encodeUtf8 query) db)))))
+  return $ map fst $ concat $ elems $ submap (encodeUtf8 query) db
 
 searchForType :: P.Type -> Handler [SearchResult]
 searchForType ty = do
     db <- atomically . readTVar =<< (appDatabase <$> getYesod)
-    return (map fst (take 50 (sortBy (comparing snd) (mapMaybe (matches ty) (concat (elems db))))))
+    return $ map fst $ sortBy (comparing snd) (mapMaybe (matches ty) $ concat (elems db))
   where
     matches :: P.Type -> (a, Maybe P.Type) -> Maybe (a, Int)
     matches ty1 (a, Just ty2) = do

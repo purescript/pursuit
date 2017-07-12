@@ -1,0 +1,21 @@
+<ul .pagination>
+    <li .previous :not hasPrevPage:.disabled>
+        $if hasPrevPage
+            <a href="#{mkPageLink $ page - 1}">
+                &larr;
+        $else
+            <span .disabled>
+              &larr;
+
+    $forall p <- allPages
+        <li :p == page:.active>
+            <a href="#{mkPageLink p}">
+                #{show p}
+
+    <li .next :not hasNextPage:.disabled>
+        $if hasNextPage
+            <a href="#{mkPageLink $ page + 1}">
+                &rarr;
+        $else
+            <span>
+              &rarr;
