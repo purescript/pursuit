@@ -38,8 +38,8 @@ getSearchR = do
     Nothing -> redirect HomeR
     Just query -> do
       (results, hasMore) <- case tryParseType query of
-        Just ty | not (isSimpleType ty) -> searchForType (min maxPages page) ty
-        _ -> searchForName (min maxPages page) (toLower query)
+        Just ty | not (isSimpleType ty) -> searchForType page ty
+        _ -> searchForName page (toLower query)
       selectRep $ do
         provideRep (htmlOutput query results page hasMore)
         provideRep (jsonOutput results)
@@ -86,7 +86,12 @@ getSearchR = do
     isSimpleType _ = False
 
     lookupCurrentPage :: Handler Int
-    lookupCurrentPage = maybe 1 (max 1) . ((readMaybe . unpack) =<<) <$> lookupGetParam "page"
+    lookupCurrentPage = fmap (fromMaybe 1) <$>
+        runMaybeT $ do
+            p    <- MaybeT $ lookupGetParam "page"
+            page <- MaybeT $ return $ readMaybe $ unpack p
+            return $ max 1 $ min maxPages $ page
+
 
 searchResultToJSON :: SearchResult -> Handler Value
 searchResultToJSON result@SearchResult{..} = do
@@ -122,18 +127,25 @@ routeResult SearchResult{..} =
 
 applyPagination :: Int -> [a] -> ([a], Bool)
 applyPagination page xs =
-    let ys = take (resultsPerPage + 1) $ drop ((page - 1) * resultsPerPage) xs
-     in (ys, length ys > resultsPerPage)
+    let (ys, more) = splitAt resultsPerPage $ drop ((page - 1) * resultsPerPage) xs
+     in (ys, not (null more))
 
 searchForName :: Int -> Text -> Handler ([SearchResult], Bool)
 searchForName page query = do
   db <- atomically . readTVar =<< (appDatabase <$> getYesod)
-  return $ first (map fst) $ applyPagination page $ concat $ elems $ submap (encodeUtf8 query) db
+  return
+    $ first (map fst)
+    $ applyPagination page
+    $ concat $ elems $ submap (encodeUtf8 query) db
 
 searchForType :: Int -> P.Type -> Handler ([SearchResult], Bool)
 searchForType page ty = do
   db <- atomically . readTVar =<< (appDatabase <$> getYesod)
-  return $ first (map fst) $ applyPagination page $ sortBy (comparing snd) (mapMaybe (matches ty) $ concat (elems db))
+  return
+    $ first (map fst)
+    $ applyPagination page
+    $ sortBy (comparing snd) (mapMaybe (matches ty)
+    $ concat (elems db))
 
   where
     matches :: P.Type -> (a, Maybe P.Type) -> Maybe (a, Int)
