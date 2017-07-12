@@ -621,15 +621,25 @@ ol li {
 }
 /* Component: Pagination
  * -------------------------------------------------------------------------- */
-ul.pagination li {
-  float: left;
-  padding-left: 0.6em;
+.pagination__top {
+    padding-bottom: 1.5em;
 }
-ul.pagination li.active {
-  text-decoration: underline;
+
+.pagination__bottom {
+    padding-top: 1.5em;
 }
-ul.pagination li::before {
-  content: inherit;
+
+.pagination {
+    position: relative;
+}
+
+.pagination .prev {
+    position: absolute;
+    left: 0;
+}
+.pagination .next {
+    position: absolute;
+    right: 0;
 }
 /* Component: Version Selector
  * -------------------------------------------------------------------------- */

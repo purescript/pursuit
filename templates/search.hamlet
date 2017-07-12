@@ -1,8 +1,9 @@
 <div .col.col--main>
   <h1>Search results
 
-  $maybe paginationW <- mPaginationW
-    ^{paginationW}
+  <div .pagination__top>
+    $maybe paginationW <- mPaginationW
+      ^{paginationW}
 
   $if null results
     <div .result.result--empty>
@@ -48,6 +49,6 @@
             <span .badge.badge--module title="Module">M
             #{moduleName}
 
-  $maybe paginationW <- mPaginationW
-    ^{paginationW}
-
+  <div .pagination__bottom>
+    $maybe paginationW <- mPaginationW
+      ^{paginationW}

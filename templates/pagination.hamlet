@@ -1,21 +1,16 @@
-<ul .pagination>
-    <li .previous :not hasPrevPage:.disabled>
-        $if hasPrevPage
-            <a href="#{mkPageLink $ page - 1}">
-                &larr;
-        $else
+<div .pagination>
+    <div .prev :isNothing mPrevPageLink:.disabled>
+        $maybe prevPageLink <- mPrevPageLink
+            <a href="#{prevPageLink}">
+                previous page
+        $nothing
             <span .disabled>
-              &larr;
+              previous page
 
-    $forall p <- allPages
-        <li :p == page:.active>
-            <a href="#{mkPageLink p}">
-                #{show p}
-
-    <li .next :not hasNextPage:.disabled>
-        $if hasNextPage
-            <a href="#{mkPageLink $ page + 1}">
-                &rarr;
-        $else
-            <span>
-              &rarr;
+    <div .next :isNothing mNextPageLink:.disabled>
+        $maybe nextPageLink <- mNextPageLink
+            <a href="#{nextPageLink}">
+                next page
+        $nothing
+            <span .disabled>
+              next page
