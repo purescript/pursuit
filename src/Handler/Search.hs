@@ -86,11 +86,11 @@ getSearchR = do
     isSimpleType _ = False
 
     lookupCurrentPage :: Handler Int
-    lookupCurrentPage = fmap (fromMaybe 1) <$>
-        runMaybeT $ do
-            p    <- MaybeT $ lookupGetParam "page"
-            page <- MaybeT $ return $ readMaybe $ unpack p
-            return $ max 1 $ min maxPages $ page
+    lookupCurrentPage = do
+        mpage <- lookupGetParam "page"
+        return $ case mpage >>= (readMaybe . unpack) of
+            Just page -> max 1 $ min maxPages page
+            Nothing -> 1
 
 
 searchResultToJSON :: SearchResult -> Handler Value
