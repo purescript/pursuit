@@ -9,7 +9,6 @@ import Data.Trie (elems, submap)
 import Data.Version (showVersion)
 import Data.Maybe (isNothing)
 import qualified Data.Map.Strict as Map
-import qualified Data.Text as T
 import Text.Read (readMaybe)
 import Control.Monad.Trans.Maybe (runMaybeT, MaybeT(..))
 import qualified Web.Bower.PackageMeta as Bower
@@ -29,17 +28,20 @@ import qualified XMLArrows
 resultsPerPage :: Int
 resultsPerPage = 50
 
+maxPages :: Int
+maxPages = 10
+
 getSearchR :: Handler TypedContent
 getSearchR = do
   mquery <- lookupGetParam "q"
-  page <- maybe 1 (max 1) . ((readMaybe . T.unpack) =<<) <$> lookupGetParam "page"
+  page <- maybe 1 (max 1) . ((readMaybe . unpack) =<<) <$> lookupGetParam "page"
 
   case mquery of
     Nothing -> redirect HomeR
     Just query -> do
       (results, hasMore) <- case tryParseType query of
-        Just ty | not (isSimpleType ty) -> searchForType page ty
-        _ -> searchForName page (toLower query)
+        Just ty | not (isSimpleType ty) -> searchForType (min maxPages page) ty
+        _ -> searchForName (min maxPages page) (toLower query)
       selectRep $ do
         provideRep (htmlOutput query results page hasMore)
         provideRep (jsonOutput results)
@@ -50,17 +52,18 @@ getSearchR = do
       MaybeT $ do
         urp <- getUrlRenderParams
         getParams <- Map.fromList . reqGetParams <$> getRequest
-        let mkPageLink :: Int -> Text
-            mkPageLink p = urp cr $ 
-                Map.toList $ Map.insert "page" (pack $ show p) getParams
-            mNextPageLink = if hasMore
-                                then Just $ mkPageLink $ page + 1
+        let mkPageLink p = urp cr $ Map.toList
+                                  $ Map.insert "page" (pack $ show p) getParams
+            mmNextPageLink = if hasMore
+                                then Just $ if page >= maxPages
+                                        then Nothing
+                                        else Just $ mkPageLink $ page + 1
                                 else Nothing
             mPrevPageLink = if page > 1
                                 then Just $ mkPageLink $ page - 1
                                 else Nothing
 
-        return $ if isNothing mNextPageLink && isNothing mPrevPageLink
+        return $ if isNothing mmNextPageLink && isNothing mPrevPageLink
             then Nothing
             else Just $ $(widgetFile "pagination")
 

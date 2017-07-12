@@ -3,14 +3,12 @@
         $maybe prevPageLink <- mPrevPageLink
             <a href="#{prevPageLink}">
                 previous page
-        $nothing
-            <span .disabled>
-              previous page
 
-    <div .next :isNothing mNextPageLink:.disabled>
-        $maybe nextPageLink <- mNextPageLink
-            <a href="#{nextPageLink}">
-                next page
-        $nothing
-            <span .disabled>
-              next page
+    <div .next :isNothing mmNextPageLink:.disabled>
+        $maybe mNextPageLink <- mmNextPageLink
+            $maybe nextPageLink <- mNextPageLink
+                <a href="#{nextPageLink}">
+                    next page
+            $nothing
+                <span .disabled>
+                    more results have been omitted
