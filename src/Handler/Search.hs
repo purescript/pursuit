@@ -7,10 +7,8 @@ module Handler.Search
 import Import
 import Data.Trie (elems, submap)
 import Data.Version (showVersion)
-import Data.Maybe (isNothing)
 import qualified Data.Map.Strict as Map
 import Text.Read (readMaybe)
-import Control.Monad.Trans.Maybe (runMaybeT, MaybeT(..))
 import qualified Web.Bower.PackageMeta as Bower
 
 import Language.PureScript.Docs.AsHtml (makeFragment, renderMarkdown)
@@ -34,7 +32,7 @@ maxPages = 10
 getSearchR :: Handler TypedContent
 getSearchR = do
   mquery <- lookupGetParam "q"
-  page <- maybe 1 (max 1) . ((readMaybe . unpack) =<<) <$> lookupGetParam "page"
+  page <- lookupCurrentPage
 
   case mquery of
     Nothing -> redirect HomeR
@@ -54,6 +52,7 @@ getSearchR = do
         getParams <- Map.fromList . reqGetParams <$> getRequest
         let mkPageLink p = urp cr $ Map.toList
                                   $ Map.insert "page" (pack $ show p) getParams
+            allPages = [1..page]
             mmNextPageLink = if hasMore
                                 then Just $ if page >= maxPages
                                         then Nothing
@@ -85,6 +84,9 @@ getSearchR = do
     isSimpleType P.TypeVar{} = True
     isSimpleType P.TypeConstructor{} = True
     isSimpleType _ = False
+
+    lookupCurrentPage :: Handler Int
+    lookupCurrentPage = maybe 1 (max 1) . ((readMaybe . unpack) =<<) <$> lookupGetParam "page"
 
 searchResultToJSON :: SearchResult -> Handler Value
 searchResultToJSON result@SearchResult{..} = do
@@ -118,23 +120,20 @@ routeResult SearchResult{..} =
   ppkgName = PathPackageName hrPkgName
   pversion = PathVersion hrPkgVersion
 
+applyPagination :: Int -> [a] -> ([a], Bool)
+applyPagination page xs =
+    let ys = take (resultsPerPage + 1) $ drop ((page - 1) * resultsPerPage) xs
+     in (ys, length ys > resultsPerPage)
+
 searchForName :: Int -> Text -> Handler ([SearchResult], Bool)
 searchForName page query = do
   db <- atomically . readTVar =<< (appDatabase <$> getYesod)
-  let xs = map fst
-            $ take (resultsPerPage + 1)
-            $ drop ((page - 1) * resultsPerPage)
-            $ concat $ elems $ submap (encodeUtf8 query) db
-  return (xs, length xs > resultsPerPage)
+  return $ first (map fst) $ applyPagination page $ concat $ elems $ submap (encodeUtf8 query) db
 
 searchForType :: Int -> P.Type -> Handler ([SearchResult], Bool)
 searchForType page ty = do
   db <- atomically . readTVar =<< (appDatabase <$> getYesod)
-  let xs = map fst
-            $ take (resultsPerPage + 1)
-            $ drop ((page - 1) * resultsPerPage)
-            $ sortBy (comparing snd) (mapMaybe (matches ty) $ concat (elems db))
-  return (xs, length xs > resultsPerPage)
+  return $ first (map fst) $ applyPagination page $ sortBy (comparing snd) (mapMaybe (matches ty) $ concat (elems db))
 
   where
     matches :: P.Type -> (a, Maybe P.Type) -> Maybe (a, Int)

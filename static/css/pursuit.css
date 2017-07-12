@@ -633,13 +633,32 @@ ol li {
     position: relative;
 }
 
-.pagination .prev {
+.pagination .pagination__left {
     position: absolute;
     left: 0;
 }
-.pagination .next {
+.pagination .pagination__prev {
+    float: left;
+}
+.pagination .pagination__right {
     position: absolute;
     right: 0;
+}
+.pagination ul {
+    float: left;
+    margin: 0;
+}
+.pagination ul li {
+    float: left;
+}
+.pagination ul li.active a {
+    color: black;
+}
+.pagination ul li::before {
+    content: "";
+}
+.pagination .disabled {
+    color: gray;
 }
 /* Component: Version Selector
  * -------------------------------------------------------------------------- */
