@@ -82,14 +82,14 @@ getSearchR = do
               mPrevPage = if page > 1
                             then Just $ page - 1
                             else Nothing
-              links = catMaybes $ [ ("next", ) <$> mNextPage
-                                  , ("prev", ) <$> mPrevPage
-                                  ]
+              links = catMaybes [ ("next", ) <$> mNextPage
+                                , ("prev", ) <$> mPrevPage
+                                ]
            in if null links
                 then Nothing
-                else Just $ ("Link", T.intercalate ", " $ renderLink <$> links)
+                else Just ("Link", T.intercalate ", " $ renderLink <$> links)
         where renderLink :: (Text, Int) -> Text
-              renderLink (rel, p) = "<" <> mkPageLink p <> ">; rel=" <> (T.pack $ show rel)
+              renderLink (rel, p) = "<" <> mkPageLink p <> ">; rel=" <> T.pack (show rel)
 
     htmlOutput :: Text -> [SearchResult] -> Int -> Bool -> Handler Html
     htmlOutput query results page hasMore = do
@@ -100,7 +100,7 @@ getSearchR = do
 
     jsonOutput :: [SearchResult] -> Int -> Bool -> Handler Value
     jsonOutput results page hasMore = do
-        when (hasMore && page <= maxPages) $ void $ do
+        when (hasMore && page <= maxPages) $ void $
           mkPaginationHeader page hasMore >>= \mHeader -> case mHeader of
             Nothing -> pure ()
             Just (name, value) -> addHeader name value
@@ -136,7 +136,7 @@ searchResultToJSON result@SearchResult{..} = do
            , "url" .= url
            ]
 
-routeResult :: SearchResult -> ((Route App), Maybe Text)
+routeResult :: SearchResult -> (Route App, Maybe Text)
 routeResult SearchResult{..} =
   case hrInfo of
     PackageResult ->
@@ -174,8 +174,7 @@ searchForType page ty = do
   return
     $ first (map fst)
     $ applyPagination page
-    $ sortBy (comparing snd) (mapMaybe (matches ty)
-    $ concat (elems db))
+    $ sortBy (comparing snd) (mapMaybe (matches ty) $ concat (elems db))
 
   where
     matches :: P.Type -> (a, Maybe P.Type) -> Maybe (a, Int)
