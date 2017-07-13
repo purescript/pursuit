@@ -1,4 +1,3 @@
-
 module Handler.Search
   ( getSearchR
   , SearchResult(..)
@@ -46,17 +45,17 @@ getSearchR = do
         provideRep (jsonOutput results page hasMore)
   where
     getPageLinkRenderer :: Handler (Maybe (Int -> Text))
-    getPageLinkRenderer = runMaybeT $ do
-      cr <- MaybeT getCurrentRoute
-      MaybeT $ do
-        urp <- getUrlRenderParams
-        getParams <- Map.fromList . reqGetParams <$> getRequest
-        return $ Just $ \p ->
-          urp cr $ Map.toList
-                 $ Map.insert "page" (pack $ show p) getParams
+    getPageLinkRenderer = do
+      getCurrentRoute >>= \case
+        Nothing -> return Nothing
+        Just cr -> do
+            urp <- getUrlRenderParams
+            getParams <- Map.fromList . reqGetParams <$> getRequest
+            return $ Just $ \p ->
+                urp cr $ Map.toList $ Map.insert "page" (tshow p) getParams
 
     mkPaginationW :: Int -> Bool -> Handler (Maybe Widget)
-    mkPaginationW page hasMore = getPageLinkRenderer >>= \mr -> case mr of
+    mkPaginationW page hasMore = getPageLinkRenderer >>= \case
         Nothing -> return Nothing
         Just mkPageLink ->
           let allPages = [1..page]
@@ -89,7 +88,7 @@ getSearchR = do
                 then Nothing
                 else Just ("Link", T.intercalate ", " $ renderLink <$> links)
         where renderLink :: (Text, Int) -> Text
-              renderLink (rel, p) = "<" <> mkPageLink p <> ">; rel=" <> T.pack (show rel)
+              renderLink (rel, p) = "<" <> mkPageLink p <> ">; rel=" <> tshow rel
 
     htmlOutput :: Text -> [SearchResult] -> Int -> Bool -> Handler Html
     htmlOutput query results page hasMore = do
@@ -101,7 +100,7 @@ getSearchR = do
     jsonOutput :: [SearchResult] -> Int -> Bool -> Handler Value
     jsonOutput results page hasMore = do
         when (hasMore && page <= maxPages) $ void $
-          mkPaginationHeader page hasMore >>= \mHeader -> case mHeader of
+          mkPaginationHeader page hasMore >>= \case
             Nothing -> pure ()
             Just (name, value) -> addHeader name value
         toJSON <$> traverse searchResultToJSON results

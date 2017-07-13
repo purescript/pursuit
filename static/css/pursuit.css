@@ -624,18 +624,8 @@ ol li {
 .pagination__top {
     padding-bottom: 1.5em;
 }
-
 .pagination__bottom {
     padding-top: 1.5em;
-}
-
-.pagination {
-    position: relative;
-}
-
-.pagination .pagination__left {
-    position: absolute;
-    left: 0;
 }
 .pagination .pagination__prev {
     float: left;
@@ -650,6 +640,9 @@ ol li {
 }
 .pagination ul li {
     float: left;
+}
+.pagination ul li a {
+    padding: 10px;
 }
 .pagination ul li.active a {
     color: black;
