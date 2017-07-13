@@ -6,6 +6,7 @@ module Handler.Search
 
 import Import
 import Data.Trie (elems, submap)
+import qualified Data.Text as T
 import Data.Version (showVersion)
 import qualified Data.Map.Strict as Map
 import Text.Read (readMaybe)
@@ -42,29 +43,53 @@ getSearchR = do
         _ -> searchForName page (toLower query)
       selectRep $ do
         provideRep (htmlOutput query results page hasMore)
-        provideRep (jsonOutput results)
+        provideRep (jsonOutput results page hasMore)
   where
-    mkPaginationW :: Int -> Bool -> Handler (Maybe Widget)
-    mkPaginationW page hasMore = runMaybeT $ do
+    getPageLinkRenderer :: Handler (Maybe (Int -> Text))
+    getPageLinkRenderer = runMaybeT $ do
       cr <- MaybeT getCurrentRoute
       MaybeT $ do
         urp <- getUrlRenderParams
         getParams <- Map.fromList . reqGetParams <$> getRequest
-        let mkPageLink p = urp cr $ Map.toList
-                                  $ Map.insert "page" (pack $ show p) getParams
-            allPages = [1..page]
-            mmNextPageLink = if hasMore
-                                then Just $ if page >= maxPages
-                                        then Nothing
-                                        else Just $ mkPageLink $ page + 1
-                                else Nothing
-            mPrevPageLink = if page > 1
-                                then Just $ mkPageLink $ page - 1
-                                else Nothing
+        return $ Just $ \p ->
+          urp cr $ Map.toList
+                 $ Map.insert "page" (pack $ show p) getParams
 
-        return $ if isNothing mmNextPageLink && isNothing mPrevPageLink
-            then Nothing
-            else Just $ $(widgetFile "pagination")
+    mkPaginationW :: Int -> Bool -> Handler (Maybe Widget)
+    mkPaginationW page hasMore = getPageLinkRenderer >>= \mr -> case mr of
+        Nothing -> return Nothing
+        Just mkPageLink ->
+          let allPages = [1..page]
+              mmNextPageLink = if hasMore
+                                  then Just $ if page >= maxPages
+                                    then Nothing
+                                    else Just $ mkPageLink $ page + 1
+                                  else Nothing
+              mPrevPageLink = if page > 1
+                                  then Just $ mkPageLink $ page - 1
+                                  else Nothing
+           in return $ if isNothing mmNextPageLink && isNothing mPrevPageLink
+                then Nothing
+                else Just $ $(widgetFile "pagination")
+
+    mkPaginationHeader :: Int -> Bool -> Handler (Maybe (Text, Text))
+    mkPaginationHeader page hasMore = (go =<<) <$> getPageLinkRenderer
+      where
+      go mkPageLink =
+          let mNextPage = if hasMore && page < maxPages
+                            then Just $ page + 1
+                            else Nothing
+              mPrevPage = if page > 1
+                            then Just $ page - 1
+                            else Nothing
+              links = catMaybes $ [ ("next", ) <$> mNextPage
+                                  , ("prev", ) <$> mPrevPage
+                                  ]
+           in if null links
+                then Nothing
+                else Just $ ("Link", T.intercalate ", " $ renderLink <$> links)
+        where renderLink :: (Text, Int) -> Text
+              renderLink (rel, p) = "<" <> mkPageLink p <> ">; rel=" <> (T.pack $ show rel)
 
     htmlOutput :: Text -> [SearchResult] -> Int -> Bool -> Handler Html
     htmlOutput query results page hasMore = do
@@ -73,7 +98,13 @@ getSearchR = do
       content <- defaultLayout $(widgetFile "search")
       sendResponseStatus ok200 content
 
-    jsonOutput = fmap toJSON . traverse searchResultToJSON
+    jsonOutput :: [SearchResult] -> Int -> Bool -> Handler Value
+    jsonOutput results page hasMore = do
+        when (hasMore && page <= maxPages) $ void $ do
+          mkPaginationHeader page hasMore >>= \mHeader -> case mHeader of
+            Nothing -> pure ()
+            Just (name, value) -> addHeader name value
+        toJSON <$> traverse searchResultToJSON results
 
     tryParseType :: Text -> Maybe P.Type
     tryParseType = hush (P.lex "") >=> hush (P.runTokenParser "" (P.parsePolyType <* Parsec.eof))
@@ -91,7 +122,6 @@ getSearchR = do
         return $ case mpage >>= (readMaybe . unpack) of
             Just page -> max 1 $ min maxPages page
             Nothing -> 1
-
 
 searchResultToJSON :: SearchResult -> Handler Value
 searchResultToJSON result@SearchResult{..} = do
