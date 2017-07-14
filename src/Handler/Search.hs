@@ -81,6 +81,7 @@ getSearchR = do
               mPrevPage = if page > 1
                             then Just $ page - 1
                             else Nothing
+              links :: [(Text, Int)]
               links = catMaybes [ ("next", ) <$> mNextPage
                                 , ("prev", ) <$> mPrevPage
                                 ]
