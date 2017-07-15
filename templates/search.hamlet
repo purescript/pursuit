@@ -49,6 +49,11 @@
             <span .badge.badge--module title="Module">M
             #{moduleName}
 
+  $if hasOmittedResults
+    <hr />
+    <div .result__omission>
+      More results have been omitteded
+
   <div .pagination__bottom>
     $maybe paginationW <- mPaginationW
       ^{paginationW}

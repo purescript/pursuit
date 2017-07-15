@@ -24,7 +24,7 @@ import qualified Language.PureScript as P
 import qualified XMLArrows
 
 resultsPerPage :: Int
-resultsPerPage = 50
+resultsPerPage = 5
 
 maxPages :: Int
 maxPages = 10
@@ -59,15 +59,13 @@ getSearchR = do
         Nothing -> return Nothing
         Just mkPageLink ->
           let allPages = [1..page]
-              mmNextPageLink = if hasMore
-                                  then Just $ if page >= maxPages
-                                    then Nothing
-                                    else Just $ mkPageLink $ page + 1
-                                  else Nothing
+              mNextPageLink = if hasMore && page < maxPages
+                                then Just $ mkPageLink $ page + 1
+                                else Nothing
               mPrevPageLink = if page > 1
-                                  then Just $ mkPageLink $ page - 1
-                                  else Nothing
-           in return $ if isNothing mmNextPageLink && isNothing mPrevPageLink
+                                then Just $ mkPageLink $ page - 1
+                                else Nothing
+           in return $ if isNothing mNextPageLink && isNothing mPrevPageLink
                 then Nothing
                 else Just $ $(widgetFile "pagination")
 
@@ -95,6 +93,7 @@ getSearchR = do
     htmlOutput query results page hasMore = do
       fr <- getFragmentRender
       mPaginationW <- mkPaginationW page hasMore
+      let hasOmittedResults = hasMore && page >= maxPages
       content <- defaultLayout $(widgetFile "search")
       sendResponseStatus ok200 content
 

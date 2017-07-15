@@ -619,39 +619,58 @@ ol li {
 .result__actions__item + .result__actions__item {
   margin-left: 0.65em;
 }
+.result__omission {
+  color: gray;
+  text-align: center;
+}
 /* Component: Pagination
  * -------------------------------------------------------------------------- */
+.pagination {
+  width: 100%;
+  display: table;
+}
 .pagination__top {
-    padding-bottom: 1.5em;
+  padding-bottom: 1.5em;
 }
 .pagination__bottom {
-    padding-top: 1.5em;
+  padding-top: 1.5em;
 }
 .pagination .pagination__prev {
-    float: left;
+  display: table-cell;
+  vertical-align: top;
+  text-align: left;
 }
-.pagination .pagination__right {
-    position: absolute;
-    right: 0;
+.pagination .pagination__next {
+  display: table-cell;
+  vertical-align: top;
+  text-align: right;
 }
-.pagination ul {
-    float: left;
-    margin: 0;
+div.pagination__numbers {
+  display: table-cell;
 }
-.pagination ul li {
-    float: left;
+.pagination__numbers ul {
+  margin: 0;
+  width: 100%;
 }
-.pagination ul li a {
-    padding: 10px;
+.pagination__numbers ul li {
+  padding-left: 0;
+  text-align: center;
+  float: left;
 }
-.pagination ul li.active a {
-    color: black;
+.pagination__numbers ul li a {
+  padding: 0.4em 0.9em;
 }
-.pagination ul li::before {
-    content: "";
+.pagination__numbers ul li a:hover {
+  background-color: #f3f3f3;
+}
+.pagination__numbers ul li.active {
+  padding: 0 0.9em;
+}
+.pagination__numbers ul li::before {
+  content: "";
 }
 .pagination .disabled {
-    color: gray;
+  color: gray;
 }
 /* Component: Version Selector
  * -------------------------------------------------------------------------- */
