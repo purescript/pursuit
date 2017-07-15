@@ -1,0 +1,26 @@
+<div .pagination>
+  <span .pagination__prev :isNothing mPrevPageLink:.disabled>
+    $maybe prevPageLink <- mPrevPageLink
+      <a href="#{prevPageLink}">
+        &laquo; previous page
+    $nothing
+      <span .disabled>
+        &laquo; previous page
+
+  <div .pagination__numbers>
+    <ul>
+      $forall p <- allPages
+        <li :p == page:.active>
+          $if p == page
+            #{show p}
+          $else
+            <a href="#{mkPageLink p}">
+              #{show p}
+
+  <span .pagination__next>
+    $maybe nextPageLink <- mNextPageLink
+      <a href="#{nextPageLink}">
+        next page &raquo;
+    $nothing
+      <span .disabled>
+        next page &raquo;

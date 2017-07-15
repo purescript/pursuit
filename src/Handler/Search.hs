@@ -1,4 +1,3 @@
-
 module Handler.Search
   ( getSearchR
   , SearchResult(..)
@@ -6,7 +5,10 @@ module Handler.Search
 
 import Import
 import Data.Trie (elems, submap)
+import qualified Data.Text as T
 import Data.Version (showVersion)
+import qualified Data.Map.Strict as Map
+import Text.Read (readMaybe)
 import qualified Web.Bower.PackageMeta as Bower
 
 import Language.PureScript.Docs.AsHtml (makeFragment, renderMarkdown)
@@ -21,26 +23,87 @@ import qualified Language.PureScript as P
 
 import qualified XMLArrows
 
+resultsPerPage :: Int
+resultsPerPage = 5
+
+maxPages :: Int
+maxPages = 10
+
 getSearchR :: Handler TypedContent
 getSearchR = do
   mquery <- lookupGetParam "q"
+  page <- lookupCurrentPage
+
   case mquery of
     Nothing -> redirect HomeR
     Just query -> do
-      results <- case tryParseType query of
-        Just ty | not (isSimpleType ty) -> searchForType ty
-        _ -> searchForName (toLower query)
+      (results, hasMore) <- case tryParseType query of
+        Just ty | not (isSimpleType ty) -> searchForType page ty
+        _ -> searchForName page (toLower query)
       selectRep $ do
-        provideRep (htmlOutput query results)
-        provideRep (jsonOutput results)
+        provideRep (htmlOutput query results page hasMore)
+        provideRep (jsonOutput results page hasMore)
   where
-    htmlOutput :: Text -> [SearchResult] -> Handler Html
-    htmlOutput query results = do
+    getPageLinkRenderer :: Handler (Maybe (Int -> Text))
+    getPageLinkRenderer = do
+      getCurrentRoute >>= \case
+        Nothing -> return Nothing
+        Just cr -> do
+            urp <- getUrlRenderParams
+            getParams <- Map.fromList . reqGetParams <$> getRequest
+            return $ Just $ \p ->
+                urp cr $ Map.toList $ Map.insert "page" (tshow p) getParams
+
+    mkPaginationW :: Int -> Bool -> Handler (Maybe Widget)
+    mkPaginationW page hasMore = getPageLinkRenderer >>= \case
+        Nothing -> return Nothing
+        Just mkPageLink ->
+          let allPages = [1..page]
+              mNextPageLink = if hasMore && page < maxPages
+                                then Just $ mkPageLink $ page + 1
+                                else Nothing
+              mPrevPageLink = if page > 1
+                                then Just $ mkPageLink $ page - 1
+                                else Nothing
+           in return $ if isNothing mNextPageLink && isNothing mPrevPageLink
+                then Nothing
+                else Just $ $(widgetFile "pagination")
+
+    mkPaginationHeader :: Int -> Bool -> Handler (Maybe (Text, Text))
+    mkPaginationHeader page hasMore = (go =<<) <$> getPageLinkRenderer
+      where
+      go mkPageLink =
+          let mNextPage = if hasMore && page < maxPages
+                            then Just $ page + 1
+                            else Nothing
+              mPrevPage = if page > 1
+                            then Just $ page - 1
+                            else Nothing
+              links :: [(Text, Int)]
+              links = catMaybes [ ("next", ) <$> mNextPage
+                                , ("prev", ) <$> mPrevPage
+                                ]
+           in if null links
+                then Nothing
+                else Just ("Link", T.intercalate ", " $ renderLink <$> links)
+        where renderLink :: (Text, Int) -> Text
+              renderLink (rel, p) = "<" <> mkPageLink p <> ">; rel=" <> tshow rel
+
+    htmlOutput :: Text -> [SearchResult] -> Int -> Bool -> Handler Html
+    htmlOutput query results page hasMore = do
       fr <- getFragmentRender
+      mPaginationW <- mkPaginationW page hasMore
+      let hasOmittedResults = hasMore && page >= maxPages
       content <- defaultLayout $(widgetFile "search")
       sendResponseStatus ok200 content
 
-    jsonOutput = fmap toJSON . traverse searchResultToJSON
+    jsonOutput :: [SearchResult] -> Int -> Bool -> Handler Value
+    jsonOutput results page hasMore = do
+        when (hasMore && page <= maxPages) $ void $
+          mkPaginationHeader page hasMore >>= \case
+            Nothing -> pure ()
+            Just (name, value) -> addHeader name value
+        toJSON <$> traverse searchResultToJSON results
 
     tryParseType :: Text -> Maybe P.Type
     tryParseType = hush (P.lex "") >=> hush (P.runTokenParser "" (P.parsePolyType <* Parsec.eof))
@@ -51,6 +114,13 @@ getSearchR = do
     isSimpleType P.TypeVar{} = True
     isSimpleType P.TypeConstructor{} = True
     isSimpleType _ = False
+
+    lookupCurrentPage :: Handler Int
+    lookupCurrentPage = do
+        mpage <- lookupGetParam "page"
+        return $ case mpage >>= (readMaybe . unpack) of
+            Just page -> max 1 $ min maxPages page
+            Nothing -> 1
 
 searchResultToJSON :: SearchResult -> Handler Value
 searchResultToJSON result@SearchResult{..} = do
@@ -65,7 +135,7 @@ searchResultToJSON result@SearchResult{..} = do
            , "url" .= url
            ]
 
-routeResult :: SearchResult -> ((Route App), Maybe Text)
+routeResult :: SearchResult -> (Route App, Maybe Text)
 routeResult SearchResult{..} =
   case hrInfo of
     PackageResult ->
@@ -84,15 +154,27 @@ routeResult SearchResult{..} =
   ppkgName = PathPackageName hrPkgName
   pversion = PathVersion hrPkgVersion
 
-searchForName :: Text -> Handler [SearchResult]
-searchForName query = do
-  db <- atomically . readTVar =<< (appDatabase <$> getYesod)
-  return (map fst (take 50 (concat (elems (submap (encodeUtf8 query) db)))))
+applyPagination :: Int -> [a] -> ([a], Bool)
+applyPagination page xs =
+    let (ys, more) = splitAt resultsPerPage $ drop ((page - 1) * resultsPerPage) xs
+     in (ys, not (null more))
 
-searchForType :: P.Type -> Handler [SearchResult]
-searchForType ty = do
-    db <- atomically . readTVar =<< (appDatabase <$> getYesod)
-    return (map fst (take 50 (sortBy (comparing snd) (mapMaybe (matches ty) (concat (elems db))))))
+searchForName :: Int -> Text -> Handler ([SearchResult], Bool)
+searchForName page query = do
+  db <- atomically . readTVar =<< (appDatabase <$> getYesod)
+  return
+    $ first (map fst)
+    $ applyPagination page
+    $ concat $ elems $ submap (encodeUtf8 query) db
+
+searchForType :: Int -> P.Type -> Handler ([SearchResult], Bool)
+searchForType page ty = do
+  db <- atomically . readTVar =<< (appDatabase <$> getYesod)
+  return
+    $ first (map fst)
+    $ applyPagination page
+    $ sortBy (comparing snd) (mapMaybe (matches ty) $ concat (elems db))
+
   where
     matches :: P.Type -> (a, Maybe P.Type) -> Maybe (a, Int)
     matches ty1 (a, Just ty2) = do

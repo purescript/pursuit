@@ -1,6 +1,10 @@
 <div .col.col--main>
   <h1>Search results
 
+  <div .pagination__top>
+    $maybe paginationW <- mPaginationW
+      ^{paginationW}
+
   $if null results
     <div .result.result--empty>
       Your search for <strong>#{query}</strong> did not yield any results.
@@ -44,3 +48,12 @@
           <span .result__actions__item>
             <span .badge.badge--module title="Module">M
             #{moduleName}
+
+  $if hasOmittedResults
+    <hr />
+    <div .result__omission>
+      More results have been omitteded
+
+  <div .pagination__bottom>
+    $maybe paginationW <- mPaginationW
+      ^{paginationW}
