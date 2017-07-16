@@ -5,6 +5,7 @@ import qualified Data.List.Split as List
 import qualified Data.Map as Map
 import Data.Traversable (for)
 import Data.Version (Version)
+import Data.List (nub)
 import Data.Text (splitOn)
 import Data.Time.Format as TimeFormat
 import Text.Blaze.Html5 as H hiding (map, link)
@@ -125,21 +126,14 @@ renderReadme = \case
           open an issue?
     |]
 
+
 renderHtmlDocs :: D.VerifiedPackage -> Text -> Handler (Maybe Html)
 renderHtmlDocs pkg mnString = do
   htmlRenderContext <- getHtmlRenderContext
-
-  depHtmlRenderContexts <- do
-    Map.fromList . catMaybes <$> do
-      for (D.pkgResolvedDependencies pkg) $ \(pkgName, version) -> do
-        fmap (pkgName, ) <$> do
-          either (const Nothing) Just <$> do
-            fmap htmlRenderContext <$> do
-                lookupPackage pkgName version
-
+  depHtmlRenderContexts <- getDepHtmlRenderContexts pkg
   let docsOutput = flip packageAsHtml pkg $ \case
-        D.Local m -> Just $ htmlRenderContext pkg m
-        D.FromDep pkgName m -> return m <**> Map.lookup pkgName depHtmlRenderContexts
+        D.Local mN -> Just $ htmlRenderContext pkg mN
+        D.FromDep pkgName mN -> fmap ($ mN) $ Map.lookup pkgName depHtmlRenderContexts
       mn = P.moduleNameFromString mnString
   traverse render $ lookup mn (htmlModules docsOutput)
 
@@ -183,6 +177,26 @@ docLinkRoute D.LinksContext{..} srcModule link = case D.linkLocation link of
       (PathPackageName pkgName)
       (PathVersion version)
       (P.runModuleName modName)
+
+getDepHtmlRenderContexts
+    :: D.Package a
+    -> Handler (Map Bower.PackageName (P.ModuleName -> HtmlRenderContext))
+getDepHtmlRenderContexts D.Package {..} = do
+  htmlRenderContext <- getHtmlRenderContext
+  let reExportedPackages =
+        nub $ concat [
+          catMaybes [
+            case inPkg of
+              D.Local _ -> Nothing
+              D.FromDep pN _ -> find ((== pN) . fst) pkgResolvedDependencies
+          | (inPkg, _) <- modReExports
+          ]
+        | D.Module {..} <- pkgModules ]
+
+  Map.fromList . catMaybes <$> do
+    for reExportedPackages $ \(pkgName, version) -> do
+      fmap (pkgName, ) . hush . fmap htmlRenderContext <$> do
+          lookupPackage pkgName version
 
 getHtmlRenderContext :: Handler (D.Package a -> P.ModuleName -> HtmlRenderContext)
 getHtmlRenderContext = do
