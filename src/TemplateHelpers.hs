@@ -130,10 +130,10 @@ renderReadme = \case
 renderHtmlDocs :: D.VerifiedPackage -> Text -> Handler (Maybe Html)
 renderHtmlDocs pkg mnString = do
   htmlRenderContext <- getHtmlRenderContext
-  depHtmlRenderContexts <- getDepHtmlRenderContexts pkg
+  depHtmlRenderContext <- getDepHtmlRenderContexts pkg
   let docsOutput = flip packageAsHtml pkg $ \case
         D.Local mN -> Just $ htmlRenderContext pkg mN
-        D.FromDep pkgName mN -> fmap ($ mN) $ Map.lookup pkgName depHtmlRenderContexts
+        D.FromDep pkgName mN -> depHtmlRenderContext pkgName mN
       mn = P.moduleNameFromString mnString
   traverse render $ lookup mn (htmlModules docsOutput)
 
@@ -180,7 +180,7 @@ docLinkRoute D.LinksContext{..} srcModule link = case D.linkLocation link of
 
 getDepHtmlRenderContexts
     :: D.Package a
-    -> Handler (Map Bower.PackageName (P.ModuleName -> HtmlRenderContext))
+    -> Handler (Bower.PackageName -> P.ModuleName -> Maybe HtmlRenderContext)
 getDepHtmlRenderContexts D.Package {..} = do
   htmlRenderContext <- getHtmlRenderContext
   let reExportedPackages =
@@ -193,10 +193,12 @@ getDepHtmlRenderContexts D.Package {..} = do
           ]
         | D.Module {..} <- pkgModules ]
 
-  Map.fromList . catMaybes <$> do
+  m <- Map.fromList . catMaybes <$> do
     for reExportedPackages $ \(pkgName, version) -> do
       fmap (pkgName, ) . hush . fmap htmlRenderContext <$> do
-          lookupPackage pkgName version
+        lookupPackage pkgName version
+
+  return $ \pkgName mN -> fmap ($ mN) $ Map.lookup pkgName m
 
 getHtmlRenderContext :: Handler (D.Package a -> P.ModuleName -> HtmlRenderContext)
 getHtmlRenderContext = do
