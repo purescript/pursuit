@@ -5,6 +5,7 @@ module Handler.Search
   ) where
 
 import Import
+import Data.Text (strip)
 import Data.Trie (elems, submap)
 import Data.Version (showVersion)
 import qualified Web.Bower.PackageMeta as Bower
@@ -23,17 +24,24 @@ import qualified XMLArrows
 
 getSearchR :: Handler TypedContent
 getSearchR = do
-  mquery <- lookupGetParam "q"
-  case mquery of
-    Nothing -> redirect HomeR
-    Just query -> do
-      results <- case tryParseType query of
-        Just ty | not (isSimpleType ty) -> searchForType ty
-        _ -> searchForName (toLower query)
-      selectRep $ do
-        provideRep (htmlOutput query results)
-        provideRep (jsonOutput results)
+  query <- getQuery
+  results <- case tryParseType query of
+    Just ty | not (isSimpleType ty) -> searchForType ty
+    _ -> searchForName (toLower query)
+  selectRep $ do
+    provideRep (htmlOutput query results)
+    provideRep (jsonOutput results)
+
   where
+    getQuery :: Handler Text
+    getQuery = do
+      mquery <- lookupGetParam "q"
+      case mquery of
+        Nothing ->
+          redirect HomeR
+        Just query ->
+          return (strip query)
+
     htmlOutput :: Text -> [SearchResult] -> Handler Html
     htmlOutput query results = do
       fr <- getFragmentRender

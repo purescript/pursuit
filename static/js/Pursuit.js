@@ -106,6 +106,8 @@ function initializeSearchForm() {
     searchInput.setAttribute('placeholder', focusPlaceholder)
   }
 
+  // Trim whitespace (for if there was whitespace in the query string)
+  searchInput.value = searchInput.value.trim();
 
   // Render messages (if any)
   var message = Cookies.get('message')
