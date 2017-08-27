@@ -28,6 +28,12 @@
       Pursuit is free and open-source software, and the code is hosted on GitHub.
       Contributions are welcome: <a href="https://github.com/purescript/pursuit">https://github.com/purescript/pursuit</a>.
 
+  <dl .grouped-list>
+    <dt .grouped-list__title>Prim
+    <dd .grouped-list__item>
+      <a href=@{BuiltinDocsR "Prim"}>Prim</a> is a module which is built into
+      the compiler; it does not exist in any package.
+
 <div .clear-floats>
   <h2>Package Index
   $if null pkgNames
