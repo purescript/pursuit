@@ -2,15 +2,19 @@ module TemplateHelpers where
 
 import Import hiding (span)
 import qualified Data.List.Split as List
+import qualified Data.Map as Map
+import Data.Traversable (for)
 import Data.Version (Version)
+import Data.List (nub)
 import Data.Text (splitOn)
 import Data.Time.Format as TimeFormat
 import Text.Blaze.Html5 as H hiding (map, link)
-import Text.Blaze.Html5.Attributes as A hiding (span, name, start)
+import Text.Blaze.Html5.Attributes as A hiding (span, name, start, for)
 import qualified Web.Bower.PackageMeta as Bower
 import qualified Language.PureScript as P
 import qualified Language.PureScript.Docs as D
 import Language.PureScript.Docs.AsHtml
+import Handler.Database (lookupPackage)
 
 import GithubAPI (ReadmeMissing(..))
 import qualified GithubAPI
@@ -64,7 +68,7 @@ findTargetPackage pkg mn' =
 renderModuleList :: D.VerifiedPackage -> Handler Html
 renderModuleList pkg = do
   htmlRenderContext <- getHtmlRenderContext
-  let docsOutput = packageAsHtml (htmlRenderContext pkg) pkg
+  let docsOutput = packageAsHtml (Just . htmlRenderContext pkg . D.ignorePackage) pkg
       moduleNames = sort . map fst $ htmlModules docsOutput
   moduleLinks <- traverse (linkToModule pkg . D.Local) moduleNames
 
@@ -122,10 +126,14 @@ renderReadme = \case
           open an issue?
     |]
 
+
 renderHtmlDocs :: D.VerifiedPackage -> Text -> Handler (Maybe Html)
 renderHtmlDocs pkg mnString = do
   htmlRenderContext <- getHtmlRenderContext
-  let docsOutput = packageAsHtml (htmlRenderContext pkg) pkg
+  depHtmlRenderContext <- getDepHtmlRenderContexts pkg
+  let docsOutput = flip packageAsHtml pkg $ \case
+        D.Local mN -> Just $ htmlRenderContext pkg mN
+        D.FromDep pkgName mN -> depHtmlRenderContext pkgName mN
       mn = P.moduleNameFromString mnString
   traverse render $ lookup mn (htmlModules docsOutput)
 
@@ -149,7 +157,7 @@ primDocs =
   htmlOutputModuleLocals $
     snd $
       moduleAsHtml
-        (nullRenderContext (P.moduleNameFromString "Prim"))
+        (const $ Just $ nullRenderContext (P.moduleNameFromString "Prim"))
         D.primDocsModule
 
 -- | Produce a Route for a given DocLink.
@@ -169,6 +177,28 @@ docLinkRoute D.LinksContext{..} srcModule link = case D.linkLocation link of
       (PathPackageName pkgName)
       (PathVersion version)
       (P.runModuleName modName)
+
+getDepHtmlRenderContexts
+    :: D.Package a
+    -> Handler (Bower.PackageName -> P.ModuleName -> Maybe HtmlRenderContext)
+getDepHtmlRenderContexts D.Package {..} = do
+  htmlRenderContext <- getHtmlRenderContext
+  let reExportedPackages =
+        nub $ concat [
+          catMaybes [
+            case inPkg of
+              D.Local _ -> Nothing
+              D.FromDep pN _ -> find ((== pN) . fst) pkgResolvedDependencies
+          | (inPkg, _) <- modReExports
+          ]
+        | D.Module {..} <- pkgModules ]
+
+  m <- Map.fromList . catMaybes <$> do
+    for reExportedPackages $ \(pkgName, version) -> do
+      fmap (pkgName, ) . hush . fmap htmlRenderContext <$> do
+        lookupPackage pkgName version
+
+  return $ \pkgName mN -> fmap ($ mN) $ Map.lookup pkgName m
 
 getHtmlRenderContext :: Handler (D.Package a -> P.ModuleName -> HtmlRenderContext)
 getHtmlRenderContext = do

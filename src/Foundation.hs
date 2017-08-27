@@ -34,10 +34,8 @@ instance Read PathPackageName where
       Left _ -> []
 
 instance PathPiece PathPackageName where
-  toPathPiece =
-    runPackageName . runPathPackageName
-  fromPathPiece =
-    fmap PathPackageName . either (const Nothing) Just . parsePackageName
+  toPathPiece = runPackageName . runPathPackageName
+  fromPathPiece = fmap PathPackageName . hush . parsePackageName
 
 newtype PathVersion =
   PathVersion { runPathVersion :: Version }

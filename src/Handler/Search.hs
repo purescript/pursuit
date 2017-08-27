@@ -51,9 +51,7 @@ getSearchR = do
     jsonOutput = fmap toJSON . traverse searchResultToJSON
 
     tryParseType :: Text -> Maybe P.Type
-    tryParseType = hush (P.lex "") >=> hush (P.runTokenParser "" (P.parsePolyType <* Parsec.eof))
-      where
-        hush f = either (const Nothing) Just . f
+    tryParseType = hush . (P.lex "") >=> hush . (P.runTokenParser "" (P.parsePolyType <* Parsec.eof))
 
     isSimpleType :: P.Type -> Bool
     isSimpleType P.TypeVar{} = True
