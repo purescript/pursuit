@@ -50,15 +50,22 @@ getSearchR = do
 
     jsonOutput = fmap toJSON . traverse searchResultToJSON
 
-    tryParseType :: Text -> Maybe P.Type
-    tryParseType = hush (P.lex "") >=> hush (P.runTokenParser "" (P.parsePolyType <* Parsec.eof))
-      where
-        hush f = either (const Nothing) Just . f
-
     isSimpleType :: P.Type -> Bool
     isSimpleType P.TypeVar{} = True
     isSimpleType P.TypeConstructor{} = True
     isSimpleType _ = False
+
+parseWithTokenParser :: P.TokenParser a -> Text -> Maybe a
+parseWithTokenParser p =
+  hush (P.lex "") >=> hush (P.runTokenParser "" (p <* Parsec.eof))
+  where
+    hush f = either (const Nothing) Just . f
+
+tryParseType :: Text -> Maybe P.Type
+tryParseType = parseWithTokenParser P.parsePolyType
+
+isSymbol :: Text -> Bool
+isSymbol = maybe False (const True) . parseWithTokenParser P.symbol
 
 searchResultToJSON :: SearchResult -> Handler Value
 searchResultToJSON result@SearchResult{..} = do
@@ -95,7 +102,8 @@ routeResult SearchResult{..} =
 searchForName :: Text -> Handler [SearchResult]
 searchForName query = do
   db <- atomically . readTVar =<< (appDatabase <$> getYesod)
-  return (map fst (take 50 (concat (elems (submap (encodeUtf8 query) db)))))
+  let query' = if isSymbol query then "(" <> query else query
+  return (map fst (take 50 (concat (elems (submap (encodeUtf8 query') db)))))
 
 searchForType :: P.Type -> Handler [SearchResult]
 searchForType ty = do
