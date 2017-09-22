@@ -8,7 +8,7 @@
     Pursuit hosts API documentation for <a href="http://www.purescript.org/">PureScript</a> packages. It lets you search by package, module, and function names, as well as approximate type signatures.
 
   <p>
-    To get started, have a look around the <a href="/packages/purescript-prelude">Prelude</a>, or try one of these example searches:
+    To get started, have a look around <a href=@{BuiltinDocsR "Prim"}>Prim</a>, the <a href="/packages/purescript-prelude">Prelude</a>, or try one of these example searches:
 
   <ul .ul--search>
     <li><a href="/search?q=map">map</a></li>
@@ -27,12 +27,6 @@
     <dd .grouped-list__item>
       Pursuit is free and open-source software, and the code is hosted on GitHub.
       Contributions are welcome: <a href="https://github.com/purescript/pursuit">https://github.com/purescript/pursuit</a>.
-
-  <dl .grouped-list>
-    <dt .grouped-list__title>Prim
-    <dd .grouped-list__item>
-      <a href=@{BuiltinDocsR "Prim"}>Prim</a> is a module which is built into
-      the compiler; it does not exist in any package.
 
 <div .clear-floats>
   <h2>Package Index
