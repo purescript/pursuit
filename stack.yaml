@@ -12,5 +12,5 @@ extra-deps:
 - http-conduit-2.1.11
 - pipes-4.2.0
 - pipes-http-1.0.5
-- purescript-0.11.4
+- purescript-0.11.6
 - websockets-0.9.8.2
