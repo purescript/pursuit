@@ -1,16 +1,9 @@
-resolver: lts-8.18
+resolver: nightly-2017-09-10
 flags:
   pursuit:
     dev: true
 packages:
-- '.'
+- .
 extra-deps:
-- barrier-0.1.1
-- directory-1.2.7.1
-- http-client-0.4.31.2
-- http-client-tls-0.2.4.1
-- http-conduit-2.1.11
-- pipes-4.2.0
 - pipes-http-1.0.5
-- purescript-0.11.4
-- websockets-0.9.8.2
+- purescript-0.11.7

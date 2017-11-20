@@ -27,11 +27,11 @@ data ReadmeMissing
 -- | Try to determine why a readme was not available
 diagnoseReadmeProblem :: HttpException -> ReadmeMissing
 diagnoseReadmeProblem = \case
-  StatusCodeException status headers _
-    | lookup (CI.mk "X-RateLimit-Remaining") headers == Just "0"
-      && status == forbidden403 ->
+  HttpExceptionRequest _ (StatusCodeException resp _)
+    | lookup (CI.mk "X-RateLimit-Remaining") (responseHeaders resp) == Just "0"
+      && (responseStatus resp) == forbidden403 ->
     APIRateLimited
-    | status == notFound404 ->
+    | responseStatus resp == notFound404 ->
     ReadmeNotFound
   r ->
     OtherReason r
@@ -99,8 +99,8 @@ getUser token =
           _                 -> Nothing
       _            -> Nothing
 
-  catch401 (Left (StatusCodeException status _ _))
-    | status == HTTP.unauthorized401 = return $ Right Nothing
+  catch401 (Left (HttpExceptionRequest _ (StatusCodeException resp _)))
+    | responseStatus resp == HTTP.unauthorized401 = return $ Right Nothing
   catch401 other = return other
 
 getUser' ::

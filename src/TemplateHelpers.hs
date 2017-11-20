@@ -64,7 +64,7 @@ findTargetPackage pkg mn' =
 renderModuleList :: D.VerifiedPackage -> Handler Html
 renderModuleList pkg = do
   htmlRenderContext <- getHtmlRenderContext
-  let docsOutput = packageAsHtml (htmlRenderContext pkg) pkg
+  let docsOutput = packageAsHtml (Just . htmlRenderContext pkg . D.ignorePackage) pkg
       moduleNames = sort . map fst $ htmlModules docsOutput
   moduleLinks <- traverse (linkToModule pkg . D.Local) moduleNames
 
@@ -125,7 +125,7 @@ renderReadme = \case
 renderHtmlDocs :: D.VerifiedPackage -> Text -> Handler (Maybe Html)
 renderHtmlDocs pkg mnString = do
   htmlRenderContext <- getHtmlRenderContext
-  let docsOutput = packageAsHtml (htmlRenderContext pkg) pkg
+  let docsOutput = packageAsHtml (Just . htmlRenderContext pkg . D.ignorePackage) pkg
       mn = P.moduleNameFromString mnString
   traverse render $ lookup mn (htmlModules docsOutput)
 
@@ -149,7 +149,7 @@ primDocs =
   htmlOutputModuleLocals $
     snd $
       moduleAsHtml
-        (nullRenderContext (P.moduleNameFromString "Prim"))
+        (const (Just (nullRenderContext (P.moduleNameFromString "Prim"))))
         D.primDocsModule
 
 -- | Produce a Route for a given DocLink.
