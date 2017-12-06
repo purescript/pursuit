@@ -46,6 +46,36 @@ getHomeR =
         pkgNamesByLetter = groupBy ((==) `on` (firstLetter )) pkgNames
     defaultLayout $(widgetFile "homepage")
 
+getPackagesLatestR :: Handler TypedContent
+getPackagesLatestR = do
+  latest <- getLatestPackages
+  now <- liftIO getCurrentTime
+  let
+    toEntry (name, version, time) =
+      let pkgname = runPackageName name
+          pkgversion = pack (showVersion version)
+      in
+        FeedEntry
+        { feedEntryLink = PackageVersionR (PathPackageName name) (PathVersion version)
+        , feedEntryUpdated = time
+        , feedEntryTitle = pkgname <> " " <> pkgversion
+        , feedEntryContent = toHtml ("" :: Text)
+        , feedEntryEnclosure = Nothing
+        }
+    feed =
+      Feed
+      { feedTitle = "Latest PureScript Packages"
+      , feedLinkSelf = PackagesLatestR
+      , feedLinkHome = HomeR
+      , feedAuthor = "purescript.org"
+      , feedDescription = toHtml ("Latest PureScript Packages" :: Text)
+      , feedLanguage = "en"
+      , feedUpdated = now
+      , feedLogo = Just (StaticR favicon_favicon_32x32_png, "logo")
+      , feedEntries = map toEntry latest
+      }
+  newsFeed feed
+
 latestVersionOr404 :: PackageName -> Handler Version
 latestVersionOr404 pkgName = do
   v <- getLatestVersionFor pkgName

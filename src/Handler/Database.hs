@@ -35,18 +35,18 @@ getAllPackageNames = do
   contents <- liftIO $ getDirectoryContents (dir ++ "/verified/")
   return . sort . rights $ map (mkPackageName . pack) contents
 
-getLatestPackages :: Handler [(PackageName, Version)]
+getLatestPackages :: Handler [(PackageName, Version, UTCTime)]
 getLatestPackages = do
     pkgNames <- getAllPackageNames
     pkgNamesAndTimestamps <- traverse withTimestamp pkgNames
-    let latest = (map fst . take 10 . sortBy (comparing (Down . snd))) pkgNamesAndTimestamps
+    let latest = (take 10 . sortBy (comparing (Down . snd))) pkgNamesAndTimestamps
     catMaybes <$> traverse withVersion latest
   where
     withTimestamp :: PackageName -> Handler (PackageName, UTCTime)
     withTimestamp name = map (name,) (getPackageModificationTime name)
 
-    withVersion :: PackageName -> Handler (Maybe (PackageName, Version))
-    withVersion name = (map . map) (name,) (getLatestVersionFor name)
+    withVersion :: (PackageName, UTCTime) -> Handler (Maybe (PackageName, Version, UTCTime))
+    withVersion (name, time) = (maybe Nothing (\v -> Just (name, v, time))) <$> (getLatestVersionFor name)
 
 -- | This is horribly inefficient, but it will do for now.
 getAllPackages :: Handler [D.VerifiedPackage]

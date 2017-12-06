@@ -37,7 +37,7 @@
       <div .multi-col__col>
         <h3>Latest uploads
         <ul>
-          $forall (pkgName, version) <- latest
+          $forall (pkgName, version, _) <- latest
             <li>
               <div .deplink>
                 <a .deplink__link href=@{PackageVersionR (PathPackageName pkgName) (PathVersion version)}>#{runPackageName pkgName}

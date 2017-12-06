@@ -12,6 +12,7 @@
 !/packages/#PathPackageName/docs/#Text                 PackageModuleDocsR          GET
 !/packages/#PathPackageName/badge                      PackageBadgeR               GET
 !/packages/#PathPackageName/available-versions         PackageAvailableVersionsR   GET
+/packages-latest                                       PackagesLatestR             GET
 
 /builtins/docs/#Text                                   BuiltinDocsR                GET
 
