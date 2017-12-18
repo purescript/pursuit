@@ -4,43 +4,13 @@
   $if null results
     <div .result.result--empty>
       Your search for <strong>#{query}</strong> did not yield any results.
-  $forall r <- results
-    <div .result>
-      <h3 .result__title>
-        $case hrInfo r
-          $of PackageResult
-            <span .result__badge.badge.badge--package title="Package">P
-            <a .result__link href=#{fr $ routeResult r}>
-              #{Bower.runPackageName $ hrPkgName r}
-          $of ModuleResult moduleName
-            <span .badge.badge--module title="Module">M
-            <a .result__link href=#{fr $ routeResult r}>
-              #{moduleName}
-          $of DeclarationResult _ _ name _
-            <a .result__link href=#{fr $ routeResult r}>
-              #{name}
-
-    <div .result__body>
-      $case hrInfo r
-        $of PackageResult
-        $of ModuleResult _
-        $of DeclarationResult _ _ name typ
-          $maybe typeValue <- typ
-            <pre .result__signature><code>#{name} :: #{typeValue}</code></pre>
-
-      #{renderMarkdownNoLinks $ hrComments r}
-
-    <div .result__actions>
-      $case hrInfo r
-        $of PackageResult
-        $of ModuleResult _
-          <span .result__actions__item>
-            <span .badge.badge--package title="Package">P
-            #{Bower.runPackageName $ hrPkgName r}
-        $of DeclarationResult _ moduleName _ _
-          <span .result__actions__item>
-            <span .badge.badge--package title="Package">P
-            #{Bower.runPackageName $ hrPkgName r}
-          <span .result__actions__item>
-            <span .badge.badge--module title="Module">M
-            #{moduleName}
+  <div #results-container>
+    $forall r <- results
+      ^{searchResultHtml fr r}
+  $if not (null results)
+    <div #load-more .load_more>
+      $maybe nextUrl <- relatedUrlsNext urls
+        <a #load-more-link href="#{nextUrl}" data-load-more-url="#{fromMaybe "" (relatedUrlsPartial urls)}">
+          Load more results
+      $nothing
+        <p>No further results.

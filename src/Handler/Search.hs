@@ -22,15 +22,69 @@ import qualified Language.PureScript as P
 
 import qualified XMLArrows
 
+resultsPerPage :: Int
+resultsPerPage = 50
+
+maxPages :: Int
+maxPages = 5
+
+queryParam :: Text
+queryParam = "q"
+
+pagesParam :: Text
+pagesParam = "pages"
+
+partialParam :: Text
+partialParam = "partial"
+
 getSearchR :: Handler TypedContent
 getSearchR = do
   query <- getQuery
-  results <- case tryParseType query of
-    Just ty | not (isSimpleType ty) -> searchForType ty
-    _ -> searchForName (toLower query)
-  selectRep $ do
-    provideRep (htmlOutput query results)
-    provideRep (jsonOutput results)
+  npages <- getPages
+  let limit = npages * resultsPerPage
+
+  (results, hasMore) <- case tryParseType query of
+    Just ty | not (isSimpleType ty) -> searchForType limit ty
+    _ -> searchForName limit (toLower query)
+
+  let justThisPage = drop (resultsPerPage * (npages - 1)) results
+
+  urls <- getRelatedUrls query npages hasMore
+  addLinkHeader urls
+
+  partial <- lookupGetParam partialParam
+  if isJust partial
+    then do
+      -- XHR; return just the new results and nothing else in an HTML document
+      fr <- getFragmentRender
+
+      -- An XHR request includes a special header to let the client know
+      -- whether to offer to render more results. If an X-Load-More header is
+      -- present, then the value will be a URL which will return more results
+      -- as a 'partial' (i.e. a minimal HTML document containing the results
+      -- and nothing else). Otherwise, there will be an X-No-More header, whose
+      -- value will either be "limited" (if there are further results but
+      -- Pursuit has opted not to show them), or "exhausted" (if there are no
+      -- further results).
+      if hasMore
+        then do
+          case relatedUrlsPartial urls of
+            Just moreUrl ->
+              addHeader "X-Load-More" moreUrl
+            Nothing ->
+              addHeader "X-No-More" "limited"
+        else
+          addHeader "X-No-More" "exhausted"
+
+      sendResponseStatus ok200 [shamlet|
+        <div #results-container>
+          $forall r <- justThisPage
+            ^{searchResultHtml fr r}
+        |]
+    else do
+      selectRep $ do
+        provideRep (htmlOutput query urls results)
+        provideRep (jsonOutput justThisPage)
 
   where
     getQuery :: Handler Text
@@ -42,8 +96,16 @@ getSearchR = do
         Just query ->
           return (strip query)
 
-    htmlOutput :: Text -> [SearchResult] -> Handler Html
-    htmlOutput query results = do
+    getPages :: Handler Int
+    getPages = fmap go (lookupGetParam "pages")
+      where
+      go param =
+        case param >>= (readMay . unpack) of
+          Just npages -> max 1 (min npages maxPages)
+          Nothing -> 1
+
+    htmlOutput :: Text -> RelatedUrls -> [SearchResult] -> Handler Html
+    htmlOutput query urls results = do
       fr <- getFragmentRender
       content <- defaultLayout $(widgetFile "search")
       sendResponseStatus ok200 content
@@ -54,6 +116,72 @@ getSearchR = do
     isSimpleType P.TypeVar{} = True
     isSimpleType P.TypeConstructor{} = True
     isSimpleType _ = False
+
+-- Used for rendering URLs in Link headers and in the HTML.
+data RelatedUrls = RelatedUrls
+  { relatedUrlsNext :: Maybe Text
+  , relatedUrlsPrevious :: Maybe Text
+  , relatedUrlsPartial :: Maybe Text
+  }
+
+getRelatedUrls :: Text -> Int -> Bool -> Handler RelatedUrls
+getRelatedUrls query npages hasMore = do
+  urlWithParams <- renderSearchUrlParams
+  let baseParams = [(queryParam, query)]
+  let nextParams =
+        if hasMore && npages < maxPages
+          then
+            Just ((pagesParam, tshow (npages + 1)) : baseParams)
+          else
+            Nothing
+
+  let nextUrl =
+        fmap urlWithParams nextParams
+  let partialUrl =
+        fmap (\params -> urlWithParams ((partialParam, "true") : params))
+             nextParams
+
+  let prevParams =
+        if npages > 1
+          then
+            Just ((pagesParam, tshow (npages - 1)) : baseParams)
+          else
+            Nothing
+  let prevUrl = fmap urlWithParams prevParams
+
+  return RelatedUrls
+    { relatedUrlsNext = nextUrl
+    , relatedUrlsPrevious = prevUrl
+    , relatedUrlsPartial = partialUrl
+    }
+
+renderLinkHeader :: RelatedUrls -> Text
+renderLinkHeader urls =
+  let
+    nextLink =
+      fmap (\url ->
+        [ "<" <> url <> ">"
+        , "rel=\"next\""
+        , "title=\"Next " <> tshow resultsPerPage <> " results\""
+        ]) (relatedUrlsNext urls)
+    prevLink =
+      fmap (\url ->
+        [ "<" <> url <> ">"
+        , "rel=\"previous\""
+        , "title=\"Previous " <> tshow resultsPerPage <> " results\""
+        ]) (relatedUrlsPrevious urls)
+  in
+    intercalate ", " (map (intercalate "; ") (catMaybes [nextLink, prevLink]))
+
+addLinkHeader :: RelatedUrls -> Handler ()
+addLinkHeader urls =
+  addHeader "Link" (renderLinkHeader urls)
+
+-- Render a link to the SearchR route with the given parameters.
+renderSearchUrlParams :: Handler ([(Text, Text)] -> Text)
+renderSearchUrlParams = do
+  render <- getUrlRenderParams
+  return (render SearchR)
 
 parseWithTokenParser :: P.TokenParser a -> Text -> Maybe a
 parseWithTokenParser p =
@@ -80,7 +208,7 @@ searchResultToJSON result@SearchResult{..} = do
            , "url" .= url
            ]
 
-routeResult :: SearchResult -> ((Route App), Maybe Text)
+routeResult :: SearchResult -> (Route App, Maybe Text)
 routeResult SearchResult{..} =
   case hrInfo of
     PackageResult ->
@@ -99,16 +227,23 @@ routeResult SearchResult{..} =
   ppkgName = PathPackageName hrPkgName
   pversion = PathVersion hrPkgVersion
 
-searchForName :: Text -> Handler [SearchResult]
-searchForName query = do
+-- Like Prelude.take, except also returns a Bool indicating whether the
+-- original list has any additional elements after the returned prefix.
+take' :: Int -> [a] -> ([a], Bool)
+take' n xs =
+  let (prefix, rest) = splitAt n xs
+   in (prefix, not (null rest))
+
+searchForName :: Int -> Text -> Handler ([SearchResult], Bool)
+searchForName limit query = do
   db <- atomically . readTVar =<< (appDatabase <$> getYesod)
   let query' = if isSymbol query then "(" <> query else query
-  return (map fst (take 50 (concat (elems (submap (encodeUtf8 query') db)))))
+  return (take' limit (map fst (concat (elems (submap (encodeUtf8 query') db)))))
 
-searchForType :: P.Type -> Handler [SearchResult]
-searchForType ty = do
+searchForType :: Int -> P.Type -> Handler ([SearchResult], Bool)
+searchForType limit ty = do
     db <- atomically . readTVar =<< (appDatabase <$> getYesod)
-    return (map fst (take 50 (sortBy (comparing snd) (mapMaybe (matches ty) (concat (elems db))))))
+    return (take' limit (map fst (sortBy (comparing snd) (mapMaybe (matches ty) (concat (elems db))))))
   where
     matches :: P.Type -> (a, Maybe P.Type) -> Maybe (a, Int)
     matches ty1 (a, Just ty2) = do
@@ -178,3 +313,47 @@ renderMarkdownNoLinks =
   -- Wrapping in a div is necessary because of how XML arrows work
   >>> Html5.div
   >>> XMLArrows.run XMLArrows.replaceLinks
+
+searchResultHtml :: ((Route App, Maybe Text) -> Text) -> SearchResult -> Html
+searchResultHtml fr r =
+  [shamlet|
+    <div .result>
+      <h3 .result__title>
+        $case hrInfo r
+          $of PackageResult
+            <span .result__badge.badge.badge--package title="Package">P
+            <a .result__link href=#{fr $ routeResult r}>
+              #{Bower.runPackageName $ hrPkgName r}
+          $of ModuleResult moduleName
+            <span .badge.badge--module title="Module">M
+            <a .result__link href=#{fr $ routeResult r}>
+              #{moduleName}
+          $of DeclarationResult _ _ name _
+            <a .result__link href=#{fr $ routeResult r}>
+              #{name}
+
+    <div .result__body>
+      $case hrInfo r
+        $of PackageResult
+        $of ModuleResult _
+        $of DeclarationResult _ _ name typ
+          $maybe typeValue <- typ
+            <pre .result__signature><code>#{name} :: #{typeValue}</code></pre>
+
+      #{renderMarkdownNoLinks $ hrComments r}
+
+    <div .result__actions>
+      $case hrInfo r
+        $of PackageResult
+        $of ModuleResult _
+          <span .result__actions__item>
+            <span .badge.badge--package title="Package">P
+            #{Bower.runPackageName $ hrPkgName r}
+        $of DeclarationResult _ moduleName _ _
+          <span .result__actions__item>
+            <span .badge.badge--package title="Package">P
+            #{Bower.runPackageName $ hrPkgName r}
+          <span .result__actions__item>
+            <span .badge.badge--module title="Module">M
+            #{moduleName}
+  |]
