@@ -16,6 +16,8 @@ import Yesod.Default.Util (WidgetFileSettings, widgetFileNoReload,
 import System.Exit (exitFailure)
 import Yesod.EmbeddedStatic (mkEmbeddedStatic, embedDir)
 
+import Settings.EmbedPursuitCss (pursuitCssEntry)
+
 newtype GithubAuthToken =
   GithubAuthToken { runGithubAuthToken :: ByteString }
   deriving (Show, Eq, Ord)
@@ -61,7 +63,7 @@ data AppSettings = AppSettings
 #else
 #define DEV_BOOL False
 #endif
-mkEmbeddedStatic DEV_BOOL "eStatic" [embedDir "static"]
+mkEmbeddedStatic DEV_BOOL "eStatic" [embedDir "static", pure [pursuitCssEntry]]
 
 isDevelopment :: Bool
 isDevelopment = DEV_BOOL
