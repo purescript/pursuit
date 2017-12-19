@@ -134,8 +134,9 @@ renderHtmlDocs pkg mnString = do
   let docsOutput = flip packageAsHtml pkg $ \case
         D.Local mn -> Just $ htmlRenderContext pkg mn
         D.FromDep pkgName mn -> depHtmlRenderContext pkgName mn
-      mn = P.moduleNameFromString mnString
-  traverse render $ lookup mn (htmlModules docsOutput)
+  traverse render $
+    lookup (P.moduleNameFromString mnString)
+           (htmlModules docsOutput)
 
   where
   render :: HtmlOutputModule Html -> Handler Html
