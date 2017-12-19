@@ -1,0 +1,12 @@
+.load_more {
+  margin-top: 2em;
+}
+
+.load_more p {
+  font-style: italic;
+}
+
+.load_more a {
+  background: #eee;
+  padding: 0.4em;
+}

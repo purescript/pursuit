@@ -121,8 +121,56 @@ function initializeSearchForm() {
   }
 }
 
+function initializeLoadMoreLink(opts) {
+  var link = document.getElementById('load-more-link')
+  var results = document.getElementById('results-container')
+  function makeOnClickHandler(url) {
+    link.removeAttribute('data-load-more-url')
+    return function() {
+      var req = new XMLHttpRequest()
+      req.open('GET', url, true)
+      req.responseType = "document"
+      req.onload = function() {
+        var container = this.responseXML.getElementById('results-container')
+        var children = container.childNodes
+        var loadMoreUrl, status, msg, pEl
+        for (var i = 0; i < children.length; i++) {
+          results.appendChild(children[i])
+        }
+        if (loadMoreUrl = req.getResponseHeader("X-Load-More")) {
+          link.onclick = makeOnClickHandler(loadMoreUrl)
+        } else {
+          status = req.getResponseHeader("X-No-More")
+          switch (status) {
+            case "limited":
+              msg = "Further results have been omitted."
+              break;
+            case "exhausted":
+              msg = "No further results."
+              break;
+            default:
+              msg = "There are no more results, but the server did not appear to indicate why."
+          }
+          link.remove()
+          loadMoreDiv = document.getElementById('load-more')
+          pEl = document.createElement("p")
+          pEl.appendChild(document.createTextNode(msg))
+          loadMoreDiv.appendChild(pEl)
+        }
+      }
+      req.send(null)
+    }
+  }
+  var url = link.getAttribute('data-load-more-url')
+  if (url) {
+    link.onclick = makeOnClickHandler(url)
+    link.href = 'javascript:void(0)'
+  }
+}
+
 window.Pursuit = {
   initializeVersionSelector: initializeVersionSelector,
   initializeSearchForm: initializeSearchForm,
+  initializeLoadMoreLink: initializeLoadMoreLink
 }
 })()
