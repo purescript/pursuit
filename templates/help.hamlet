@@ -50,6 +50,26 @@
     <p>
       Your package, together with documentation, should now appear in Pursuit.
 
+  <div #module-docs .help>
+    <h3>Writing Module Documentation
+    <p>
+      Pursuit builds documentation from module source files. Documentation is formatted
+      as [markdown](https://guides.github.com/features/mastering-markdown/) prefixed on
+      each line by `-- |`. Type signatures for functions and Class definitions are discovered
+      and hyperlinked automagically.
+    <p>
+      Here's an example of a function with a docstring containing a code example:
+    <p>
+      <code>
+        -- | Break an array into its first element and remaining elements.
+        -- |
+        -- | ``` purescript
+        -- | f arr = case uncons arr of
+        -- |   Just { head: x, tail: xs } -> something
+        -- |   Nothing -> somethingElse
+        -- | ```
+        uncons :: forall a. Array a -> Maybe { head :: a, tail :: Array a }
+        uncons = uncons' (const Nothing) \x xs -> Just { head: x, tail: xs }
   <div #submit-automated .help>
     <h3>Submitting packages from a script
     <p>
