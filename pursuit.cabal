@@ -18,6 +18,7 @@ Flag library-only
 library
     hs-source-dirs: src, app
     exposed-modules: Application
+                     EmbeddedDocs
                      Foundation
                      GithubAPI
                      Handler.Caching

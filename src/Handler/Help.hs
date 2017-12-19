@@ -3,21 +3,9 @@ module Handler.Help where
 
 import Import
 import Handler.Caching
+import EmbeddedDocs
 
 getHelpR :: Handler Html
 getHelpR =
-  cacheHtml $ do
-    suggestedBadgeMarkup <- getSuggestedBadgeMarkup
+  cacheHtml $
     defaultLayout $(widgetFile "help")
-
-getSuggestedBadgeMarkup :: Handler Text
-getSuggestedBadgeMarkup = do
-  root <- appRoot . appSettings <$> getYesod
-  let url = (root <>)
-  return $ intercalate "\n"
-    [ "<a href=\"" <> url "/packages/$PACKAGE_NAME" <> "\">"
-    , "  <img src=\"" <> url "/packages/$PACKAGE_NAME/badge" <> "\""
-    , "       alt=\"$PACKAGE_NAME on Pursuit\">"
-    , "  </img>"
-    , "</a>"
-    ]
