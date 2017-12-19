@@ -185,9 +185,7 @@ renderSearchUrlParams = do
 
 parseWithTokenParser :: P.TokenParser a -> Text -> Maybe a
 parseWithTokenParser p =
-  hush (P.lex "") >=> hush (P.runTokenParser "" (p <* Parsec.eof))
-  where
-    hush f = either (const Nothing) Just . f
+  hush . (P.lex "") >=> hush . (P.runTokenParser "" (p <* Parsec.eof))
 
 tryParseType :: Text -> Maybe P.Type
 tryParseType = parseWithTokenParser P.parsePolyType
