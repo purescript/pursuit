@@ -56,7 +56,7 @@ getAllPackages = do
   catMaybes <$> traverse lookupPackageMay pkgNamesAndVersions
   where
   withVersion name = (map . map) (name,) (getLatestVersionFor name)
-  lookupPackageMay = map (either (const Nothing) Just) . uncurry lookupPackage
+  lookupPackageMay = map hush . uncurry lookupPackage
 
 tryStripPrefix :: Text -> Text -> Text
 tryStripPrefix pre s = fromMaybe s (T.stripPrefix pre s)
