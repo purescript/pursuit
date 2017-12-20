@@ -4,8 +4,8 @@
 --
 module EmbeddedDocs
   ( helpIndex
-  -- , helpAuthors
-  -- , helpUsers
+  , helpAuthors
+  , helpUsers
   ) where
 
 import Import.NoFoundation
@@ -17,3 +17,9 @@ renderMarkdown = toHtml . Cheapskate.markdown def . decodeUtf8
 
 helpIndex :: Html
 helpIndex = renderMarkdown $(embedFile "static/help-docs/index.md")
+
+helpAuthors :: Html
+helpAuthors = renderMarkdown $(embedFile "static/help-docs/authors.md")
+
+helpUsers :: Html
+helpUsers = renderMarkdown $(embedFile "static/help-docs/users.md")

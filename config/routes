@@ -17,4 +17,6 @@
 
 /search                                                SearchR                     GET
 
-/help HelpR GET
+/help         HelpR        GET
+/help/authors HelpAuthorsR GET
+/help/users   HelpUsersR   GET

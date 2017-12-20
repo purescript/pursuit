@@ -20,6 +20,7 @@ $doctype 5
     <link href="https://fonts.googleapis.com/css?family=Roboto+Mono|Roboto:300,400,400i,700,700i" type="text/css" rel="stylesheet">
     <link href=@{StaticR css_normalize_css} type="text/css" rel="stylesheet">
     <link href=@{StaticR css_pursuit_css} type="text/css" rel="stylesheet">
+    <link href=@{StaticR css_extra_css} type="text/css" rel="stylesheet">
     <script type="text/javascript" src=@{StaticR js_js_cookie_js}>
     <script type="text/javascript" src=@{StaticR js_Pursuit_js}>
     ^{pageHead pc}

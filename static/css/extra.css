@@ -1,0 +1,9 @@
+/* Additional Pursuit CSS
+ * Note that most of the Pursuit-related CSS lives in the compiler, so that it
+ * can be used for `purs docs`.
+ */
+
+/* This is mainly for the help pages */
+.col--main > h2:first-child {
+  margin-top: 0;
+}
