@@ -107,23 +107,66 @@ createDatabase = do
                , ( SearchResult (bowerName pkgMeta)
                                 pkgVersion
                                 (fromMaybe "" declComments)
-                                (DeclarationResult ns (P.runModuleName modName) declTitle (fmap (outputWith renderText . renderType) ty))
+                                (DeclarationResult ns (P.runModuleName modName) declTitle (fmap typeToText ty))
                  , ty
                  )
                )
         declEntry : do
           D.ChildDeclaration{..} <- declChildren
+          let ty' = extractChildDeclarationType declTitle declInfo cdeclInfo
           return ( fromText (T.toLower cdeclTitle)
                  , ( SearchResult (bowerName pkgMeta)
                                   pkgVersion
                                   (fromMaybe "" cdeclComments)
-                                  (DeclarationResult ValueLevel (P.runModuleName modName) cdeclTitle Nothing)
+                                  (DeclarationResult ValueLevel (P.runModuleName modName) cdeclTitle (fmap typeToText ty'))
                    , Nothing
                    )
                  )
   where
+    typeToText = outputWith renderText . renderType
+
     fromListWithDuplicates :: [(ByteString, a)] -> Trie.Trie [a]
     fromListWithDuplicates = foldr (\(k, a) -> Trie.alterBy (\_ xs -> Just . maybe xs (xs <>)) k [a]) Trie.empty
+
+-- Extract the type of a child declaration when considering it as a standalone
+-- declaration. For instance, type class members need to have the appropriate
+-- constraint added, and data constructors need to have their arguments plus
+-- the parent data type put together to form the constructor's type.
+--
+-- TODO: Move this into the purescript library?
+extractChildDeclarationType :: Text -> D.DeclarationInfo -> D.ChildDeclarationInfo -> Maybe P.Type
+extractChildDeclarationType declTitle declInfo cdeclInfo =
+  case (declInfo, cdeclInfo) of
+    (D.TypeClassDeclaration args _ _ , D.ChildTypeClassMember ty) ->
+      let
+        constraint =
+          P.Constraint
+            { P.constraintClass = parentName
+            , P.constraintArgs = map (P.TypeVar . fst) args
+            , P.constraintData = Nothing
+            }
+        in
+          Just (addConstraint constraint ty)
+    (D.DataDeclaration _ tyArgs, D.ChildDataConstructor args) ->
+      let
+        dataTy = foldl' P.TypeApp (P.TypeConstructor parentName)
+                                  (map (P.TypeVar . fst) tyArgs)
+        mkFun t1 t2 = P.TypeApp (P.TypeApp P.tyFunction t1) t2
+      in
+        Just . P.quantify $ case args of
+          [] ->
+            dataTy
+          (a:as) ->
+            foldl' mkFun a (as ++ [dataTy])
+    _ ->
+      Nothing
+
+  where
+    parentName :: P.Qualified (P.ProperName a)
+    parentName = P.Qualified Nothing (P.ProperName declTitle)
+
+    addConstraint constraint =
+      P.quantify . P.moveQuantifiersToFront . P.ConstrainedType constraint
 
 data SomethingMissing
   = NoSuchPackage
