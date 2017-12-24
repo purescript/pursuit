@@ -132,7 +132,7 @@ entriesForDeclaration mkResult modName D.Declaration{..} =
     ns =
       D.declInfoNamespace declInfo
     declEntry =
-      ( fromText (T.toLower declTitle)
+      ( fromText (T.toLower (handleTypeOp declTitle))
       , ( mkResult (fromMaybe "" declComments)
                    (DeclarationResult
                       ns
@@ -156,6 +156,10 @@ entriesForDeclaration mkResult modName D.Declaration{..} =
                , ty'
                )
              )
+  where
+  -- The declaration title of a type operator is e.g. "type (/\)". Here we
+  -- remove this prefix but leave other kinds of declarations unchanged.
+  handleTypeOp = tryStripPrefix "type "
 
 typeToText :: P.Type -> Text
 typeToText = outputWith renderText . renderType
