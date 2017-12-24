@@ -56,14 +56,21 @@ instance PathPiece VerificationKey where
 
 -- | A single search result.
 data SearchResult = SearchResult
-  { hrPkgName    :: PackageName
-  , hrPkgVersion :: Version
-  , hrComments   :: Text
-  , hrInfo       :: SearchResultInfo
+  { srSource   :: SearchResultSource
+  , srComments :: Text
+  , srInfo     :: SearchResultInfo
   }
   deriving (Show, Eq, Generic)
 
 instance NFData SearchResult
+
+-- | Tells you where a search result came from.
+data SearchResultSource
+  = SourceBuiltin
+  | SourcePackage PackageName Version
+  deriving (Show, Eq, Generic)
+
+instance NFData SearchResultSource
 
 data SearchResultInfo
   = PackageResult
