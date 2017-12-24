@@ -74,7 +74,15 @@ fromText = TE.encodeUtf8
 createDatabase :: Handler (Trie.Trie [(SearchResult, Maybe P.Type)])
 createDatabase = do
   pkgs <- getAllPackages
-  return . fromListWithDuplicates $ concatMap entriesForPackage pkgs
+  return . fromListWithDuplicates $
+    primEntries ++ concatMap entriesForPackage pkgs
+
+primEntries :: [(ByteString, (SearchResult, Maybe P.Type))]
+primEntries =
+  let
+    mkResult = SearchResult SourceBuiltin
+  in
+    entriesForModule mkResult D.primDocsModule
 
 entriesForPackage ::
   D.Package a ->
@@ -82,7 +90,7 @@ entriesForPackage ::
 entriesForPackage D.Package{..} =
   let
     mkResult =
-      SearchResult (bowerName pkgMeta) pkgVersion
+      SearchResult (SourcePackage (bowerName pkgMeta) pkgVersion)
     packageEntry =
       ( fromText (tryStripPrefix "purescript-" (T.toLower (runPackageName (bowerName pkgMeta))))
       , ( mkResult (fromMaybe "" (bowerDescription pkgMeta))

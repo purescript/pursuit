@@ -196,34 +196,53 @@ isSymbol = maybe False (const True) . parseWithTokenParser P.symbol
 searchResultToJSON :: SearchResult -> Handler Value
 searchResultToJSON result@SearchResult{..} = do
   url <- getFragmentRender <*> pure (routeResult result)
-  let html = renderMarkdown hrComments
+  let html = renderMarkdown srComments
   return $
-    object [ "package" .= hrPkgName
-           , "version" .= showVersion hrPkgVersion
+    object [ "package" .= pkg
+           , "version" .= showVersion version
            , "markup" .= BlazeT.renderMarkup html
            , "text" .= BlazeT.renderMarkup (Blaze.contents html)
-           , "info" .= toJSON hrInfo
+           , "info" .= toJSON srInfo
            , "url" .= url
            ]
+  where
+  (pkg, version) =
+    case srSource of
+      SourceBuiltin ->
+        ("<builtin>", P.version)
+      SourcePackage pn v ->
+        (Bower.runPackageName pn, v)
 
 routeResult :: SearchResult -> (Route App, Maybe Text)
 routeResult SearchResult{..} =
-  case hrInfo of
+  case srInfo of
     PackageResult ->
-      ( PackageR ppkgName
+      ( case srSource of
+          SourcePackage pkgName _ ->
+            PackageR (PathPackageName pkgName)
+          SourceBuiltin ->
+            -- this shouldn't happen
+            HomeR
       , Nothing
       )
     ModuleResult modName ->
-      ( PackageVersionModuleDocsR ppkgName pversion modName
+      ( moduleRoute modName
       , Nothing
       )
-    DeclarationResult typeOrValue modName declTitle _ ->
-      ( PackageVersionModuleDocsR ppkgName pversion modName
-      , Just $ drop 1 $ makeFragment typeOrValue declTitle
+    DeclarationResult ns modName declTitle _ ->
+      ( moduleRoute modName
+      , Just $ drop 1 $ makeFragment ns declTitle
       )
   where
-  ppkgName = PathPackageName hrPkgName
-  pversion = PathVersion hrPkgVersion
+  moduleRoute =
+    case srSource of
+      SourceBuiltin ->
+        BuiltinDocsR
+      SourcePackage pkgName version ->
+        PackageVersionModuleDocsR
+          (PathPackageName pkgName)
+          (PathVersion version)
+
 
 -- Like Prelude.take, except also returns a Bool indicating whether the
 -- original list has any additional elements after the returned prefix.
@@ -317,11 +336,11 @@ searchResultHtml fr r =
   [shamlet|
     <div .result>
       <h3 .result__title>
-        $case hrInfo r
+        $case srInfo r
           $of PackageResult
             <span .result__badge.badge.badge--package title="Package">P
             <a .result__link href=#{fr $ routeResult r}>
-              #{Bower.runPackageName $ hrPkgName r}
+              #{pkgName}
           $of ModuleResult moduleName
             <span .badge.badge--module title="Module">M
             <a .result__link href=#{fr $ routeResult r}>
@@ -331,27 +350,34 @@ searchResultHtml fr r =
               #{name}
 
     <div .result__body>
-      $case hrInfo r
+      $case srInfo r
         $of PackageResult
         $of ModuleResult _
         $of DeclarationResult _ _ name typ
           $maybe typeValue <- typ
             <pre .result__signature><code>#{name} :: #{typeValue}</code></pre>
 
-      #{renderMarkdownNoLinks $ hrComments r}
+      #{renderMarkdownNoLinks $ srComments r}
 
     <div .result__actions>
-      $case hrInfo r
+      $case srInfo r
         $of PackageResult
         $of ModuleResult _
           <span .result__actions__item>
             <span .badge.badge--package title="Package">P
-            #{Bower.runPackageName $ hrPkgName r}
+            #{pkgName}
         $of DeclarationResult _ moduleName _ _
           <span .result__actions__item>
             <span .badge.badge--package title="Package">P
-            #{Bower.runPackageName $ hrPkgName r}
+            #{pkgName}
           <span .result__actions__item>
             <span .badge.badge--module title="Module">M
             #{moduleName}
   |]
+  where
+  pkgName =
+    case srSource r of
+      SourceBuiltin ->
+        "<builtin>"
+      SourcePackage pn _ ->
+        Bower.runPackageName pn
