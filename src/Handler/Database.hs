@@ -153,7 +153,7 @@ entriesForDeclaration mkResult modName D.Declaration{..} =
                               (P.runModuleName modName)
                               cdeclTitle
                               (fmap typeToText ty'))
-               , Nothing
+               , ty'
                )
              )
 
