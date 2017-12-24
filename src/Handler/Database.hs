@@ -74,59 +74,88 @@ fromText = TE.encodeUtf8
 createDatabase :: Handler (Trie.Trie [(SearchResult, Maybe P.Type)])
 createDatabase = do
   pkgs <- getAllPackages
-  return . fromListWithDuplicates $ do
-    D.Package{..} <- pkgs
-    let packageEntry =
-          ( fromText (tryStripPrefix "purescript-" (T.toLower (runPackageName (bowerName pkgMeta))))
-          , ( SearchResult (bowerName pkgMeta)
-                         pkgVersion
-                         (fromMaybe "" (bowerDescription pkgMeta))
-                         PackageResult
-            , Nothing
-            )
-          )
-    packageEntry : do
-      D.Module{..} <- pkgModules
-      let moduleEntry =
-            ( fromText (T.toLower (P.runModuleName modName))
-            , ( SearchResult (bowerName pkgMeta)
-                             pkgVersion
-                             (fromMaybe "" modComments)
-                             (ModuleResult (P.runModuleName modName))
-              , Nothing
-              )
-            )
-      moduleEntry : do
-        D.Declaration{..} <- modDeclarations
-        let ty = case declInfo of
-                    D.ValueDeclaration t -> Just t
-                    _ -> Nothing
-            ns = D.declInfoNamespace declInfo
-            declEntry =
-               ( fromText (T.toLower declTitle)
-               , ( SearchResult (bowerName pkgMeta)
-                                pkgVersion
-                                (fromMaybe "" declComments)
-                                (DeclarationResult ns (P.runModuleName modName) declTitle (fmap typeToText ty))
-                 , ty
-                 )
-               )
-        declEntry : do
-          D.ChildDeclaration{..} <- declChildren
-          let ty' = extractChildDeclarationType declTitle declInfo cdeclInfo
-          return ( fromText (T.toLower cdeclTitle)
-                 , ( SearchResult (bowerName pkgMeta)
-                                  pkgVersion
-                                  (fromMaybe "" cdeclComments)
-                                  (DeclarationResult ValueLevel (P.runModuleName modName) cdeclTitle (fmap typeToText ty'))
-                   , Nothing
-                   )
-                 )
-  where
-    typeToText = outputWith renderText . renderType
+  return . fromListWithDuplicates $ concatMap entriesForPackage pkgs
 
-    fromListWithDuplicates :: [(ByteString, a)] -> Trie.Trie [a]
-    fromListWithDuplicates = foldr (\(k, a) -> Trie.alterBy (\_ xs -> Just . maybe xs (xs <>)) k [a]) Trie.empty
+entriesForPackage ::
+  D.Package a ->
+  [(ByteString, (SearchResult, Maybe P.Type))]
+entriesForPackage D.Package{..} =
+  let
+    mkResult =
+      SearchResult (bowerName pkgMeta) pkgVersion
+    packageEntry =
+      ( fromText (tryStripPrefix "purescript-" (T.toLower (runPackageName (bowerName pkgMeta))))
+      , ( mkResult (fromMaybe "" (bowerDescription pkgMeta))
+                   PackageResult
+        , Nothing
+        )
+      )
+  in
+    packageEntry : concatMap (entriesForModule mkResult) pkgModules
+
+entriesForModule ::
+  (Text -> SearchResultInfo -> SearchResult) ->
+  D.Module ->
+  [(ByteString, (SearchResult, Maybe P.Type))]
+entriesForModule mkResult D.Module{..} =
+  let
+    moduleEntry =
+      ( fromText (T.toLower (P.runModuleName modName))
+      , ( mkResult (fromMaybe "" modComments)
+                   (ModuleResult (P.runModuleName modName))
+        , Nothing
+        )
+      )
+  in
+    moduleEntry :
+      concatMap (entriesForDeclaration mkResult modName) modDeclarations
+
+entriesForDeclaration ::
+  (Text -> SearchResultInfo -> SearchResult) ->
+  P.ModuleName ->
+  D.Declaration ->
+  [(ByteString, (SearchResult, Maybe P.Type))]
+entriesForDeclaration mkResult modName D.Declaration{..} =
+  let
+    ty =
+      case declInfo of
+        D.ValueDeclaration t -> Just t
+        _ -> Nothing
+    ns =
+      D.declInfoNamespace declInfo
+    declEntry =
+      ( fromText (T.toLower declTitle)
+      , ( mkResult (fromMaybe "" declComments)
+                   (DeclarationResult
+                      ns
+                      (P.runModuleName modName)
+                      declTitle
+                      (fmap typeToText ty))
+        , ty
+        )
+      )
+  in
+    declEntry : do
+      D.ChildDeclaration{..} <- declChildren
+      let ty' = extractChildDeclarationType declTitle declInfo cdeclInfo
+      return ( fromText (T.toLower cdeclTitle)
+             , ( mkResult (fromMaybe "" cdeclComments)
+                          (DeclarationResult
+                              ValueLevel
+                              (P.runModuleName modName)
+                              cdeclTitle
+                              (fmap typeToText ty'))
+               , Nothing
+               )
+             )
+
+typeToText :: P.Type -> Text
+typeToText = outputWith renderText . renderType
+
+fromListWithDuplicates :: [(ByteString, a)] -> Trie.Trie [a]
+fromListWithDuplicates = foldr go Trie.empty
+  where
+  go (k, a) = Trie.alterBy (\_ xs -> Just . maybe xs (xs <>)) k [a]
 
 -- Extract the type of a child declaration when considering it as a standalone
 -- declaration. For instance, type class members need to have the appropriate
