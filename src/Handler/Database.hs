@@ -9,6 +9,7 @@ module Handler.Database
   , getLatestVersionFor
   , insertPackage
   , SomethingMissing(..)
+  , countReverseDependencies
   ) where
 
 import Import
@@ -17,6 +18,7 @@ import qualified Data.NonNull as NN
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Data.Trie as Trie
+import qualified Data.Map as Map
 import Data.Version (Version, showVersion)
 import System.Directory (getDirectoryContents, getModificationTime, doesDirectoryExist)
 
@@ -48,7 +50,8 @@ getLatestPackages = do
     withVersion :: PackageName -> Handler (Maybe (PackageName, Version))
     withVersion name = (map . map) (name,) (getLatestVersionFor name)
 
--- | This is horribly inefficient, but it will do for now.
+-- | This is horribly inefficient, but it will do for now. Note that this
+-- only gets the latest version of each package in the database.
 getAllPackages :: Handler [D.VerifiedPackage]
 getAllPackages = do
   pkgNames <- getAllPackageNames
@@ -71,9 +74,29 @@ renderText str = case str of
 fromText :: Text -> ByteString
 fromText = TE.encodeUtf8
 
+-- |
+-- Given a list of packages (which should not include duplicates, or more than
+-- one version of any given package), return a list of packages together with
+-- the number of reverse dependencies each one has, in no particular order.
+--
+countReverseDependencies :: [D.Package a] -> [(D.Package a, Int)]
+countReverseDependencies packages =
+  Map.elems $ foldl' go initialMap packages
+  where
+  initialMap =
+    Map.fromList $ map (\pkg -> (D.packageName pkg, (pkg, 0))) packages
+
+  go m pkg =
+    foldl' (flip increment) m
+      (map fst (D.pkgResolvedDependencies pkg))
+
+  increment =
+    Map.adjust (second (+1))
+
 createDatabase :: Handler (Trie.Trie [(SearchResult, Maybe P.Type)])
 createDatabase = do
-  pkgs <- getAllPackages
+  pkgsWithRevDeps <- countReverseDependencies <$> getAllPackages
+  let pkgs = map fst (sortWith (Down . snd) pkgsWithRevDeps)
   return . fromListWithDuplicates $
     primEntries ++ concatMap entriesForPackage pkgs
 
