@@ -5,8 +5,8 @@ module Handler.Search
   ) where
 
 import Import
-import Data.Text (strip)
-import Data.Trie (elems, submap)
+import qualified Data.Text as T
+import qualified Data.Trie as Trie
 import Data.Version (showVersion)
 import qualified Web.Bower.PackageMeta as Bower
 
@@ -43,9 +43,10 @@ getSearchR = do
   npages <- getPages
   let limit = npages * resultsPerPage
 
-  (results, hasMore) <- case tryParseType query of
-    Just ty | not (isSimpleType ty) -> searchForType limit ty
-    _ -> searchForName limit (toLower query)
+  (results, hasMore) <- do
+    resultSets <- traverse ($ query) searchSources
+    let interleavedResults = foldl' interleave [] resultSets
+    return . take' limit . map fst $ interleavedResults
 
   let justThisPage = drop (resultsPerPage * (npages - 1)) results
 
@@ -94,7 +95,7 @@ getSearchR = do
         Nothing ->
           redirect HomeR
         Just query ->
-          return (strip query)
+          return (T.strip query)
 
     getPages :: Handler Int
     getPages = fmap go (lookupGetParam "pages")
@@ -111,11 +112,6 @@ getSearchR = do
       sendResponseStatus ok200 content
 
     jsonOutput = fmap toJSON . traverse searchResultToJSON
-
-    isSimpleType :: P.Type -> Bool
-    isSimpleType P.TypeVar{} = True
-    isSimpleType P.TypeConstructor{} = True
-    isSimpleType _ = False
 
 -- Used for rendering URLs in Link headers and in the HTML.
 data RelatedUrls = RelatedUrls
@@ -243,24 +239,77 @@ routeResult SearchResult{..} =
           (PathPackageName pkgName)
           (PathVersion version)
 
+-- | Interleave two lists. If the arguments are in ascending order (according
+-- to their second elements) then the result is also in ascending order.
+interleave :: Ord score => [(a,score)] -> [(a,score)] -> [(a,score)]
+interleave [] ys = ys
+interleave xs [] = xs
+interleave (x@(_, scoreX):xs) (y@(_, scoreY):ys) =
+  if scoreX > scoreY
+    then
+      y : x : interleave xs ys
+    else
+      x : y : interleave xs ys
 
--- Like Prelude.take, except also returns a Bool indicating whether the
+-- | Like Prelude.take, except also returns a Bool indicating whether the
 -- original list has any additional elements after the returned prefix.
 take' :: Int -> [a] -> ([a], Bool)
 take' n xs =
   let (prefix, rest) = splitAt n xs
    in (prefix, not (null rest))
 
-searchForName :: Int -> Text -> Handler ([SearchResult], Bool)
-searchForName limit query = do
-  db <- atomically . readTVar =<< (appDatabase <$> getYesod)
-  let query' = if isSymbol query then "(" <> query else query
-  return (take' limit (map fst (concat (elems (submap (encodeUtf8 query') db)))))
+searchSources :: [Text -> Handler [(SearchResult, Int)]]
+searchSources =
+  [ searchForName
+  , searchForType
+  ]
 
-searchForType :: Int -> P.Type -> Handler ([SearchResult], Bool)
-searchForType limit ty = do
+-- | Return the entire list of entries which match the given query, together
+-- with a score (between 0 and 1).
+searchForName :: Text -> Handler [(SearchResult, Int)]
+searchForName query = do
+  db <- atomically . readTVar =<< (appDatabase <$> getYesod)
+  let
+    query' =
+      toLower $
+        if isSymbol query
+          then "(" <> query
+          else tryStripPrefix "purescript-" query
+    convert (key, rs) =
+      -- note that, because we are using a trie here, all the results are at
+      -- least as long as the query; we use the difference in length as the
+      -- score.
+      map (\r -> (fst r, T.length (decodeUtf8 key) - T.length query')) rs
+
+  return
+    (sortWith snd
+      (concat
+        (map convert
+          (Trie.toList (Trie.submap (encodeUtf8 query') db)))))
+  where
+  tryStripPrefix :: Text -> Text -> Text
+  tryStripPrefix pre s = fromMaybe s (T.stripPrefix pre s)
+
+searchForType :: Text -> Handler [(SearchResult, Int)]
+searchForType query =
+  case tryParseType query of
+    Just ty | not (isSimpleType ty) ->
+      searchForType' ty
+    _ ->
+      return []
+  where
+  isSimpleType :: P.Type -> Bool
+  isSimpleType P.TypeVar{} = True
+  isSimpleType P.TypeConstructor{} = True
+  isSimpleType _ = False
+
+
+-- | Return the entire list of entries which match the given type, together
+-- with a score (between 0 and 1).
+searchForType' :: P.Type -> Handler [(SearchResult, Int)]
+searchForType' ty = do
     db <- atomically . readTVar =<< (appDatabase <$> getYesod)
-    return (take' limit (map fst (sortBy (comparing snd) (mapMaybe (matches ty) (concat (elems db))))))
+    return (sortWith snd (mapMaybe (matches ty) (concat (Trie.elems db))))
   where
     matches :: P.Type -> (a, Maybe P.Type) -> Maybe (a, Int)
     matches ty1 (a, Just ty2) = do
