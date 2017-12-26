@@ -21,6 +21,7 @@ import qualified Text.Parsec.Combinator as Parsec
 import qualified Language.PureScript as P
 
 import qualified XMLArrows
+import SearchUtils (interleave)
 
 resultsPerPage :: Int
 resultsPerPage = 50
@@ -238,18 +239,6 @@ routeResult SearchResult{..} =
         PackageVersionModuleDocsR
           (PathPackageName pkgName)
           (PathVersion version)
-
--- | Interleave two lists. If the arguments are in ascending order (according
--- to their second elements) then the result is also in ascending order.
-interleave :: Ord score => [(a,score)] -> [(a,score)] -> [(a,score)]
-interleave [] ys = ys
-interleave xs [] = xs
-interleave (x@(_, scoreX):xs) (y@(_, scoreY):ys) =
-  if scoreX > scoreY
-    then
-      y : x : interleave xs ys
-    else
-      x : y : interleave xs ys
 
 -- | Like Prelude.take, except also returns a Bool indicating whether the
 -- original list has any additional elements after the returned prefix.
