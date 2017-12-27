@@ -6,7 +6,7 @@
 
 3. Authenticate to GitHub by running `pulp login`. (This is necessary in order for us to be able to tell who uploaded which packages).
 
-4. Change to your project directory and run `pulp publish`. This will register your package on Bower if necessary, push commits and the relevant tag to your "origin" Git remote, and then generate your documentation and upload it to Pursuit.
+4. Change to your project directory and run `pulp publish`. This will register your package on Bower if necessary, push commits and the relevant tag to your “origin” Git remote, and then generate your documentation and upload it to Pursuit.
 
    `pulp publish` also accepts a `--no-push` flag which skips the Bower registration check as well as pushing commits (this is useful for uploading other people's packages, if you ever need to do this). There is also a `--push-to` option which allows you to specify a different Git remote to push tags and commits to.
 
