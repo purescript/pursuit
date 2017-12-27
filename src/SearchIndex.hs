@@ -2,6 +2,7 @@ module SearchIndex
   ( SearchResult(..)
   , SearchResultSource(..)
   , SearchResultInfo(..)
+  , searchResultTitle
   , SearchIndex
   , emptySearchIndex
   , createSearchIndex
@@ -71,6 +72,20 @@ instance ToJSON SearchResultInfo where
       , "title" .= declTitle
       , "typeText" .= typeText
       ]
+
+searchResultTitle :: SearchResult -> Text
+searchResultTitle r =
+  case srInfo r of
+    PackageResult ->
+      case srSource r of
+        SourceBuiltin ->
+          "<builtin>"
+        SourcePackage pkgName _ ->
+          runPackageName pkgName
+    ModuleResult modName ->
+      modName
+    DeclarationResult _ title _ _ ->
+      title
 
 newtype SearchIndex
   = SearchIndex { unSearchIndex :: Trie [(SearchResult, Maybe P.Type)] }
