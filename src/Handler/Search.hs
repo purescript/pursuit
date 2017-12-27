@@ -2,6 +2,7 @@
 module Handler.Search
   ( getSearchR
   , SearchResult(..)
+  , interleave
   ) where
 
 import Import
@@ -22,7 +23,6 @@ import qualified XMLArrows
 import SearchIndex
   (SearchResult(..), SearchResultSource(..), SearchResultInfo(..), SearchIndex,
    searchForName, searchForType)
-import SearchUtils (interleave)
 
 resultsPerPage :: Int
 resultsPerPage = 50
@@ -237,6 +237,18 @@ take' :: Int -> [a] -> ([a], Bool)
 take' n xs =
   let (prefix, rest) = splitAt n xs
    in (prefix, not (null rest))
+
+-- | Interleave two lists. If the arguments are in ascending order (according
+-- to their second elements) then the result is also in ascending order.
+interleave :: Ord score => [(a,score)] -> [(a,score)] -> [(a,score)]
+interleave [] ys = ys
+interleave xs [] = xs
+interleave (x@(_, scoreX):xs) (y@(_, scoreY):ys) =
+  if scoreX > scoreY
+    then
+      y : interleave (x:xs) ys
+    else
+      x : interleave xs (y:ys)
 
 searchSources :: [Text -> Handler [(SearchResult, Int)]]
 searchSources =

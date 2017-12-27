@@ -5,7 +5,7 @@ import Test.Hspec
 import Test.Hspec.QuickCheck (prop)
 import Test.QuickCheck as QC
 
-import SearchUtils (interleave)
+import Handler.Search (interleave)
 
 data Whatev = A | B | C | D | E
   deriving (Show, Eq, Enum, Bounded)

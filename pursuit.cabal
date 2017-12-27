@@ -32,7 +32,6 @@ library
                      Import
                      Import.NoFoundation
                      SearchIndex
-                     SearchUtils
                      Settings
                      Settings.EmbedPursuitCss
                      TemplateHelpers
