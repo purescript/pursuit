@@ -10,20 +10,20 @@ which has been uploaded to Pursuit. This is the most common type of search
 result. It includes types, values (note: functions are values), data
 constructors, type synonyms, type classes, kinds, and so on. For example:
 
-* the query "const" will return the [`const`][] function in the results,
-* the query "Unit" will return the [`Unit`][] type in the results, and
-* the query "applicative" will return the [`Applicative`][] type class in the
+* the query “const” will return the [`const`][] function in the results,
+* the query “Unit” will return the [`Unit`][] type in the results, and
+* the query “applicative” will return the [`Applicative`][] type class in the
   results.
 
 Searching using prefixes of the desired result's name also works; for example,
-the query "sequen" returns the [`sequence`][] function.
+the query “sequen” returns the [`sequence`][] function.
 
 You can also search for declarations based on their type. For example, the type
-of [`const`][] is `forall a b. a -> b -> a`; if you search for "a -> b -> a",
+of [`const`][] is `forall a b. a -> b -> a`; if you search for “a -> b -> a”,
 then `const` will appear in the search results.
 
 When searching by type, Pursuit knows that the names you give to the type
-variables do not matter. For example, the query "x -> y -> x" also returns
+variables do not matter. For example, the query “x -> y -> x” also returns
 `const` in the results.
 
 ### Modules
@@ -35,10 +35,10 @@ repository][].
 To search for a module, enter either the whole module name or a prefix of it.
 For example:
 
-- the query "Control.Plus" returns the module `Control.Plus`,
-- the query "Data.String" returns the module `Data.String`, as well as
+- the query “Control.Plus” returns the module `Control.Plus`,
+- the query “Data.String” returns the module `Data.String`, as well as
   `Data.String.Base64`, `Data.String.CaseInsensitive`, and so on, and
-- the query "DOM" returns the module `DOM`, as well as all of the other modules
+- the query “DOM” returns the module `DOM`, as well as all of the other modules
   which begin with `DOM`.
 
 ### Packages
@@ -48,12 +48,12 @@ intended to be used together. Packages also have metadata attached to them such
 as their author, version, publish date, and so on.
 
 To search for a package, simply enter its name or a prefix of it. It is not
-necessary to include the "purescript-" prefix. For example:
+necessary to include the “purescript-” prefix. For example:
 
-* the query "lazy" returns the package `purescript-lazy`,
-* the query "strings" returns the packages `purescript-strings` and
+* the query “lazy” returns the package `purescript-lazy`,
+* the query “strings” returns the packages `purescript-strings` and
   `purescript-strings-extra`, and
-* the query "argonaut" returns the packages `purescript-argonaut`,
+* the query “argonaut” returns the packages `purescript-argonaut`,
   `purescript-argonaut-codecs`, `purescript-argonaut-core`, and so on.
 
 ### Types of searches
@@ -64,13 +64,13 @@ Only declarations can have types (modules and packages cannot), so when you
 search by type, you will only get declaration results.
 
 When searching by name, an entry in Pursuit's database is considered to be a
-match if the query is a prefix of its name. For example, "con" matches "const"
-but "cosnt" does not. (This may change in the future.)
+match if the query is a prefix of its name. For example, “con” matches “const”
+but “cosnt” does not. (This may change in the future.)
 
 Currently, documentation comments are not included in the search index. This
-means that, for example, if you search for "Kleisli", there are no results,
+means that, for example, if you search for “Kleisli”, there are no results,
 even though the documentation for [`Star`][] mentions that this type is also
-called "Kleisli" in some contexts. This may also change in the future; see
+called “Kleisli” in some contexts. This may also change in the future; see
 [Pursuit issue #318](https://github.com/purescript/pursuit/issues/318).
 
 [`const`]: https://pursuit.purescript.org/packages/purescript-prelude/docs/Prelude#v:const
