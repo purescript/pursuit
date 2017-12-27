@@ -31,6 +31,7 @@ library
                      Handler.Utils
                      Import
                      Import.NoFoundation
+                     SearchIndex
                      SearchUtils
                      Settings
                      Settings.EmbedPursuitCss

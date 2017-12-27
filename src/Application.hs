@@ -21,8 +21,7 @@ import Import
 import "monad-logger" Control.Monad.Logger (liftLoc)
 import Language.Haskell.TH.Syntax (qLocation)
 import Control.Concurrent (forkIO)
-import Control.Parallel.Strategies (withStrategy, evalTraversable, rdeepseq)
-import qualified Data.Trie as Trie
+import Control.Parallel.Strategies (withStrategy)
 import Network.Wai.Handler.Warp
   (Settings, defaultSettings, defaultShouldDisplayException, runSettings,
   setHost, setOnException, setPort, getPort)
@@ -41,6 +40,7 @@ import Handler.Packages
 import Handler.Search
 import Handler.PackageBadges
 import Handler.Help
+import SearchIndex (emptySearchIndex, createSearchIndex, evalSearchIndex)
 
 -- This line actually creates our YesodDispatch instance. It is the second half
 -- of the call to mkYesodData which occurs in Foundation.hs. Please see the
@@ -58,7 +58,7 @@ makeFoundation appSettings = do
     putStrLn $ "Starting in " <> mode <> " mode"
     appHttpManager <- newManager
     appLogger <- newStdoutLoggerSet defaultBufSize >>= makeYesodLogger
-    appDatabase <- newTVarIO Trie.empty
+    appSearchIndex <- newTVarIO emptySearchIndex
     let foundation = App{..}
     void (startRegenThread foundation)
     return foundation
@@ -71,13 +71,16 @@ makeFoundation appSettings = do
        let hour = 60 * 60 * 1000 * 1000 -- microseconds
        in every hour $ do
            let emptySessionMap = mempty :: SessionMap
-           pkgs <- Unsafe.runFakeHandler emptySessionMap
-                                         appLogger
-                                         foundation
-                                         createDatabase
+           pkgs <- Unsafe.runFakeHandler
+                      emptySessionMap
+                      appLogger
+                      foundation
+                      getAllPackages
+
            traverse ( atomically
-                    . writeTVar (appDatabase foundation)
-                    . withStrategy (evalTraversable rdeepseq)
+                    . writeTVar (appSearchIndex foundation)
+                    . withStrategy evalSearchIndex
+                    . createSearchIndex
                     ) pkgs
 
 -- | Convert our foundation to a WAI Application by calling @toWaiAppPlain@ and

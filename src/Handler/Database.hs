@@ -1,7 +1,8 @@
-
+-- | This module provides functions for working with the database (i.e. the set
+-- of JSON files representing the packages which have been uploaded to
+-- Pursuit).
 module Handler.Database
-  ( createDatabase
-  , getAllPackageNames
+  ( getAllPackageNames
   , getAllPackages
   , getLatestPackages
   , lookupPackage
@@ -9,24 +10,18 @@ module Handler.Database
   , getLatestVersionFor
   , insertPackage
   , SomethingMissing(..)
-  , countReverseDependencies
   ) where
 
 import Import
 import qualified Data.Aeson as A
 import qualified Data.NonNull as NN
 import qualified Data.Text as T
-import qualified Data.Text.Encoding as TE
-import qualified Data.Trie as Trie
-import qualified Data.Map as Map
 import Data.Version (Version, showVersion)
-import System.Directory (getDirectoryContents, getModificationTime, doesDirectoryExist)
+import System.Directory
+  (getDirectoryContents, getModificationTime, doesDirectoryExist)
 
-import Web.Bower.PackageMeta (PackageName, bowerName, bowerDescription,
-                              mkPackageName, runPackageName)
-import qualified Language.PureScript as P
+import Web.Bower.PackageMeta (PackageName, mkPackageName, runPackageName)
 import qualified Language.PureScript.Docs as D
-import Language.PureScript.Docs.RenderedCode (renderType, RenderedCodeElement(..), Namespace(..), outputWith)
 
 import Handler.Utils
 import Handler.Caching (clearCache)
@@ -60,177 +55,6 @@ getAllPackages = do
   where
   withVersion name = (map . map) (name,) (getLatestVersionFor name)
   lookupPackageMay = map hush . uncurry lookupPackage
-
-tryStripPrefix :: Text -> Text -> Text
-tryStripPrefix pre s = fromMaybe s (T.stripPrefix pre s)
-
-renderText :: RenderedCodeElement -> Text
-renderText str = case str of
-  Syntax s -> s
-  Keyword s -> s
-  Space -> " "
-  Symbol _ s _ -> s
-
-fromText :: Text -> ByteString
-fromText = TE.encodeUtf8
-
--- |
--- Given a list of packages (which should not include duplicates, or more than
--- one version of any given package), return a list of packages together with
--- the number of reverse dependencies each one has, in no particular order.
---
-countReverseDependencies :: [D.Package a] -> [(D.Package a, Int)]
-countReverseDependencies packages =
-  Map.elems $ foldl' go initialMap packages
-  where
-  initialMap =
-    Map.fromList $ map (\pkg -> (D.packageName pkg, (pkg, 0))) packages
-
-  go m pkg =
-    foldl' (flip increment) m
-      (map fst (D.pkgResolvedDependencies pkg))
-
-  increment =
-    Map.adjust (second (+1))
-
-createDatabase :: Handler (Trie.Trie [(SearchResult, Maybe P.Type)])
-createDatabase = do
-  pkgsWithRevDeps <- countReverseDependencies <$> getAllPackages
-  let pkgs = map fst (sortWith (Down . snd) pkgsWithRevDeps)
-  return . fromListWithDuplicates $
-    primEntries ++ concatMap entriesForPackage pkgs
-
-primEntries :: [(ByteString, (SearchResult, Maybe P.Type))]
-primEntries =
-  let
-    mkResult = SearchResult SourceBuiltin
-  in
-    entriesForModule mkResult D.primDocsModule
-
-entriesForPackage ::
-  D.Package a ->
-  [(ByteString, (SearchResult, Maybe P.Type))]
-entriesForPackage D.Package{..} =
-  let
-    mkResult =
-      SearchResult (SourcePackage (bowerName pkgMeta) pkgVersion)
-    packageEntry =
-      ( fromText (tryStripPrefix "purescript-" (T.toLower (runPackageName (bowerName pkgMeta))))
-      , ( mkResult (fromMaybe "" (bowerDescription pkgMeta))
-                   PackageResult
-        , Nothing
-        )
-      )
-  in
-    packageEntry : concatMap (entriesForModule mkResult) pkgModules
-
-entriesForModule ::
-  (Text -> SearchResultInfo -> SearchResult) ->
-  D.Module ->
-  [(ByteString, (SearchResult, Maybe P.Type))]
-entriesForModule mkResult D.Module{..} =
-  let
-    moduleEntry =
-      ( fromText (T.toLower (P.runModuleName modName))
-      , ( mkResult (fromMaybe "" modComments)
-                   (ModuleResult (P.runModuleName modName))
-        , Nothing
-        )
-      )
-  in
-    moduleEntry :
-      concatMap (entriesForDeclaration mkResult modName) modDeclarations
-
-entriesForDeclaration ::
-  (Text -> SearchResultInfo -> SearchResult) ->
-  P.ModuleName ->
-  D.Declaration ->
-  [(ByteString, (SearchResult, Maybe P.Type))]
-entriesForDeclaration mkResult modName D.Declaration{..} =
-  let
-    ty =
-      case declInfo of
-        D.ValueDeclaration t -> Just t
-        _ -> Nothing
-    ns =
-      D.declInfoNamespace declInfo
-    declEntry =
-      ( fromText (T.toLower (handleTypeOp declTitle))
-      , ( mkResult (fromMaybe "" declComments)
-                   (DeclarationResult
-                      ns
-                      (P.runModuleName modName)
-                      declTitle
-                      (fmap typeToText ty))
-        , ty
-        )
-      )
-  in
-    declEntry : do
-      D.ChildDeclaration{..} <- declChildren
-      let ty' = extractChildDeclarationType declTitle declInfo cdeclInfo
-      return ( fromText (T.toLower cdeclTitle)
-             , ( mkResult (fromMaybe "" cdeclComments)
-                          (DeclarationResult
-                              ValueLevel
-                              (P.runModuleName modName)
-                              cdeclTitle
-                              (fmap typeToText ty'))
-               , ty'
-               )
-             )
-  where
-  -- The declaration title of a type operator is e.g. "type (/\)". Here we
-  -- remove this prefix but leave other kinds of declarations unchanged.
-  handleTypeOp = tryStripPrefix "type "
-
-typeToText :: P.Type -> Text
-typeToText = outputWith renderText . renderType
-
-fromListWithDuplicates :: [(ByteString, a)] -> Trie.Trie [a]
-fromListWithDuplicates = foldr go Trie.empty
-  where
-  go (k, a) = Trie.alterBy (\_ xs -> Just . maybe xs (xs <>)) k [a]
-
--- Extract the type of a child declaration when considering it as a standalone
--- declaration. For instance, type class members need to have the appropriate
--- constraint added, and data constructors need to have their arguments plus
--- the parent data type put together to form the constructor's type.
---
--- TODO: Move this into the purescript library?
-extractChildDeclarationType :: Text -> D.DeclarationInfo -> D.ChildDeclarationInfo -> Maybe P.Type
-extractChildDeclarationType declTitle declInfo cdeclInfo =
-  case (declInfo, cdeclInfo) of
-    (D.TypeClassDeclaration args _ _ , D.ChildTypeClassMember ty) ->
-      let
-        constraint =
-          P.Constraint
-            { P.constraintClass = parentName
-            , P.constraintArgs = map (P.TypeVar . fst) args
-            , P.constraintData = Nothing
-            }
-        in
-          Just (addConstraint constraint ty)
-    (D.DataDeclaration _ tyArgs, D.ChildDataConstructor args) ->
-      let
-        dataTy = foldl' P.TypeApp (P.TypeConstructor parentName)
-                                  (map (P.TypeVar . fst) tyArgs)
-        mkFun t1 t2 = P.TypeApp (P.TypeApp P.tyFunction t1) t2
-      in
-        Just . P.quantify $ case args of
-          [] ->
-            dataTy
-          (a:as) ->
-            foldl' mkFun a (as ++ [dataTy])
-    _ ->
-      Nothing
-
-  where
-    parentName :: P.Qualified (P.ProperName a)
-    parentName = P.Qualified Nothing (P.ProperName declTitle)
-
-    addConstraint constraint =
-      P.quantify . P.moveQuantifiersToFront . P.ConstrainedType constraint
 
 data SomethingMissing
   = NoSuchPackage

@@ -6,7 +6,6 @@ module Handler.Search
 
 import Import
 import qualified Data.Text as T
-import qualified Data.Trie as Trie
 import Data.Version (showVersion)
 import qualified Web.Bower.PackageMeta as Bower
 
@@ -16,12 +15,14 @@ import TemplateHelpers (getFragmentRender)
 import qualified Text.Blaze as Blaze
 import qualified Text.Blaze.Html5 as Html5
 import qualified Text.Blaze.Renderer.Text as BlazeT
-import qualified Text.Parsec.Combinator as Parsec
 
 import qualified Language.PureScript as P
 
 import qualified XMLArrows
-import SearchUtils (interleave, compareTypes)
+import SearchIndex
+  (SearchResult(..), SearchResultSource(..), SearchResultInfo(..), SearchIndex,
+   searchForName, searchForType)
+import SearchUtils (interleave)
 
 resultsPerPage :: Int
 resultsPerPage = 50
@@ -180,16 +181,6 @@ renderSearchUrlParams = do
   render <- getUrlRenderParams
   return (render SearchR)
 
-parseWithTokenParser :: P.TokenParser a -> Text -> Maybe a
-parseWithTokenParser p =
-  hush . (P.lex "") >=> hush . (P.runTokenParser "" (p <* Parsec.eof))
-
-tryParseType :: Text -> Maybe P.Type
-tryParseType = parseWithTokenParser P.parsePolyType
-
-isSymbol :: Text -> Bool
-isSymbol = maybe False (const True) . parseWithTokenParser P.symbol
-
 searchResultToJSON :: SearchResult -> Handler Value
 searchResultToJSON result@SearchResult{..} = do
   url <- getFragmentRender <*> pure (routeResult result)
@@ -249,62 +240,17 @@ take' n xs =
 
 searchSources :: [Text -> Handler [(SearchResult, Int)]]
 searchSources =
-  [ searchForName
-  , searchForType
-  ]
-
--- | Return the entire list of entries which match the given query, together
--- with a score (between 0 and 1).
-searchForName :: Text -> Handler [(SearchResult, Int)]
-searchForName query = do
-  db <- atomically . readTVar =<< (appDatabase <$> getYesod)
-  let
-    query' =
-      toLower $
-        if isSymbol query
-          then "(" <> query
-          else tryStripPrefix "purescript-" query
-    convert (key, rs) =
-      -- note that, because we are using a trie here, all the results are at
-      -- least as long as the query; we use the difference in length as the
-      -- score.
-      map (\r -> (fst r, T.length (decodeUtf8 key) - T.length query')) rs
-
-  return
-    (sortWith snd
-      (concat
-        (map convert
-          (Trie.toList (Trie.submap (encodeUtf8 query') db)))))
+  map conv
+    [ searchForName
+    , searchForType
+    ]
   where
-  tryStripPrefix :: Text -> Text -> Text
-  tryStripPrefix pre s = fromMaybe s (T.stripPrefix pre s)
-
-searchForType :: Text -> Handler [(SearchResult, Int)]
-searchForType query =
-  case tryParseType query of
-    Just ty | not (isSimpleType ty) ->
-      searchForType' ty
-    _ ->
-      return []
-  where
-  isSimpleType :: P.Type -> Bool
-  isSimpleType P.TypeVar{} = True
-  isSimpleType P.TypeConstructor{} = True
-  isSimpleType _ = False
-
-
--- | Return the entire list of entries which match the given type, together
--- with a score (between 0 and 1).
-searchForType' :: P.Type -> Handler [(SearchResult, Int)]
-searchForType' ty = do
-    db <- atomically . readTVar =<< (appDatabase <$> getYesod)
-    return (sortWith snd (mapMaybe (matches ty) (concat (Trie.elems db))))
-  where
-    matches :: P.Type -> (a, Maybe P.Type) -> Maybe (a, Int)
-    matches ty1 (a, Just ty2) = do
-      score <- compareTypes ty1 ty2
-      return (a, score)
-    matches _ _ = Nothing
+  conv :: (Text -> SearchIndex -> [(SearchResult, Int)]) ->
+          Text ->
+          Handler [(SearchResult, Int)]
+  conv f query = do
+    idx <- liftIO . readTVarIO . appSearchIndex =<< getYesod
+    return $ f query idx
 
 renderMarkdownNoLinks :: Text -> Html
 renderMarkdownNoLinks =

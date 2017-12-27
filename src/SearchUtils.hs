@@ -2,7 +2,7 @@
 module SearchUtils where
 
 import Import.NoFoundation
-
+import qualified Text.Parsec.Combinator as Parsec
 import qualified Language.PureScript as P
 
 -- | Interleave two lists. If the arguments are in ascending order (according
@@ -17,9 +17,20 @@ interleave (x@(_, scoreX):xs) (y@(_, scoreY):ys) =
     else
       x : interleave xs (y:ys)
 
--- This is an approximation to type subsumption / unification.
--- This function returns Just a score if there is a possible match,
--- or Nothing otherwise. Lower scores are better.
+-- | This is an approximation to type subsumption / unification. This function
+-- returns Just a score if there is a possible match, or Nothing otherwise.
+-- Lower scores are better.
+--
+-- The first argument is the query, and the second is the candidate result.
+-- This function is not symmetric; for example:
+--
+-- let compare s1 s2 = compareTypes <$> tryParseType s2 <*> tryParseType s2
+--
+-- >>> compare "a" "Int"
+-- Just Nothing
+-- >>> compare "Int" "a"
+-- Just (Just 1)
+--
 compareTypes :: P.Type -> P.Type -> Maybe Int
 compareTypes (P.TypeVar _) (P.TypeVar _) = Just 0
 compareTypes t (P.TypeVar _) = Just (1 + typeComplexity t)
@@ -29,7 +40,7 @@ compareTypes (P.TypeConstructor q1) (P.TypeConstructor q2) | compareQual q1 q2 =
 -- There is a special case for functions, since if the user _asked_ for a function,
 -- they probably don't want to see something more general of type 'f a' or 'f a b'.
 compareTypes (P.TypeApp a b) (P.TypeApp c d)
-  | not (isFunction a && not (isFunction c)) = (+) <$> compareTypes a c <*> compareTypes b d
+  | not (isFunction a) || isFunction c = (+) <$> compareTypes a c <*> compareTypes b d
 compareTypes (P.ForAll _ t1 _) t2 = compareTypes t1 t2
 compareTypes t1 (P.ForAll _ t2 _) = compareTypes t1 t2
 compareTypes (P.ConstrainedType _ t1) t2 = compareTypes t1 t2
@@ -72,3 +83,13 @@ typeComplexity _ = 0
 compareQual :: Eq a => P.Qualified a -> P.Qualified a -> Bool
 compareQual (P.Qualified (Just mn1) a1) (P.Qualified (Just mn2) a2) = mn1 == mn2 && a1 == a2
 compareQual (P.Qualified _ a1) (P.Qualified _ a2) = a1 == a2
+
+parseWithTokenParser :: P.TokenParser a -> Text -> Maybe a
+parseWithTokenParser p =
+  hush . (P.lex "") >=> hush . (P.runTokenParser "" (p <* Parsec.eof))
+
+tryParseType :: Text -> Maybe P.Type
+tryParseType = parseWithTokenParser P.parsePolyType
+
+isSymbol :: Text -> Bool
+isSymbol = maybe False (const True) . parseWithTokenParser P.symbol

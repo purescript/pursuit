@@ -17,11 +17,11 @@ import Yesod.EmbeddedStatic        (EmbeddedStatic, embedStaticContent)
 import qualified Yesod.Core.Unsafe as Unsafe
 
 import Web.Bower.PackageMeta (PackageName, parsePackageName, runPackageName)
-import qualified Data.Trie as Trie
 import Data.Version
-import qualified Language.PureScript as P
 import qualified Language.PureScript.Docs as D
 import qualified Paths_pursuit as Paths
+
+import SearchIndex (SearchIndex)
 
 newtype PathPackageName =
   PathPackageName { runPathPackageName :: PackageName }
@@ -54,50 +54,6 @@ instance PathPiece VerificationKey where
   toPathPiece = decodeUtf8 . runVerificationKey
   fromPathPiece = Just . VerificationKey . encodeUtf8
 
--- | A single search result.
-data SearchResult = SearchResult
-  { srSource   :: SearchResultSource
-  , srComments :: Text
-  , srInfo     :: SearchResultInfo
-  }
-  deriving (Show, Eq, Generic)
-
-instance NFData SearchResult
-
--- | Tells you where a search result came from.
-data SearchResultSource
-  = SourceBuiltin
-  | SourcePackage PackageName Version
-  deriving (Show, Eq, Generic)
-
-instance NFData SearchResultSource
-
-data SearchResultInfo
-  = PackageResult
-  | ModuleResult Text
-  -- ^ Module name
-  | DeclarationResult D.Namespace Text Text (Maybe Text)
-  -- ^ Module name & declaration title & type if value
-  deriving (Show, Eq, Generic)
-
-instance NFData SearchResultInfo
-
-instance ToJSON SearchResultInfo where
-  toJSON i = object $ case i of
-    PackageResult ->
-      [ "type" .= ("package" :: Text)
-      ]
-    ModuleResult moduleName ->
-      [ "type" .= ("module" :: Text)
-      , "module" .= moduleName
-      ]
-    DeclarationResult typeOrValue moduleName declTitle typeText ->
-      [ "type" .= ("declaration" :: Text)
-      , "typeOrValue" .= show typeOrValue
-      , "module" .= moduleName
-      , "title" .= declTitle
-      , "typeText" .= typeText
-      ]
 
 -- | The foundation datatype for your application. This can be a good place to
 -- keep settings and values requiring initialization before your application
@@ -109,7 +65,7 @@ data App = App
     -- ^ Settings for static file serving.
     , appHttpManager    :: Manager
     , appLogger         :: Logger
-    , appDatabase       :: TVar (Trie.Trie [(SearchResult, Maybe P.Type)])
+    , appSearchIndex    :: TVar SearchIndex
     }
 
 instance HasHttpManager App where
