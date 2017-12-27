@@ -36,25 +36,25 @@ helpLayout forWhom inner =
     <div .col.col--aside>
       <dl .grouped-list>
         <dt .grouped-list__title>
-          Contents
+          Overview
         <dd .grouped-list__item>
           <a href="/help">Help index
+      <dl .grouped-list>
+        <dt .grouped-list__title>
+          Pursuit users
         <dd .grouped-list__item>
-          <a href="/help/users">Pursuit users
-          <ul>
-            <li>
-              <a href="/help/users#searching">
-                Searching
+          <a href="/help/users#searching">
+            Searching
+      <dl .grouped-list>
+        <dt .grouped-list__title>
+          Package authors
         <dd .grouped-list__item>
-          <a href="/help/authors">Package authors
-          <ul>
-            <li>
-              <a href="/help/authors#submitting-packages">
-                How to submit packages
-            <li>
-              <a href="/help/authors#submit-automated">
-                Submitting packages from a script
-            <li>
-              <a href="/help/authors#package-badges">
-                Package badges
+          <a href="/help/authors#submitting-packages">
+            How to submit packages
+        <dd .grouped-list__item>
+          <a href="/help/authors#submit-automated">
+            Submitting packages from a script
+        <dd .grouped-list__item>
+          <a href="/help/authors#package-badges">
+            Package badges
     |]
