@@ -1,4 +1,4 @@
-## How to submit packages <a name="submitting-packages"></a>
+## <a name="submitting-packages"></a>How to submit packages
 
 1. Put the code up on GitHub. (Currently, GitHub is the only supported hosting method. If you'd rather host your code somewhere else, please open an issue and let us know).
 
@@ -13,7 +13,7 @@
 
 Your package, together with documentation, should now appear in Pursuit.
 
-## Submitting packages from a script <a name="submit-automated"></a>
+## <a name="submit-automated"></a>Submitting packages from a script
 
 You can also use Pulp to submit packages from a script. Pulp prompts for confirmation when you run `pulp publish`, so you will need to use a program like `yes` to answer affirmatively.
 
@@ -41,7 +41,7 @@ curl -X POST \
 
 If your submission is successful, Pursuit will return a 201 Created response, and the URL for your newly uploaded package will be in the Location header.
 
-## Package badges <a name="package-badges"></a>
+## <a name="package-badges"></a>Package badges
 
 Pursuit can generate SVG badges for your packages, which you can put on your project's homepage, or perhaps its GitHub readme.
 
