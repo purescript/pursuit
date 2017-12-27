@@ -90,7 +90,22 @@ searchResultTitle r =
       title
 
 newtype SearchIndex
-  = SearchIndex { unSearchIndex :: Trie [(SearchResult, Maybe P.Type)] }
+  = SearchIndex { unSearchIndex :: Trie [IndexEntry] }
+
+data IndexEntry = IndexEntry
+  { entryResult  :: !SearchResult
+  , entryType    :: !(Maybe P.Type)
+  -- | The number of reverse dependencies of the containing package. Used for
+  -- sorting otherwise equivalently-ranked results. We use 'Maybe (Down Int)'
+  -- so that builtin modules (e.g. Prim) can use 'Nothing' and have it compare
+  -- less than everything else, and otherwise, packages with more reverse
+  -- dependencies compare less than packages with more; note that lower is
+  -- better when searching.
+  , entryRevDeps :: !(Maybe (Down Int))
+  }
+  deriving (Show, Eq, Generic)
+
+instance NFData IndexEntry
 
 emptySearchIndex :: SearchIndex
 emptySearchIndex = SearchIndex Trie.empty
@@ -99,9 +114,8 @@ emptySearchIndex = SearchIndex Trie.empty
 createSearchIndex :: [D.Package a] -> SearchIndex
 createSearchIndex =
   countReverseDependencies
-  >>> sortWith (Down . snd)
-  >>> map fst
-  >>> concatMap entriesForPackage
+  >>> sortOn (Down . snd)
+  >>> concatMap (uncurry entriesForPackage)
   >>> (primEntries ++)
   >>> fromListWithDuplicates
   >>> SearchIndex
@@ -129,53 +143,65 @@ countReverseDependencies packages =
   increment =
     Map.adjust (second (+1))
 
-primEntries :: [(ByteString, (SearchResult, Maybe P.Type))]
+primEntries :: [(ByteString, IndexEntry)]
 primEntries =
   let
-    mkResult = SearchResult SourceBuiltin
+    mkEntry comments info mtype =
+      IndexEntry
+        { entryResult  = SearchResult SourceBuiltin comments info
+        , entryType    = mtype
+        , entryRevDeps = Nothing
+        }
   in
-    entriesForModule mkResult D.primDocsModule
+    entriesForModule mkEntry D.primDocsModule
 
-entriesForPackage ::
-  D.Package a ->
-  [(ByteString, (SearchResult, Maybe P.Type))]
-entriesForPackage D.Package{..} =
+entriesForPackage :: D.Package a -> Int -> [(ByteString, IndexEntry)]
+entriesForPackage D.Package{..} revDeps =
   let
-    mkResult =
-      SearchResult (SourcePackage (bowerName pkgMeta) pkgVersion)
+    src =
+      SourcePackage (bowerName pkgMeta) pkgVersion
+    mkEntry comments info mtype =
+        IndexEntry
+          { entryResult  = SearchResult src comments info
+          , entryType    = mtype
+          , entryRevDeps = Just (Down revDeps)
+          }
+    entryKey =
+      encodeUtf8
+        (tryStripPrefix "purescript-"
+          (T.toLower
+            (runPackageName (bowerName pkgMeta))))
     packageEntry =
-      ( encodeUtf8 (tryStripPrefix "purescript-" (T.toLower (runPackageName (bowerName pkgMeta))))
-      , ( mkResult (fromMaybe "" (bowerDescription pkgMeta))
-                   PackageResult
-        , Nothing
-        )
+      ( entryKey
+      , mkEntry (fromMaybe "" (bowerDescription pkgMeta))
+                PackageResult
+                Nothing
       )
   in
-    packageEntry : concatMap (entriesForModule mkResult) pkgModules
+    packageEntry : concatMap (entriesForModule mkEntry) pkgModules
 
 entriesForModule ::
-  (Text -> SearchResultInfo -> SearchResult) ->
+  (Text -> SearchResultInfo -> Maybe P.Type -> IndexEntry) ->
   D.Module ->
-  [(ByteString, (SearchResult, Maybe P.Type))]
-entriesForModule mkResult D.Module{..} =
+  [(ByteString, IndexEntry)]
+entriesForModule mkEntry D.Module{..} =
   let
     moduleEntry =
       ( encodeUtf8 (T.toLower (P.runModuleName modName))
-      , ( mkResult (fromMaybe "" modComments)
-                   (ModuleResult (P.runModuleName modName))
-        , Nothing
-        )
+      , mkEntry (fromMaybe "" modComments)
+                (ModuleResult (P.runModuleName modName))
+                Nothing
       )
   in
     moduleEntry :
-      concatMap (entriesForDeclaration mkResult modName) modDeclarations
+      concatMap (entriesForDeclaration mkEntry modName) modDeclarations
 
 entriesForDeclaration ::
-  (Text -> SearchResultInfo -> SearchResult) ->
+  (Text -> SearchResultInfo -> Maybe P.Type -> IndexEntry) ->
   P.ModuleName ->
   D.Declaration ->
-  [(ByteString, (SearchResult, Maybe P.Type))]
-entriesForDeclaration mkResult modName D.Declaration{..} =
+  [(ByteString, IndexEntry)]
+entriesForDeclaration mkEntry modName D.Declaration{..} =
   let
     ty =
       case declInfo of
@@ -185,28 +211,26 @@ entriesForDeclaration mkResult modName D.Declaration{..} =
       D.declInfoNamespace declInfo
     declEntry =
       ( encodeUtf8 (T.toLower (handleTypeOp declTitle))
-      , ( mkResult (fromMaybe "" declComments)
-                   (DeclarationResult
-                      ns
-                      (P.runModuleName modName)
-                      declTitle
-                      (fmap typeToText ty))
-        , ty
-        )
+      , mkEntry (fromMaybe "" declComments)
+                (DeclarationResult
+                  ns
+                  (P.runModuleName modName)
+                  declTitle
+                  (fmap typeToText ty))
+                ty
       )
   in
     declEntry : do
       D.ChildDeclaration{..} <- declChildren
       let ty' = extractChildDeclarationType declTitle declInfo cdeclInfo
       return ( encodeUtf8 (T.toLower cdeclTitle)
-             , ( mkResult (fromMaybe "" cdeclComments)
-                          (DeclarationResult
-                              D.ValueLevel
-                              (P.runModuleName modName)
-                              cdeclTitle
-                              (fmap typeToText ty'))
-               , ty'
-               )
+             , mkEntry (fromMaybe "" cdeclComments)
+                       (DeclarationResult
+                         D.ValueLevel
+                         (P.runModuleName modName)
+                         cdeclTitle
+                         (fmap typeToText ty'))
+                       ty'
              )
   where
   -- The declaration title of a type operator is e.g. "type (/\)". Here we
@@ -279,18 +303,23 @@ searchForName query =
         if isSymbol query
           then "(" <> query
           else tryStripPrefix "purescript-" query
-    convert (key, rs) =
+
+    convert (key, entries) =
       -- note that, because we are using a trie here, all the results are at
       -- least as long as the query; we use the difference in length as the
       -- score.
-      map (\r -> (fst r, T.length (decodeUtf8 key) - T.length query')) rs
+      map (\entry ->
+        ( entry
+        , T.length (decodeUtf8 key) - T.length query'
+        )) entries
+
   in
     unSearchIndex
     >>> Trie.submap (encodeUtf8 query')
     >>> Trie.toList
     >>> map convert
     >>> concat
-    >>> sortWith snd
+    >>> sortEntries
 
 -- | Search the index by type. If the query does not parse as a type, or is a
 -- "simple type", i.e. just a single type constructor or type variable, return
@@ -317,13 +346,21 @@ searchForType' ty =
   >>> Trie.elems
   >>> concat
   >>> mapMaybe (matches ty)
-  >>> sortWith snd
+  >>> sortEntries
   where
-  matches :: P.Type -> (a, Maybe P.Type) -> Maybe (a, Int)
-  matches ty1 (a, Just ty2) = do
+  matches :: P.Type -> IndexEntry -> Maybe (IndexEntry, Int)
+  matches ty1 entry@(IndexEntry { entryType = Just ty2 }) = do
     score <- compareTypes ty1 ty2
-    return (a, score)
+    return (entry, score)
   matches _ _ = Nothing
+
+-- | Given a list of index entries and associated scores, sort them based on
+-- the score followed by number of reverse dependencies, and then discard extra
+-- unnecessary information, leaving only the SearchResult
+sortEntries :: [(IndexEntry, Int)] -> [(SearchResult, Int)]
+sortEntries =
+  sortOn (\(entry, score) -> (score, entryRevDeps entry))
+  >>> map (first entryResult)
 
 tryStripPrefix :: Text -> Text -> Text
 tryStripPrefix pre s = fromMaybe s (T.stripPrefix pre s)
