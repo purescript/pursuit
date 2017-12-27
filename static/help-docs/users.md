@@ -1,4 +1,4 @@
-## Searching <a name="searching"></a>
+## <a name="searching"></a>Searching
 
 When you use Pursuit's search feature, there are three types of results which
 may come up: declarations, modules, and packages.
