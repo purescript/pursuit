@@ -19,4 +19,4 @@ case "$ret" in
     ;;
 esac
 
-stack --no-terminal -j1 build --flag pursuit:-dev --pedantic
+stack --no-terminal -j1 test --flag pursuit:-dev --pedantic
