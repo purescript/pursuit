@@ -18,10 +18,11 @@ the most up-to-date version of this file.
   dependencies (@hdgarrood, #353)
 * Fix an issue where any query which included a hyphen would be treated as a
   type, preventing searching by name; this was a problem for queries such as
-  e.g. "generics-rep".
+  e.g. "generics-rep" (@hdgarrood, #321)
 * Take into account whether type variables match when performing type search.
   For example, after this change, `map` ranks higher than `cmap` for the query
-  "(a -> b) -> f a -> f b"; previously they were equally ranked.
+  "(a -> b) -> f a -> f b"; previously they were equally ranked (@hdgarrood,
+  #355)
 * Add help explaining the search feature (@hdgarrood / @grossbart, #339, #357)
 
 ## v0.6.2
