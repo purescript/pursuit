@@ -46,15 +46,27 @@ the most up-to-date version of this file.
 
 * Update `aeson` and `purescript` dependencies for JSON compatibility.
 
-## v0.5.*
+## v0.5.0
 
-* A bunch of stuff happened, I forgot to update the changelog, and it doesn't
-  really seem worth going through the commit history at this point.
+* Update to `purescript-0.11.0`.
 
 ## v0.4.*
 
-* A bunch of stuff happened, I forgot to update the changelog, and it doesn't
-  really seem worth going through the commit history at this point.
+* Recommend pulp for uploading packages (@hdgarrood)
+* Remove the package upload form (@hdgarrood)
+* Update for purescript 0.9.x (@jplatte)
+* Switch to using an in-memory trie instead of Hoogle for searching (@paf31)
+* Group packages by letter (@paf31)
+* Add list of latest uploads to homepage (@paf31)
+* Include type class members when searching by name (@paf31)
+* Add the types of things to search results (@nwolversion)
+* Explain what happened when failing to fetch a README (@hdgarrood)
+* Changes to help with building with GHC8 and Nix (@abuibrahim)
+* Better handling of invalid uploaded gzip data (@hdgarrood)
+* Provide Prim docs (@hdgarrood)
+* Incredible redesign (@grossbart)
+* Some styling fixes (@utatti)
+* Improve compareTypes algorithm (@matthewleon)
 
 ## v0.3.10
 
