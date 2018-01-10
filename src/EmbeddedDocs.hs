@@ -11,9 +11,14 @@ module EmbeddedDocs
 import Import.NoFoundation
 import Data.FileEmbed (embedFile)
 import qualified Cheapskate
+import Cheapskate.SmartQuotes (smartQuotes, defaultQuoteStyle)
 
 renderMarkdown :: ByteString -> Html
-renderMarkdown = toHtml . Cheapskate.markdown def . decodeUtf8
+renderMarkdown =
+  toHtml
+  . smartQuotes defaultQuoteStyle
+  . Cheapskate.markdown def
+  . decodeUtf8
 
 helpIndex :: Html
 helpIndex = renderMarkdown $(embedFile "static/help-docs/index.md")
