@@ -1,6 +1,7 @@
 module Handler.Packages where
 
 import Import
+import Data.Ord (comparing)
 import Text.Julius (rawJS)
 import Text.Blaze (ToMarkup, toMarkup)
 import qualified Data.Char as Char
@@ -43,7 +44,7 @@ getHomeR =
         stripIntro s = fromMaybe s (stripPrefix "purescript-" s)
 
         pkgNamesByLetter :: [[PackageName]]
-        pkgNamesByLetter = groupBy ((==) `on` (firstLetter )) pkgNames
+        pkgNamesByLetter = groupBy ((==) `on` firstLetter) (sortBy (comparing firstLetter) pkgNames)
     defaultLayout $(widgetFile "homepage")
 
 latestVersionOr404 :: PackageName -> Handler Version
