@@ -1,5 +1,5 @@
 name:              pursuit
-version:           0.6.3
+version:           0.6.4
 cabal-version:     >= 1.8
 build-type:        Simple
 license:           MIT
@@ -32,6 +32,8 @@ library
                      Handler.Utils
                      Import
                      Import.NoFoundation
+                     Model
+                     Utils
                      SearchIndex
                      Settings
                      Settings.EmbedPursuitCss
@@ -129,6 +131,13 @@ library
                  , barrier ==0.1.*
                  , mono-traversable
                  , streaming-commons
+                 , persistent
+                 , persistent-sqlite
+                 , persistent-template
+                 , foreign-store
+                 , esqueleto
+                 , extra
+                 , resource-pool
 
     if flag(dev)
       build-depends: foreign-store
@@ -175,3 +184,4 @@ test-suite test
                  , classy-prelude
                  , classy-prelude-yesod
                  , QuickCheck
+                 , foreign-store

@@ -9,18 +9,23 @@ module Handler.Database
   , availableVersionsFor
   , getLatestVersionFor
   , insertPackage
-  , SomethingMissing(..)
+  , getDependents
   ) where
 
 import Import
 import qualified Data.Aeson as A
 import qualified Data.NonNull as NN
 import qualified Data.Text as T
+import qualified Database.Esqueleto      as E
+import           Database.Esqueleto      ((^.))
+import Utils
+import Database.Persist.Sqlite (createSqlitePool, runSqlPool, sqlDatabase, sqlPoolSize)
+import Data.Either.Extra (fromRight')
 import Data.Version (Version, showVersion)
 import System.Directory
   (getDirectoryContents, getModificationTime, doesDirectoryExist)
 
-import Web.Bower.PackageMeta (PackageName, mkPackageName, runPackageName)
+import Web.Bower.PackageMeta (PackageName, mkPackageName, runPackageName)  
 import qualified Language.PureScript.Docs as D
 
 import Handler.Utils
@@ -29,8 +34,18 @@ import Handler.Caching (clearCache)
 getAllPackageNames :: Handler [PackageName]
 getAllPackageNames = do
   dir <- getDataDir
-  contents <- liftIO $ getDirectoryContents (dir ++ "/verified/")
-  return . sort . rights $ map (mkPackageName . pack) contents
+  contents <- liftIO $ getAllPackageNamesIO dir
+  return contents
+
+getDependents :: PackageName -> Handler [PackageName]
+getDependents pkgdep = do
+  dependents <- runDB $ E.select $ E.distinct $ E.from $ \pkg -> do
+    E.where_ (pkg ^. PackageDependency E.==. (E.val depName))
+    return (pkg ^. PackageDependent)
+  -- I am wary of the fromRight', but hoping that it should be safe because
+  -- I saved only verified package names in DB
+  return $ map (fromRight' . mkPackageName . E.unValue) dependents
+  where depName = runPackageName pkgdep
 
 getLatestPackages :: Handler [(PackageName, Version)]
 getLatestPackages = do
@@ -56,10 +71,6 @@ getAllPackages = do
   withVersion name = (map . map) (name,) (getLatestVersionFor name)
   lookupPackageMay = map hush . uncurry lookupPackage
 
-data SomethingMissing
-  = NoSuchPackage
-  | NoSuchPackageVersion
-  deriving (Show, Eq, Ord)
 
 lookupPackage :: PackageName -> Version -> Handler (Either SomethingMissing D.VerifiedPackage)
 lookupPackage pkgName version = do

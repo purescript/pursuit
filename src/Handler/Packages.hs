@@ -1,6 +1,7 @@
 module Handler.Packages where
 
 import Import
+import Utils
 import Text.Julius (rawJS)
 import Text.Blaze (ToMarkup, toMarkup)
 import qualified Data.Char as Char
@@ -81,6 +82,7 @@ getPackageVersionR (PathPackageName pkgName) (PathVersion version) =
     findPackage pkgName version $ \pkg@D.Package{..} -> do
       moduleList <- renderModuleList pkg
       ereadme    <- tryGetReadme pkg
+      dependents <- getDependents pkgName
       let cacheStatus = either (const NotOkToCache) (const OkToCache) ereadme
       content <- defaultLayout $ do
         setTitle (toHtml (runPackageName pkgName))
@@ -180,7 +182,7 @@ getBuiltinDocsR mnString = do
     _ ->
       defaultLayout404 $ [whamlet|
         <h2>Module not found
-        <p>No such builtin module: #
+        <p>No such builtin: #
           <b>#{mnString}
         |]
 

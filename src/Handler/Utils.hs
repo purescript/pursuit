@@ -21,22 +21,6 @@ internalServerError = sendResponseStatus internalServerError500 ("" :: Text)
 getDataDir :: Handler String
 getDataDir = appDataDir . appSettings <$> getYesod
 
--- | Read the file at the given path as a strict ByteString, or return Nothing
--- if no such file exists.
-readFileMay :: FilePath -> IO (Maybe ByteString)
-readFileMay file =
-  catchDoesNotExist (readFile file)
-
-catchDoesNotExist :: IO a -> IO (Maybe a)
-catchDoesNotExist act =
-  catchJust selectDoesNotExist
-            (Just <$> act)
-            (const (return Nothing))
-  where
-  selectDoesNotExist e
-    | isDoesNotExistErrorType (ioeGetErrorType e) = Just ()
-    | otherwise = Nothing
-
 writeFileWithParents :: MonadIO m => FilePath -> ByteString -> m ()
 writeFileWithParents file contents = liftIO $ do
   createDirectoryIfMissing True (takeDirectory file)

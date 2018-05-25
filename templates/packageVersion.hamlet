@@ -32,3 +32,11 @@
           <div .deplink>
             <a .deplink__link href=@{packageNameRoute depPkg}>#{runPackageName depPkg}
             <span .deplink__version>#{renderVersionRange versionRange}
+  <dl .grouped-list>
+      <dt .grouped-list__title>Dependents
+      $if null dependents
+        <dd .grouped-list__item>No depents
+      $else
+        $forall pkgDepns <- dependents
+          <dd .grouped-list__item>
+            <div .deplink>#{runPackageName pkgDepns}

@@ -2,9 +2,12 @@
 -- See https://groups.google.com/forum/#!topic/yesodweb/DlyXqFM7ZnY
 {-# LANGUAGE NoDisambiguateRecordFields #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
+{-# LANGUAGE InstanceSigs #-}
+
 module Foundation where
 
 import Import.NoFoundation
+import Database.Persist.Sql (ConnectionPool, runSqlPool)
 import Text.Read (readsPrec)
 import qualified Data.Text as T
 import qualified Data.Text.Lazy as LT
@@ -63,6 +66,7 @@ data App = App
     { appSettings       :: AppSettings
     , appStatic         :: EmbeddedStatic
     -- ^ Settings for static file serving.
+    , appConnPool    :: ConnectionPool -- ^ Database connection pool.    
     , appHttpManager    :: Manager
     , appLogger         :: Logger
     , appSearchIndex    :: TVar SearchIndex
@@ -136,6 +140,18 @@ instance Yesod App where
             || level == LevelError
 
     makeLogger = return . appLogger
+
+-- How to run database actions.
+instance YesodPersist App where
+  type YesodPersistBackend App = SqlBackend
+  runDB :: SqlPersistT Handler a -> Handler a
+  runDB action = do
+    master <- getYesod
+    runSqlPool action $ appConnPool master
+
+instance YesodPersistRunner App where
+  getDBRunner :: Handler (DBRunner App, Handler ())
+  getDBRunner = defaultGetDBRunner appConnPool
 
 -- This instance is required to use forms. You can modify renderMessage to
 -- achieve customized and internationalized form validation messages.

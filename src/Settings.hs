@@ -8,6 +8,7 @@ module Settings where
 import ClassyPrelude.Yesod
 import System.Environment (lookupEnv)
 import Data.Version
+import Database.Persist.Sqlite     (SqliteConf(..))
 import Language.PureScript.Docs (parseVersion')
 import Language.Haskell.TH.Syntax (Exp, Name, Q)
 import Network.Wai.Handler.Warp (HostPreference)
@@ -32,6 +33,8 @@ data AppSettings = AppSettings
     -- ^ Host/interface the server should bind to.
     , appPort                   :: Int
     -- ^ Port to listen on
+    , appDatabaseConf           :: SqliteConf
+    -- ^ Configuration settings for accessing the database.
     , appIpFromHeader           :: Bool
     -- ^ Get the IP address from the header when logging. Useful when sitting
     -- behind a reverse proxy.
@@ -83,7 +86,7 @@ getAppSettings = do
 
   appAnalytics <- env "GOOGLE_ANALYTICS_CODE"
   appDataDir   <- env "DATA_DIR" .!= "./data"
-
+  appDatabaseConf <- (return SqliteConf { sqlDatabase = "test-sqlite.sqlite3", sqlPoolSize = 10 })
   appGithubAuthToken <- map (GithubAuthToken . fromString) <$> env "GITHUB_AUTH_TOKEN"
   when (isNothing appGithubAuthToken) $
     let message = "No GitHub auth token configured (environment variable is: PURSUIT_GITHUB_AUTH_TOKEN)"

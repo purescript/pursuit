@@ -12,6 +12,7 @@ module Handler.Caching
   ) where
 
 import Import
+import Utils (catchDoesNotExist)
 import Data.Version (Version, showVersion)
 import qualified Data.Text.Lazy as LT
 import Text.Blaze.Html.Renderer.Utf8 (renderHtml)

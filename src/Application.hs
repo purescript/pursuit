@@ -15,10 +15,13 @@ module Application
     , shutdownApp
     -- * for GHCI
     , handler
+    , db
     ) where
 
+import "monad-logger" Control.Monad.Logger (liftLoc, runLoggingT)
+import Database.Persist.Sqlite (createSqlitePool, runSqlPool, sqlDatabase, sqlPoolSize)
 import Import
-import "monad-logger" Control.Monad.Logger (liftLoc)
+import Utils
 import Language.Haskell.TH.Syntax (qLocation)
 import Control.Concurrent (forkIO)
 import Control.Parallel.Strategies (withStrategy)
@@ -59,7 +62,19 @@ makeFoundation appSettings = do
     appHttpManager <- newManager
     appLogger <- newStdoutLoggerSet defaultBufSize >>= makeYesodLogger
     appSearchIndex <- newTVarIO emptySearchIndex
-    let foundation = App{..}
+    let mkFoundation appConnPool = App{..}
+        tempFoundation = mkFoundation $ error "connPool forced in tempFoundation"
+        logFunc = messageLoggerSource tempFoundation appLogger
+    -- Create the database connection pool
+    pool <- flip runLoggingT logFunc $ createSqlitePool
+        (sqlDatabase $ appDatabaseConf appSettings)
+        (sqlPoolSize $ appDatabaseConf appSettings)
+
+    -- Perform database migration using our application's logging settings.
+    runLoggingT (runSqlPool (runMigration migrateAll) pool) logFunc
+    loadDatabase "./data" pool
+         
+    let foundation = mkFoundation pool
     void (startRegenThread foundation)
     return foundation
 
@@ -82,6 +97,8 @@ makeFoundation appSettings = do
                     . withStrategy evalSearchIndex
                     . createSearchIndex
                     ) pkgs
+
+
 
 -- | Convert our foundation to a WAI Application by calling @toWaiAppPlain@ and
 -- applyng some additional middlewares.
@@ -168,3 +185,7 @@ shutdownApp _ = return ()
 -- | Run a handler
 handler :: Handler a -> IO a
 handler h = getAppSettings >>= makeFoundation >>= flip unsafeHandler h
+
+-- | Run DB queries
+db :: ReaderT SqlBackend Handler a -> IO a
+db = handler . runDB
