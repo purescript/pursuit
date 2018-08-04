@@ -20,7 +20,7 @@ module Application
 import Import
 import "monad-logger" Control.Monad.Logger (liftLoc)
 import Language.Haskell.TH.Syntax (qLocation)
-import Control.Concurrent (forkIO)
+import Control.Concurrent (forkIO, threadDelay)
 import Control.Parallel.Strategies (withStrategy)
 import Network.Wai.Handler.Warp
   (Settings, defaultSettings, defaultShouldDisplayException, runSettings,

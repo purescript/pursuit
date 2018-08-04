@@ -7,7 +7,6 @@ module GithubAPI
 
 import Import
 import Text.Blaze.Html (preEscapedToHtml)
-import qualified Control.Monad.Catch as Catch
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Aeson as A
 import qualified Data.HashMap.Strict as HashMap
@@ -38,7 +37,7 @@ diagnoseReadmeProblem = \case
 
 -- | Get a repository readme, rendered as HTML.
 getReadme ::
-  (MonadCatch m, MonadIO m, HasHttpManager env, MonadReader env m) =>
+  (MonadUnliftIO m, MonadThrow m, MonadIO m, HasHttpManager env, MonadReader env m) =>
   Maybe GithubAuthToken ->
   D.GithubUser ->
   D.GithubRepo ->
@@ -72,7 +71,7 @@ buildRawGithubURL (D.GithubUser user) (D.GithubRepo repo) ref =
     concat ["https://raw.githubusercontent.com/", user, "/", repo, "/", ref, "/"]
 
 getReadme' ::
-  (MonadCatch m, MonadIO m, HasHttpManager env, MonadReader env m) =>
+  (MonadUnliftIO m, MonadThrow m, MonadIO m, HasHttpManager env, MonadReader env m) =>
   Maybe GithubAuthToken ->
   D.GithubUser ->
   D.GithubRepo ->
@@ -85,7 +84,7 @@ getReadme' mauth (D.GithubUser user) (D.GithubRepo repo) ref =
 
 -- | Get the currently logged in user.
 getUser ::
-  (MonadCatch m, MonadIO m, HasHttpManager env, MonadReader env m) =>
+  (MonadUnliftIO m, MonadThrow m, MonadIO m, HasHttpManager env, MonadReader env m) =>
   GithubAuthToken -> m (Either HttpException (Maybe D.GithubUser))
 getUser token =
   (map . map) extractUser (getUser' token) >>= catch401
@@ -104,7 +103,7 @@ getUser token =
   catch401 other = return other
 
 getUser' ::
-  (MonadCatch m, MonadIO m, HasHttpManager env, MonadReader env m) =>
+  (MonadUnliftIO m, MonadThrow m, MonadIO m, HasHttpManager env, MonadReader env m) =>
   GithubAuthToken -> m (Either HttpException BL.ByteString)
 getUser' auth =
   githubAPI ["user"] "" headers
@@ -112,7 +111,7 @@ getUser' auth =
   headers = ("Accept", "application/json") : authHeader (Just auth)
 
 githubAPI ::
-  (MonadCatch m, MonadIO m, HasHttpManager env, MonadReader env m) =>
+  (MonadUnliftIO m, MonadThrow m, MonadIO m, HasHttpManager env, MonadReader env m) =>
   [Text] -> -- Path parts
   Text -> -- Query string
   [(CI ByteString, ByteString)] -> -- Extra headers
@@ -142,5 +141,5 @@ parseGithubUrlWithQuery parts query =
     , query
     ]
 
-tryHttp :: MonadCatch m => m a -> m (Either HttpException a)
-tryHttp = Catch.try
+tryHttp :: (MonadUnliftIO m, MonadThrow m) => m a -> m (Either HttpException a)
+tryHttp = try
