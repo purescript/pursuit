@@ -15,6 +15,7 @@ import Text.Julius                 (rawJS)
 import Yesod.Core.Types            (Logger)
 import Yesod.EmbeddedStatic        (EmbeddedStatic, embedStaticContent)
 import qualified Yesod.Core.Unsafe as Unsafe
+import Yesod.Core.Types (HandlerData, rheSite, handlerEnv)
 
 import Web.Bower.PackageMeta (PackageName, parsePackageName, runPackageName)
 import Data.Version
@@ -71,6 +72,12 @@ data App = App
 instance HasHttpManager App where
     getHttpManager = appHttpManager
 
+-- This is an orphan instance; previously it seems to have been provided by
+-- Yesod, but it appears to no longer exist as of Yesod 1.6. Therefore, we
+-- provide it here instead.
+instance HasHttpManager site => HasHttpManager (HandlerData child site) where
+    getHttpManager = getHttpManager . rheSite . handlerEnv
+
 -- This is where we define all of the routes in our application. For a full
 -- explanation of the syntax, please see:
 -- http://www.yesodweb.com/book/routing-and-handlers
@@ -81,7 +88,7 @@ instance HasHttpManager App where
 mkYesodData "App" $(parseRoutesFile "config/routes")
 
 -- | A convenient synonym for creating forms.
-type Form x = Html -> MForm (HandlerT App IO) (FormResult x, Widget)
+type Form x = Html -> MForm (HandlerFor App) (FormResult x, Widget)
 
 -- Please see the documentation for the Yesod typeclass. There are a number
 -- of settings which can be configured by overriding methods here.
@@ -127,13 +134,6 @@ instance Yesod App where
     isAuthorized _ _ = return Authorized
 
     addStaticContent = embedStaticContent appStatic StaticR minifym
-
-    -- What messages should be logged. The following includes all messages when
-    -- in development, and warnings and errors in production.
-    shouldLog app _source level =
-        appShouldLogAll (appSettings app)
-            || level == LevelWarn
-            || level == LevelError
 
     makeLogger = return . appLogger
 

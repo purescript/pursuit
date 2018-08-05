@@ -1,6 +1,6 @@
 module TemplateHelpers where
 
-import Import hiding (span)
+import Import hiding (span, link)
 import qualified Data.List.Split as List
 import qualified Data.Map as Map
 import Data.Traversable (for)

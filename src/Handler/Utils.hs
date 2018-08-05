@@ -43,7 +43,7 @@ writeFileWithParents file contents = liftIO $ do
   writeFile file contents
 
 deleteFilesOlderThan :: forall m.
-  (MonadIO m, MonadCatch m, MonadLogger m, MonadBaseControl IO m) =>
+  (MonadIO m, MonadUnliftIO m, MonadLogger m) =>
   NominalDiffTime -> FilePath -> m ()
 deleteFilesOlderThan maxAge dir = do
   files <- getDirectoryContents' dir
@@ -81,11 +81,18 @@ setCookieMessage msg =
 parseJsonBodyPotentiallyGzipped :: Handler (Either String Value)
 parseJsonBodyPotentiallyGzipped = do
   unzipping <- shouldUnzip <$> lookupHeader hContentEncoding
-  let ungzip = if unzipping then Zlib.ungzip else mapC id
-  let parser = ungzip .| Attoparsec.sinkParser AP.value'
-  eValue <- runConduit $ rawRequestBody .| catchEither parser
+  let unzipIfNecessary = if unzipping then Zlib.ungzip else mapC id
 
-  return $ bimap display id eValue
+  bodyChunks <- sourceToList rawRequestBody
+  liftIO $
+    let
+      jsonBodyC =
+        yieldMany bodyChunks .|
+        unzipIfNecessary .|
+        Attoparsec.sinkParser AP.value'
+    in
+      catch (map Right (runConduit jsonBodyC))
+            (pure . Left . display)
 
   where
   shouldUnzip = maybe False (== "gzip")
@@ -100,6 +107,3 @@ parseJsonBodyPotentiallyGzipped = do
             Attoparsec.errorMessage err
           _ ->
             show e
-
-catchEither :: MonadCatch m => m a -> m (Either SomeException a)
-catchEither m = catch (map Right m) (pure . Left)

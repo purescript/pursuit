@@ -69,10 +69,10 @@ library
                 LambdaCase
 
     build-depends: base                          >= 4          && < 5
-                 , yesod                         >= 1.4.1      && < 1.5
-                 , yesod-core                    >= 1.4.6      && < 1.5
-                 , yesod-static                  >= 1.4.0.3    && < 1.6
-                 , yesod-form                    >= 1.4.0      && < 1.5
+                 , yesod                         >= 1.6        && < 1.7
+                 , yesod-core                    >= 1.6        && < 1.7
+                 , yesod-static                  >= 1.6        && < 1.7
+                 , yesod-form                    >= 1.6        && < 1.7
                  , classy-prelude                >= 0.10.2
                  , classy-prelude-conduit        >= 0.10.2
                  , classy-prelude-yesod          >= 0.10.2
@@ -85,7 +85,7 @@ library
                  , monad-control                 >= 0.3        && < 1.1
                  , wai-extra                     >= 3.0        && < 3.1
                  , yaml                          >= 0.8        && < 0.9
-                 , http-conduit                  >= 2.1        && < 2.3
+                 , http-conduit                  >= 2.3        && < 2.4
                  , deepseq                       >= 1.4        && < 1.5
                  , directory                     >= 1.1        && < 1.4
                  , warp                          >= 3.0        && < 4
@@ -103,7 +103,7 @@ library
                  , containers
                  , vector
                  , time
-                 , purescript >= 0.11.4
+                 , purescript >= 0.12.0
                  , bower-json >= 1.0.0.1
                  , blaze-builder
                  , blaze-markup

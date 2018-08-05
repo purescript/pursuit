@@ -209,7 +209,7 @@ defaultLayout404 :: Widget -> Handler a
 defaultLayout404 widget =
   defaultLayout widget >>= sendResponseStatus notFound404
 
-versionSelector :: PackageName -> Version -> WidgetT App IO ()
+versionSelector :: PackageName -> Version -> WidgetFor App ()
 versionSelector pkgName version = do
   versionSelectorIdent <- newIdent
   let route = PackageAvailableVersionsR (PathPackageName pkgName)
