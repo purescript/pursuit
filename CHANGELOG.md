@@ -3,6 +3,16 @@
 Please see https://github.com/purescript/pursuit/blob/master/CHANGELOG.md for
 the most up-to-date version of this file.
 
+## v0.7.0
+
+* Build against version 0.12.0 of the PureScript compiler (@hdgarrood)
+* Make documentation for all builtin modules available, rather than just Prim
+  (@hdgarrood, #357)
+* Fix a bug where incorrect types were displayed in search results for data
+  constructors with 2 or more arguments (@jonathanlking, #373)
+* Add an OpenSearch description file (@hdgarrood, #325)
+* Use smart quotes in help pages (@hdgarrood, 358)
+
 ## v0.6.3
 
 * Add a "load more" button for display of additional search results
