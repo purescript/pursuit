@@ -9,6 +9,9 @@ dist: trusty
 sudo: required
 
 cache:
+  # Our caches are large, and take long enough to upload that we sometimes hit
+  # the default timeout of 180s, so we extend it here
+  timeout: 1500
   directories:
     - $HOME/.stack
 
