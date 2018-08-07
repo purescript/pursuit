@@ -277,11 +277,8 @@ extractChildDeclarationType declTitle declInfo cdeclInfo =
         dataTy = foldl' P.TypeApp (P.TypeConstructor parentName)
                                   (map (P.TypeVar . fst) tyArgs)
       in
-        Just . P.quantify $ case args of
-          [] ->
-            dataTy
-          ts ->
-            foldr P.TypeApp dataTy (fmap (P.TypeApp P.tyFunction) ts)
+        Just . P.quantify . foldr P.TypeApp dataTy $
+          fmap (P.TypeApp P.tyFunction) args
     _ ->
       Nothing
 
