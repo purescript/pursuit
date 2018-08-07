@@ -72,6 +72,22 @@ renderModuleList pkg = do
       moduleNames = sort . map fst $ htmlModules docsOutput
   moduleLinks <- traverse (linkToModule pkg . D.Local) moduleNames
 
+  moduleListFromLinks moduleLinks
+
+builtinModuleList :: Handler Html
+builtinModuleList =
+  traverse builtinModuleLink D.primModules >>= moduleListFromLinks
+  where
+  builtinModuleLink m =
+    let
+      mn = D.modName m
+      route = BuiltinDocsR (P.runModuleName mn)
+      linkText = insertBreaks mn
+    in
+      withUrlRenderer [hamlet|<a href=@{route}>#{linkText}|]
+
+moduleListFromLinks :: [Html] -> Handler Html
+moduleListFromLinks moduleLinks =
   withUrlRenderer [hamlet|
     <dl .grouped-list>
       <dt .grouped-list__title>Modules
@@ -153,13 +169,16 @@ renderHtmlDocs pkg mnString = do
         strong moduleLink
       decls
 
-primDocs :: Html
-primDocs =
-  htmlOutputModuleLocals $
-    snd $
-      moduleAsHtml
-        (const (Just (nullRenderContext (P.moduleNameFromString "Prim"))))
-        D.primDocsModule
+primDocsFor :: P.ModuleName -> Maybe Html
+primDocsFor mn =
+  fmap intoHtml $ find ((== mn) . D.modName) D.primModules
+  where
+  intoHtml m =
+    htmlOutputModuleLocals $
+      snd $
+        moduleAsHtml
+          (const (Just (nullRenderContext (D.modName m))))
+          m
 
 -- | Produce a Route for a given DocLink.
 docLinkRoute :: D.LinksContext -> P.ModuleName -> D.DocLink -> Route App
