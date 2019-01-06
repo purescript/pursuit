@@ -1,8 +1,9 @@
-resolver: lts-11.7
+resolver: lts-12.0
 flags:
   pursuit:
     dev: true
 packages:
 - .
 extra-deps:
-- purescript-0.12.0
+- github: hdgarrood/bytestring-trie
+  commit: 1ad63cfcfc59ff65d331e3be7029025765c3ca6f
