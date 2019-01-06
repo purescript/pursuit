@@ -94,7 +94,7 @@ newtype SearchIndex
 
 data IndexEntry = IndexEntry
   { entryResult  :: !SearchResult
-  , entryType    :: !(Maybe P.Type)
+  , entryType    :: !(Maybe D.Type')
   -- | The number of reverse dependencies of the containing package. Used for
   -- sorting otherwise equivalently-ranked results. We use 'Maybe (Down Int)'
   -- so that builtin modules (e.g. Prim) can use 'Nothing' and have it compare
@@ -181,7 +181,7 @@ entriesForPackage D.Package{..} revDeps =
     packageEntry : concatMap (entriesForModule mkEntry) pkgModules
 
 entriesForModule ::
-  (Text -> SearchResultInfo -> Maybe P.Type -> IndexEntry) ->
+  (Text -> SearchResultInfo -> Maybe D.Type' -> IndexEntry) ->
   D.Module ->
   [(ByteString, IndexEntry)]
 entriesForModule mkEntry D.Module{..} =
@@ -197,7 +197,7 @@ entriesForModule mkEntry D.Module{..} =
       concatMap (entriesForDeclaration mkEntry modName) modDeclarations
 
 entriesForDeclaration ::
-  (Text -> SearchResultInfo -> Maybe P.Type -> IndexEntry) ->
+  (Text -> SearchResultInfo -> Maybe D.Type' -> IndexEntry) ->
   P.ModuleName ->
   D.Declaration ->
   [(ByteString, IndexEntry)]
@@ -237,7 +237,7 @@ entriesForDeclaration mkEntry modName D.Declaration{..} =
   -- remove this prefix but leave other kinds of declarations unchanged.
   handleTypeOp = tryStripPrefix "type "
 
-typeToText :: P.Type -> Text
+typeToText :: D.Type' -> Text
 typeToText = D.outputWith renderText . D.renderType
 
 
@@ -259,7 +259,7 @@ fromListWithDuplicates = foldr go Trie.empty
 -- the parent data type put together to form the constructor's type.
 --
 -- TODO: Move this into the purescript library?
-extractChildDeclarationType :: Text -> D.DeclarationInfo -> D.ChildDeclarationInfo -> Maybe P.Type
+extractChildDeclarationType :: Text -> D.DeclarationInfo -> D.ChildDeclarationInfo -> Maybe D.Type'
 extractChildDeclarationType declTitle declInfo cdeclInfo =
   case (declInfo, cdeclInfo) of
     (D.TypeClassDeclaration args _ _ , D.ChildTypeClassMember ty) ->
@@ -267,18 +267,22 @@ extractChildDeclarationType declTitle declInfo cdeclInfo =
         constraint =
           P.Constraint
             { P.constraintClass = parentName
-            , P.constraintArgs = map (P.TypeVar . fst) args
+            , P.constraintArgs = map (P.TypeVar () . fst) args
             , P.constraintData = Nothing
+            , P.constraintAnn = ()
             }
         in
           Just (addConstraint constraint ty)
     (D.DataDeclaration _ tyArgs, D.ChildDataConstructor args) ->
       let
-        dataTy = foldl' P.TypeApp (P.TypeConstructor parentName)
-                                  (map (P.TypeVar . fst) tyArgs)
+        dataTy =
+          foldl'
+            (P.TypeApp ())
+            (P.TypeConstructor () parentName)
+            (map (P.TypeVar () . fst) tyArgs)
       in
-        Just . P.quantify . foldr P.TypeApp dataTy $
-          fmap (P.TypeApp P.tyFunction) args
+        Just . P.quantify . foldr (P.TypeApp ()) dataTy $
+          fmap (P.TypeApp () (P.tyFunction $> ())) args
     _ ->
       Nothing
 
@@ -287,7 +291,7 @@ extractChildDeclarationType declTitle declInfo cdeclInfo =
     parentName = P.Qualified Nothing (P.ProperName declTitle)
 
     addConstraint constraint =
-      P.quantify . P.moveQuantifiersToFront . P.ConstrainedType constraint
+      P.quantify . P.moveQuantifiersToFront . P.ConstrainedType () constraint
 
 -- | Return the entire list of entries which match the given query, together
 -- with a nonnegative score (lower is better).
@@ -331,12 +335,12 @@ searchForType query =
     _ ->
       const []
   where
-  isSimpleType :: P.Type -> Bool
+  isSimpleType :: D.Type' -> Bool
   isSimpleType P.TypeVar{} = True
   isSimpleType P.TypeConstructor{} = True
   isSimpleType _ = False
 
-searchForType' :: P.Type -> SearchIndex -> [(SearchResult, Int)]
+searchForType' :: D.Type' -> SearchIndex -> [(SearchResult, Int)]
 searchForType' ty =
   unSearchIndex
   >>> Trie.elems
@@ -344,7 +348,7 @@ searchForType' ty =
   >>> mapMaybe (matches ty)
   >>> sortEntries
   where
-  matches :: P.Type -> IndexEntry -> Maybe (IndexEntry, Int)
+  matches :: D.Type' -> IndexEntry -> Maybe (IndexEntry, Int)
   matches ty1 entry@(IndexEntry { entryType = Just ty2 }) = do
     score <- compareTypes ty1 ty2
     return (entry, score)
@@ -378,46 +382,46 @@ tryStripPrefix pre s = fromMaybe s (T.stripPrefix pre s)
 -- (The idea here being it's ok to show a more general version of the query,
 -- but usually not helpful to show a more concrete version of it.)
 --
-compareTypes :: P.Type -> P.Type -> Maybe Int
+compareTypes :: D.Type' -> D.Type' -> Maybe Int
 compareTypes type1 type2 =
   map calculate . runWriterT $ go type1 type2
   where
   calculate :: (Int, [(Text, Text)]) -> Int
   calculate (score, vars) = (10 * score) + typeVarPenalty vars
 
-  go :: P.Type -> P.Type -> WriterT [(Text, Text)] Maybe Int
-  go (P.TypeVar v1) (P.TypeVar v2) = tell [(v1, v2)] *> pure 0
-  go t (P.TypeVar _) = pure (1 + typeComplexity t)
-  go (P.TypeLevelString s1) (P.TypeLevelString s2) | s1 == s2 = pure 0
+  go :: D.Type' -> D.Type' -> WriterT [(Text, Text)] Maybe Int
+  go (P.TypeVar _ v1) (P.TypeVar _ v2) = tell [(v1, v2)] *> pure 0
+  go t (P.TypeVar _ _) = pure (1 + typeComplexity t)
+  go (P.TypeLevelString _ s1) (P.TypeLevelString _ s2) | s1 == s2 = pure 0
   go (P.TypeWildcard _) t = pure (typeComplexity t)
-  go (P.TypeConstructor q1) (P.TypeConstructor q2) | compareQual q1 q2 = pure 0
+  go (P.TypeConstructor _ q1) (P.TypeConstructor _ q2) | compareQual q1 q2 = pure 0
 -- There is a special case for functions, since if the user _asked_ for a
 -- function, they probably don't want to see something more general of type 'f
 -- a' or 'f a b'.
-  go (P.TypeApp a b) (P.TypeApp c d)
+  go (P.TypeApp _ a b) (P.TypeApp _ c d)
     | not (isFunction a) || isFunction c = (+) <$> go a c <*> go b d
-  go (P.ForAll _ t1 _) t2 = go t1 t2
-  go t1 (P.ForAll _ t2 _) = go t1 t2
-  go (P.ConstrainedType _ t1) t2 = go t1 t2
-  go t1 (P.ConstrainedType _ t2) = go t1 t2
-  go P.REmpty P.REmpty = pure 0
+  go (P.ForAll _ _ t1 _) t2 = go t1 t2
+  go t1 (P.ForAll _ _ t2 _) = go t1 t2
+  go (P.ConstrainedType _ _ t1) t2 = go t1 t2
+  go t1 (P.ConstrainedType _ _ t2) = go t1 t2
+  go (P.REmpty _) (P.REmpty _) = pure 0
   go t1@P.RCons{} t2 = goRows t1 t2
   go t1 t2@P.RCons{} = goRows t1 t2
-  go (P.KindedType t1 _) t2 = go t1 t2
-  go t1 (P.KindedType t2 _) = go t1 t2
+  go (P.KindedType _ t1 _) t2 = go t1 t2
+  go t1 (P.KindedType _ t2 _) = go t1 t2
   -- Really, we should desugar any type operators here.
   -- Since type operators are not supported in search right now, this is fine,
   -- since we only care about functions, which are already in the correct
   -- order as they come out of the parser.
-  go (P.ParensInType t1) t2 = go t1 t2
-  go t1 (P.ParensInType t2) = go t1 t2
+  go (P.ParensInType _ t1) t2 = go t1 t2
+  go t1 (P.ParensInType _ t2) = go t1 t2
   go _ _ = lift Nothing
 
-  goRows :: P.Type -> P.Type -> WriterT [(Text, Text)] Maybe Int
+  goRows :: D.Type' -> D.Type' -> WriterT [(Text, Text)] Maybe Int
   goRows r1 r2 = sum <$>
     sequence [ go t1 t2
-             | (name, t1) <- fst (P.rowToList r1)
-             , (name', t2) <- fst (P.rowToList r2)
+             | P.RowListItem _ name t1 <- fst (P.rowToList r1)
+             , P.RowListItem _ name' t2 <- fst (P.rowToList r2)
              , name == name'
              ]
 
@@ -438,19 +442,19 @@ compareTypes type1 type2 =
       >>> map (\s -> Set.size s - 1)
       >>> sum
 
-isFunction :: P.Type -> Bool
-isFunction (P.TypeConstructor (P.Qualified _ (P.ProperName "Function"))) = True
+isFunction :: D.Type' -> Bool
+isFunction (P.TypeConstructor _ (P.Qualified _ (P.ProperName "Function"))) = True
 isFunction _ = False
 
 
-typeComplexity :: P.Type -> Int
-typeComplexity (P.TypeApp a b) = 1 + typeComplexity a + typeComplexity b
-typeComplexity (P.ForAll _ t _) = 1 + typeComplexity t
-typeComplexity (P.ConstrainedType _ t) = typeComplexity t + 1
-typeComplexity P.REmpty = 0
-typeComplexity (P.RCons _ t r) = 1 + typeComplexity t + typeComplexity r
-typeComplexity (P.KindedType t _) = typeComplexity t
-typeComplexity (P.ParensInType t) = typeComplexity t
+typeComplexity :: D.Type' -> Int
+typeComplexity (P.TypeApp _ a b) = 1 + typeComplexity a + typeComplexity b
+typeComplexity (P.ForAll _ _ t _) = 1 + typeComplexity t
+typeComplexity (P.ConstrainedType _ _ t) = typeComplexity t + 1
+typeComplexity (P.REmpty _) = 0
+typeComplexity (P.RCons _ _ t r) = 1 + typeComplexity t + typeComplexity r
+typeComplexity (P.KindedType _ t _) = typeComplexity t
+typeComplexity (P.ParensInType _ t) = typeComplexity t
 typeComplexity _ = 0
 
 compareQual :: Eq a => P.Qualified a -> P.Qualified a -> Bool
@@ -461,8 +465,8 @@ parseWithTokenParser :: P.TokenParser a -> Text -> Maybe a
 parseWithTokenParser p =
   hush . (P.lex "") >=> hush . (P.runTokenParser "" (p <* Parsec.eof))
 
-parseType :: Text -> Maybe P.Type
-parseType = parseWithTokenParser P.parsePolyType
+parseType :: Text -> Maybe D.Type'
+parseType = fmap ($> ()) . parseWithTokenParser P.parsePolyType
 
 isSymbol :: Text -> Bool
 isSymbol = maybe False (const True) . parseWithTokenParser P.symbol
