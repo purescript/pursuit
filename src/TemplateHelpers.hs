@@ -177,20 +177,18 @@ primDocsFor mn =
     htmlOutputModuleLocals $
       snd $
         moduleAsHtml
-          (const (Just (nullRenderContext (D.modName m))))
+          (const (Just nullRenderContext))
           m
 
 -- | Produce a Route for a given DocLink.
-docLinkRoute :: D.LinksContext -> P.ModuleName -> D.DocLink -> Route App
-docLinkRoute D.LinksContext{..} srcModule link = case D.linkLocation link of
-  D.SameModule ->
-    mkRoute ctxPackageName ctxVersion srcModule
-  D.LocalModule _ otherModule ->
-    mkRoute ctxPackageName ctxVersion otherModule
-  D.DepsModule _ otherPackageName otherVersion otherModule ->
-    mkRoute otherPackageName otherVersion otherModule
-  D.BuiltinModule otherModule ->
-    BuiltinDocsR (P.runModuleName otherModule)
+docLinkRoute :: D.LinksContext -> D.DocLink -> Route App
+docLinkRoute D.LinksContext{..} link = case D.linkLocation link of
+  D.LocalModule modName ->
+    mkRoute ctxPackageName ctxVersion modName
+  D.DepsModule pkgName version modName ->
+    mkRoute pkgName version modName
+  D.BuiltinModule modName ->
+    BuiltinDocsR (P.runModuleName modName)
   where
   mkRoute pkgName version modName =
     PackageVersionModuleDocsR
@@ -228,9 +226,8 @@ getHtmlRenderContext = do
       linksContext = D.getLinksContext pkg
     in
       HtmlRenderContext
-        { currentModuleName = currentMn
-        , buildDocLink = D.getLink linksContext currentMn
-        , renderDocLink = renderUrl . docLinkRoute linksContext currentMn
+        { buildDocLink = D.getLink linksContext currentMn
+        , renderDocLink = renderUrl . docLinkRoute linksContext
         , renderSourceLink = Just . renderSourceLink' linksContext
         }
 
