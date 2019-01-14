@@ -5,7 +5,6 @@ flags:
 packages:
 - .
 extra-deps:
-- github: purescript/purescript
-  commit: 2beb8c8775fa4fd6062929922e42c8425bbffd7f
+- purescript-0.12.2
 - github: hdgarrood/bytestring-trie
   commit: 1ad63cfcfc59ff65d331e3be7029025765c3ca6f

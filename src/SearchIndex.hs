@@ -393,7 +393,7 @@ compareTypes type1 type2 =
   go (P.TypeVar _ v1) (P.TypeVar _ v2) = tell [(v1, v2)] *> pure 0
   go t (P.TypeVar _ _) = pure (1 + typeComplexity t)
   go (P.TypeLevelString _ s1) (P.TypeLevelString _ s2) | s1 == s2 = pure 0
-  go (P.TypeWildcard _) t = pure (typeComplexity t)
+  go (P.TypeWildcard _ _) t = pure (typeComplexity t)
   go (P.TypeConstructor _ q1) (P.TypeConstructor _ q2) | compareQual q1 q2 = pure 0
 -- There is a special case for functions, since if the user _asked_ for a
 -- function, they probably don't want to see something more general of type 'f
