@@ -3,6 +3,10 @@
 Please see https://github.com/purescript/pursuit/blob/master/CHANGELOG.md for
 the most up-to-date version of this file.
 
+## v0.7.1
+
+* Build against version 0.12.2 of the PureScript compiler (@hdgarrood)
+
 ## v0.7.0
 
 * Build against version 0.12.0 of the PureScript compiler (@hdgarrood)
