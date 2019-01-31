@@ -5,6 +5,7 @@ import Text.Julius (rawJS)
 import Text.Blaze (ToMarkup, toMarkup)
 import qualified Data.Char as Char
 import Data.Version
+import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
 import qualified Language.PureScript.Docs as D
 import Web.Bower.PackageMeta (PackageName, runPackageName, bowerDependencies, bowerLicense)
@@ -87,6 +88,10 @@ getPackageVersionR (PathPackageName pkgName) (PathVersion version) =
         let dependencies = bowerDependencies pkgMeta
         $(widgetFile "packageVersion")
       return (cacheStatus, content)
+
+isPurescriptPackage :: PackageName -> Bool
+isPurescriptPackage pkgName =
+    "purescript-" `T.isPrefixOf` runPackageName pkgName
 
 getPackageIndexR :: Handler TypedContent
 getPackageIndexR =

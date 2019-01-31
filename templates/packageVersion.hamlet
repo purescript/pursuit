@@ -30,5 +30,8 @@
       $forall (depPkg, versionRange) <- dependencies
         <dd .grouped-list__item>
           <div .deplink>
-            <a .deplink__link href=@{packageNameRoute depPkg}>#{runPackageName depPkg}
+            $if isPurescriptPackage depPkg
+              <a .deplink__link href=@{packageNameRoute depPkg}>#{runPackageName depPkg}
+            $else
+              <a .deplink__link href="https://libraries.io/bower/#{runPackageName depPkg}">#{runPackageName depPkg}
             <span .deplink__version>#{renderVersionRange versionRange}
