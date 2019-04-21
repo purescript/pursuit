@@ -153,7 +153,7 @@ primEntries =
         , entryRevDeps = Nothing
         }
   in
-    entriesForModule mkEntry D.primDocsModule
+    concatMap (entriesForModule mkEntry) D.primModules
 
 entriesForPackage :: D.Package a -> Int -> [(ByteString, IndexEntry)]
 entriesForPackage D.Package{..} revDeps =

@@ -13,7 +13,6 @@ import qualified Web.Bower.PackageMeta as Bower
 import Language.PureScript.Docs.AsHtml (makeFragment, renderMarkdown)
 import TemplateHelpers (getFragmentRender)
 
-import qualified Text.Blaze as Blaze
 import qualified Text.Blaze.Html5 as Html5
 import qualified Text.Blaze.Renderer.Text as BlazeT
 
