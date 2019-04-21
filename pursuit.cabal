@@ -76,25 +76,25 @@ library
                  , classy-prelude                >= 0.10.2
                  , classy-prelude-conduit        >= 0.10.2
                  , classy-prelude-yesod          >= 0.10.2
-                 , bytestring                    >= 0.9        && < 0.11
-                 , bytestring-trie               >= 0.2.4      && < 0.2.5
-                 , text                          >= 0.11       && < 2.0
+                 , bytestring
+                 , bytestring-trie
+                 , text
                  , template-haskell
-                 , shakespeare                   >= 2.0        && < 2.1
-                 , hjsmin                        >= 0.2        && < 0.3
-                 , monad-control                 >= 0.3        && < 1.1
-                 , wai-extra                     >= 3.0        && < 3.1
-                 , yaml                          >= 0.8        && < 0.9
-                 , http-conduit                  >= 2.3        && < 2.4
-                 , deepseq                       >= 1.4        && < 1.5
-                 , directory                     >= 1.1        && < 1.4
-                 , warp                          >= 3.0        && < 4
+                 , shakespeare
+                 , hjsmin
+                 , monad-control
+                 , wai-extra
+                 , yaml
+                 , http-conduit
+                 , deepseq
+                 , directory
+                 , warp
                  , data-default
                  , aeson
-                 , conduit                       >= 1.0        && < 2.0
-                 , monad-logger                  >= 0.3        && < 0.4
-                 , fast-logger                   >= 2.2        && < 2.5
-                 , wai-logger                    >= 2.2        && < 2.4
+                 , conduit
+                 , monad-logger
+                 , fast-logger
+                 , wai-logger
                  , parallel
                  , parsec
                  , file-embed
@@ -103,8 +103,8 @@ library
                  , containers
                  , vector
                  , time
-                 , purescript >= 0.12.2
-                 , bower-json >= 1.0.0.1
+                 , purescript
+                 , bower-json
                  , blaze-builder
                  , blaze-markup
                  , blaze-html
@@ -126,7 +126,7 @@ library
                  , transformers
                  , cookie
                  , xss-sanitize
-                 , barrier ==0.1.*
+                 , barrier
                  , mono-traversable
                  , streaming-commons
 
