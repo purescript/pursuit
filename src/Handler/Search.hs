@@ -189,7 +189,7 @@ searchResultToJSON result@SearchResult{..} = do
     object [ "package" .= pkg
            , "version" .= showVersion version
            , "markup" .= BlazeT.renderMarkup html
-           , "text" .= BlazeT.renderMarkup (Blaze.contents html)
+           , "text" .= srComments
            , "info" .= toJSON srInfo
            , "url" .= url
            ]
