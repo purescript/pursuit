@@ -1,12 +1,4 @@
-# Adapted from FPComplete's Haskell Travis Config:
-#   https://www.fpcomplete.com/blog/2016/02/updated-haskell-travis-config
-
-# Choose a lightweight base image; we provide our own tools.
-language: c
-
-# The following two lines seem to improve performance.
-dist: trusty
-sudo: required
+language: generic
 
 cache:
   # Our caches are large, and take long enough to upload that we sometimes hit
@@ -21,7 +13,6 @@ branches:
   only:
     - master
     - /^v\d+\.\d+(\.\d+)?(-\S*)?$/
-
 
 addons:
   apt:
