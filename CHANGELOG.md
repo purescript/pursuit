@@ -3,6 +3,13 @@
 Please see https://github.com/purescript/pursuit/blob/master/CHANGELOG.md for
 the most up-to-date version of this file.
 
+## v0.7.2
+
+* Fix a bug where Prim submodules did not show up in search results (#387)
+* Fix a bug where the `text` field for JSON search results contained HTML, as
+  opposed to the raw Markdown text present in the source file (#171)
+* Recommend viewing docs locally before publishing (#384)
+
 ## v0.7.1
 
 * Build against version 0.12.2 of the PureScript compiler (@hdgarrood)
