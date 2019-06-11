@@ -14,6 +14,7 @@ import qualified Data.Aeson as Aeson
 import qualified Data.Aeson.BetterErrors as ABE
 import qualified Language.PureScript as P
 
+import SearchIndex (isDeprecated)
 import Handler.Database
 import Handler.Caching
 import Handler.Utils
@@ -79,13 +80,14 @@ getPackageAvailableVersionsR (PathPackageName pkgName) =
 getPackageVersionR :: PathPackageName -> PathVersion -> Handler Html
 getPackageVersionR (PathPackageName pkgName) (PathVersion version) =
   cacheHtmlConditional $
-    findPackage pkgName version $ \pkg@D.Package{..} -> do
+    findPackageWithLatest pkgName version $ \pkg@D.Package{..} latestPkg -> do
       moduleList <- renderModuleList pkg
       ereadme    <- tryGetReadme pkg
       let cacheStatus = either (const NotOkToCache) (const OkToCache) ereadme
       content <- defaultLayout $ do
         setTitle (toHtml (runPackageName pkgName))
         let dependencies = bowerDependencies pkgMeta
+        let deprecated = isDeprecated latestPkg
         $(widgetFile "packageVersion")
       return (cacheStatus, content)
 
@@ -156,7 +158,7 @@ getPackageVersionDocsR (PathPackageName pkgName) (PathVersion version) =
 
 getPackageVersionModuleDocsR :: PathPackageName -> PathVersion -> Text -> Handler Html
 getPackageVersionModuleDocsR (PathPackageName pkgName) (PathVersion version) mnString =
-  cacheHtml $ findPackage pkgName version $ \pkg@D.Package{..} -> do
+  cacheHtml $ findPackageWithLatest pkgName version $ \pkg@D.Package{..} latestPkg -> do
     moduleList <- renderModuleList pkg
     mhtmlDocs <- renderHtmlDocs pkg mnString
     case mhtmlDocs of
@@ -164,6 +166,7 @@ getPackageVersionModuleDocsR (PathPackageName pkgName) (PathVersion version) mnS
       Just htmlDocs ->
         defaultLayout $ do
           let mn = P.moduleNameFromString mnString
+          let deprecated = isDeprecated latestPkg
           setTitle (toHtml (mnString <> " - " <> runPackageName pkgName))
           $(widgetFile "packageVersionModuleDocs")
 
@@ -206,6 +209,17 @@ findPackage pkgName version cont = do
     Right pkg -> cont pkg
     Left NoSuchPackage -> packageNotFound pkgName
     Left NoSuchPackageVersion -> packageVersionNotFound pkgName version
+
+findPackageWithLatest ::
+  PackageName ->
+  Version ->
+  (D.VerifiedPackage -> D.VerifiedPackage -> Handler r) ->
+  Handler r
+findPackageWithLatest pkgName version cont = do
+  findPackage pkgName version $ \pkg -> do
+    latestVersion <- fromMaybe version <$> getLatestVersionFor pkgName
+    latestPkg <- fromMaybe pkg . hush <$> lookupPackage pkgName latestVersion
+    cont pkg latestPkg
 
 packageNotFound :: PackageName -> Handler a
 packageNotFound pkgName = do

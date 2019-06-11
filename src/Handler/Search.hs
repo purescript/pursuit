@@ -203,7 +203,7 @@ searchResultToJSON result@SearchResult{..} = do
 routeResult :: SearchResult -> (Route App, Maybe Text)
 routeResult SearchResult{..} =
   case srInfo of
-    PackageResult ->
+    PackageResult _ ->
       ( case srSource of
           SourcePackage pkgName _ ->
             PackageR (PathPackageName pkgName)
@@ -276,10 +276,13 @@ searchResultHtml fr r =
     <div .result>
       <h3 .result__title>
         $case srInfo r
-          $of PackageResult
+          $of PackageResult deprecated
             <span .result__badge.badge.badge--package title="Package">P
             <a .result__link href=#{fr $ routeResult r}>
               #{pkgName}
+            $if deprecated
+              <span .badge--deprecated title="This package is marked as deprecated">
+                DEPRECATED
           $of ModuleResult moduleName
             <span .badge.badge--module title="Module">M
             <a .result__link href=#{fr $ routeResult r}>
@@ -290,7 +293,7 @@ searchResultHtml fr r =
 
     <div .result__body>
       $case srInfo r
-        $of PackageResult
+        $of PackageResult _
         $of ModuleResult _
         $of DeclarationResult _ _ name typ
           $maybe typeValue <- typ
@@ -300,7 +303,7 @@ searchResultHtml fr r =
 
     <div .result__actions>
       $case srInfo r
-        $of PackageResult
+        $of PackageResult _
         $of ModuleResult _
           <span .result__actions__item>
             <span .badge.badge--package title="Package">P
