@@ -8,6 +8,9 @@
   <dl .grouped-list>
     <dt .grouped-list__title>Package
     <dd .grouped-list__item><a href=@{packageRoute pkg}>#{runPackageName pkgName}</a>
+      $if deprecated
+        <span .badge--deprecated title="This package is marked as deprecated">
+          DEPRECATED
     <dt .grouped-list__title>Repository
     <dd .grouped-list__item>#{linkToGithub pkgGithub}
 

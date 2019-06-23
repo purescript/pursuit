@@ -7,3 +7,15 @@
 .col--main > h2:first-child {
   margin-top: 0;
 }
+
+.badge--deprecated {
+  color: #fff;
+  background-color: #c4953a;
+  padding: 0.1em 0.4em 0.1em 0.4em;
+  border-radius: 0.3em;
+  font-size: 77%;
+  font-weight: bold;
+  position: relative;
+  top: -0.1em;
+  margin-left: 0.4em;
+}

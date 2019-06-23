@@ -1,5 +1,10 @@
 <div .page-title .clearfix>
-  <div .page-title__label>Package
+  <div .page-title__label>
+    Package
+    $if deprecated
+      <span .badge--deprecated title="This package is marked as deprecated">
+        DEPRECATED
+
   <h1 .page-title__title>#{runPackageName pkgName}
 
 <div .col.col--main>

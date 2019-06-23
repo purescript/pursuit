@@ -13,6 +13,7 @@ module SearchIndex
   , typeComplexity
   , parseType
   , isSymbol
+  , isDeprecated
   ) where
 
 import Import.NoFoundation
@@ -28,7 +29,7 @@ import qualified Text.Parsec.Combinator as Parsec
 import qualified Language.PureScript as P
 import qualified Language.PureScript.Docs as D
 import Web.Bower.PackageMeta
-  (PackageName, bowerName, bowerDescription, runPackageName)
+  (PackageName, bowerName, bowerDescription, bowerKeywords, runPackageName)
 
 -- | A single search result.
 data SearchResult = SearchResult
@@ -49,7 +50,8 @@ data SearchResultSource
 instance NFData SearchResultSource
 
 data SearchResultInfo
-  = PackageResult
+  = PackageResult Bool
+  -- ^ Package deprecation status
   | ModuleResult Text
   -- ^ Module name
   | DeclarationResult D.Namespace Text Text (Maybe Text)
@@ -60,8 +62,9 @@ instance NFData SearchResultInfo
 
 instance ToJSON SearchResultInfo where
   toJSON i = object $ case i of
-    PackageResult ->
+    PackageResult deprecated ->
       [ "type" .= ("package" :: Text)
+      , "deprecated" .= deprecated
       ]
     ModuleResult moduleName ->
       [ "type" .= ("module" :: Text)
@@ -78,7 +81,7 @@ instance ToJSON SearchResultInfo where
 searchResultTitle :: SearchResult -> Text
 searchResultTitle r =
   case srInfo r of
-    PackageResult ->
+    PackageResult _ ->
       case srSource r of
         SourceBuiltin ->
           "<builtin>"
@@ -156,7 +159,7 @@ primEntries =
     concatMap (entriesForModule mkEntry) D.primModules
 
 entriesForPackage :: D.Package a -> Int -> [(ByteString, IndexEntry)]
-entriesForPackage D.Package{..} revDeps =
+entriesForPackage pkg@D.Package{..} revDeps =
   let
     src =
       SourcePackage (bowerName pkgMeta) pkgVersion
@@ -171,14 +174,17 @@ entriesForPackage D.Package{..} revDeps =
         (tryStripPrefix "purescript-"
           (T.toLower
             (runPackageName (bowerName pkgMeta))))
+    deprecated = isDeprecated pkg
     packageEntry =
       ( entryKey
       , mkEntry (fromMaybe "" (bowerDescription pkgMeta))
-                PackageResult
+                (PackageResult deprecated)
                 Nothing
       )
   in
-    packageEntry : concatMap (entriesForModule mkEntry) pkgModules
+    packageEntry : if deprecated
+                     then []
+                     else concatMap (entriesForModule mkEntry) pkgModules
 
 entriesForModule ::
   (Text -> SearchResultInfo -> Maybe D.Type' -> IndexEntry) ->
@@ -470,3 +476,7 @@ parseType = fmap ($> ()) . parseWithTokenParser P.parsePolyType
 
 isSymbol :: Text -> Bool
 isSymbol = maybe False (const True) . parseWithTokenParser P.symbol
+
+isDeprecated :: D.Package a -> Bool
+isDeprecated D.Package{..} =
+  "pursuit-deprecated" `elem` bowerKeywords pkgMeta

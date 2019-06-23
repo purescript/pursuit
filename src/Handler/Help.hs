@@ -55,6 +55,9 @@ helpLayout forWhom inner =
           <a href="/help/authors#submit-automated">
             Submitting packages from a script
         <dd .grouped-list__item>
+          <a href="/help/authors#package-deprecation">
+            How to mark package as deprecated
+        <dd .grouped-list__item>
           <a href="/help/authors#package-badges">
             Package badges
     |]

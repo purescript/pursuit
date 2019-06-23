@@ -43,6 +43,10 @@ curl -X POST \
 
 If your submission is successful, Pursuit will return a 201 Created response, and the URL for your newly uploaded package will be in the Location header.
 
+## <a name="package-deprecation"></a>How to mark package as deprecated
+
+Package deprecation is a mechanism to tell the end users that your package is no longer supported. When package is marked as deprecated, its contents will not show up in search results on Pursuit (with the only exception of the package name itself). A package can be marked as deprecated by adding a special keyword `pursuit-deprecated` to keywords section of `bower.json` and publishing a new version of the package.
+
 ## <a name="package-badges"></a>Package badges
 
 Pursuit can generate SVG badges for your packages, which you can put on your project's homepage, or perhaps its GitHub readme.
