@@ -398,6 +398,7 @@ compareTypes type1 type2 =
   go :: D.Type' -> D.Type' -> WriterT [(Text, Text)] Maybe Int
   go (P.TypeVar _ v1) (P.TypeVar _ v2) = tell [(v1, v2)] *> pure 0
   go t (P.TypeVar _ _) = pure (1 + typeComplexity t)
+  go (P.TypeVar _ _) t = pure (typeComplexity t)
   go (P.TypeLevelString _ s1) (P.TypeLevelString _ s2) | s1 == s2 = pure 0
   go (P.TypeWildcard _ _) t = pure (typeComplexity t)
   go (P.TypeConstructor _ q1) (P.TypeConstructor _ q2) | compareQual q1 q2 = pure 0
