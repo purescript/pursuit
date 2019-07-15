@@ -381,12 +381,12 @@ tryStripPrefix pre s = fromMaybe s (T.stripPrefix pre s)
 -- let compare s1 s2 = compareTypes <$> parseType s2 <*> parseType s2
 --
 -- >>> compare "a" "Int"
--- Just Nothing
+-- Just (Just 0)
 -- >>> compare "Int" "a"
 -- Just (Just 1)
 --
--- (The idea here being it's ok to show a more general version of the query,
--- but usually not helpful to show a more concrete version of it.)
+-- (The idea here being it's preferred to show a more concrete version of the
+-- query, rather than showing a more general version of it.)
 --
 compareTypes :: D.Type' -> D.Type' -> Maybe Int
 compareTypes type1 type2 =
