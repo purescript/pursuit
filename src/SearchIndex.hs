@@ -25,7 +25,6 @@ import qualified Data.Map as Map
 import qualified Data.Set as Set
 import qualified Data.Text as T
 import qualified Data.Trie as Trie
-import qualified Text.Parsec.Combinator as Parsec
 import qualified Language.PureScript as P
 import qualified Language.PureScript.Docs as D
 import qualified Language.PureScript.CST as CST

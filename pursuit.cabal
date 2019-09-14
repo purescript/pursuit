@@ -96,7 +96,6 @@ library
                  , fast-logger
                  , wai-logger
                  , parallel
-                 , parsec
                  , file-embed
                  , safe
                  , unordered-containers
