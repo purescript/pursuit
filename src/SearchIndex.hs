@@ -28,6 +28,8 @@ import qualified Data.Trie as Trie
 import qualified Text.Parsec.Combinator as Parsec
 import qualified Language.PureScript as P
 import qualified Language.PureScript.Docs as D
+import qualified Language.PureScript.CST as CST
+import qualified Language.PureScript.CST.Monad as CSTM
 import Web.Bower.PackageMeta
   (PackageName, bowerName, bowerDescription, bowerKeywords, runPackageName)
 
@@ -406,8 +408,8 @@ compareTypes type1 type2 =
 -- a' or 'f a b'.
   go (P.TypeApp _ a b) (P.TypeApp _ c d)
     | not (isFunction a) || isFunction c = (+) <$> go a c <*> go b d
-  go (P.ForAll _ _ t1 _) t2 = go t1 t2
-  go t1 (P.ForAll _ _ t2 _) = go t1 t2
+  go (P.ForAll _ _ _ t1 _) t2 = go t1 t2
+  go t1 (P.ForAll _ _ _ t2 _) = go t1 t2
   go (P.ConstrainedType _ _ t1) t2 = go t1 t2
   go t1 (P.ConstrainedType _ _ t2) = go t1 t2
   go (P.REmpty _) (P.REmpty _) = pure 0
@@ -455,7 +457,7 @@ isFunction _ = False
 
 typeComplexity :: D.Type' -> Int
 typeComplexity (P.TypeApp _ a b) = 1 + typeComplexity a + typeComplexity b
-typeComplexity (P.ForAll _ _ t _) = 1 + typeComplexity t
+typeComplexity (P.ForAll _ _ _ t _) = 1 + typeComplexity t
 typeComplexity (P.ConstrainedType _ _ t) = typeComplexity t + 1
 typeComplexity (P.REmpty _) = 0
 typeComplexity (P.RCons _ _ t r) = 1 + typeComplexity t + typeComplexity r
@@ -467,15 +469,17 @@ compareQual :: Eq a => P.Qualified a -> P.Qualified a -> Bool
 compareQual (P.Qualified (Just mn1) a1) (P.Qualified (Just mn2) a2) = mn1 == mn2 && a1 == a2
 compareQual (P.Qualified _ a1) (P.Qualified _ a2) = a1 == a2
 
-parseWithTokenParser :: P.TokenParser a -> Text -> Maybe a
-parseWithTokenParser p =
-  hush . (P.lex "") >=> hush . (P.runTokenParser "" (p <* Parsec.eof))
+runParser :: CST.Parser a -> Text -> Maybe a
+runParser p =
+  hush
+    . CST.runTokenParser (p <* CSTM.token CST.TokEof)
+    . CST.lexTopLevel
 
 parseType :: Text -> Maybe D.Type'
-parseType = fmap ($> ()) . parseWithTokenParser P.parsePolyType
+parseType = fmap (fmap (const ()) . CST.convertType "<query>") . runParser CST.parseType
 
 isSymbol :: Text -> Bool
-isSymbol = maybe False (const True) . parseWithTokenParser P.symbol
+isSymbol = maybe False (const True) . runParser CST.parseOperator
 
 isDeprecated :: D.Package a -> Bool
 isDeprecated D.Package{..} =
