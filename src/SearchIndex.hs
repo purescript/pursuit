@@ -474,11 +474,22 @@ runParser p =
     . CST.runTokenParser (p <* CSTM.token CST.TokEof)
     . CST.lexTopLevel
 
+parseOne :: CST.Parser a -> CST.Parser a
+parseOne p = CSTM.token CST.TokLayoutStart *> p <* CSTM.token CST.TokLayoutEnd
+
 parseType :: Text -> Maybe D.Type'
-parseType = fmap (fmap (const ()) . CST.convertType "<query>") . runParser CST.parseType
+parseType = fmap (fmap (const ()) . CST.convertType "<query>") . runParser (parseOne CST.parseTypeP)
 
 isSymbol :: Text -> Bool
-isSymbol = maybe False (const True) . runParser CST.parseOperator
+isSymbol =
+  either (const False) id
+    . fmap (symbol . map CST.tokValue)
+    . sequence
+    . CST.lex
+  where
+  symbol (CST.TokSymbolName _ _ : _) = True
+  symbol (CST.TokOperator _ _ : _) = True
+  symbol _ = False
 
 isDeprecated :: D.Package a -> Bool
 isDeprecated D.Package{..} =
