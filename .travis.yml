@@ -33,6 +33,7 @@ before_deploy:
   - mkdir bundle
   - cp `stack path --dist-dir`/build/pursuit/pursuit bundle/
   - cp LICENSE bundle/
+  - cp -r deploy/ bundle/
   - tar czf pursuit.tar.gz -C bundle/ .
 
 deploy:
