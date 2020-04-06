@@ -7,7 +7,7 @@ User=www-data
 ExecStart=/var/www/pursuit/pursuit +RTS -N1 -A128m -M1.5G -RTS
 Restart=always
 RestartSec=5s
-Environment="PURSUIT_APPROOT=http://pursuit.purescript.org"
+Environment="PURSUIT_APPROOT=https://pursuit.purescript.org"
 Environment="PURSUIT_HOST=127.0.0.1"
 Environment="PURSUIT_PORT=3000"
 Environment="PURSUIT_DATA_DIR=/var/www/pursuit/data"
