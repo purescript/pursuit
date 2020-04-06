@@ -32,6 +32,11 @@ if [ ! -d /var/www/pursuit/data/verified ]; then
   sudo -u www-data sh -c 'cd /var/www/pursuit && git clone https://github.com/purescript/pursuit-backups data/verified'
 fi
 
+# create diffie-helman parameters (for TLS) if not present
+if [ ! -f /etc/nginx/ssl_dhparam ]; then
+  openssl dhparam 4096 > /etc/nginx/ssl_dhparam
+fi
+
 # download release
 tmpdir="$(sudo -u www-data mktemp -d)"
 pushd "$tmpdir"
