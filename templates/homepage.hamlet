@@ -14,7 +14,7 @@
     <li><a href="/search?q=map">map</a></li>
     <li><a href="/search?q=%28a+->+b%29+->+f+a+->+f+b">(a -> b) -> f a -> f b</a></li>
     <li><a href="/search?q=Data.List">Data.List</a></li>
-    <li><a href="/search?q=Event+->+_">Event -> _</a></li>
+    <li><a href="/search?q=Event+->+_">Event -> _</a> (<a href="https://github.com/purescript/pursuit/issues/395">experimental</a>)</li>
 
 <div .col.col--aside>
   <dl .grouped-list style="margin-top: 0.6em">
