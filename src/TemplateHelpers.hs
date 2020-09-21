@@ -4,6 +4,7 @@ import Import hiding (span, link)
 import qualified Data.List.Split as List
 import qualified Data.Map as Map
 import Data.Traversable (for)
+import Data.Bifunctor (first)
 import Data.Version (Version)
 import Data.List (nub)
 import Data.Text (splitOn)
@@ -26,9 +27,14 @@ linkToGithubUser user =
 
 linkToGithub :: (D.GithubUser, D.GithubRepo) -> Html
 linkToGithub (user, repo) =
+  let linkContent = D.runGithubUser user <> "/" <> D.runGithubRepo repo
+  in linkToGithub' linkContent (user, repo)
+
+linkToGithub' :: Text -> (D.GithubUser, D.GithubRepo) -> Html
+linkToGithub' linkContent (user, repo) =
   let path = D.runGithubUser user <> "/" <> D.runGithubRepo repo
   in a ! href (toValue ("https://github.com/" <> path)) $ do
-    toHtml path
+    toHtml linkContent
 
 joinLicenses :: [Text] -> Maybe Html
 joinLicenses ls
@@ -105,8 +111,8 @@ insertBreaks =
    >>> map toHtml
    >>> intercalate (toHtml ("." :: Text) *> wbr)
 
-tryGetReadme :: D.VerifiedPackage -> Handler (Either ReadmeMissing Html)
-tryGetReadme D.Package{..} = do
+tryGetReadme :: D.VerifiedPackage -> Handler (Either (ReadmeMissing, D.VerifiedPackage) Html)
+tryGetReadme pkg@D.Package{..} = do
   mtoken <- appGithubAuthToken . appSettings <$> getYesod
   let (ghUser, ghRepo) = pkgGithub
   let ghTag = pkgVersionTag
@@ -116,24 +122,26 @@ tryGetReadme D.Package{..} = do
       $logError (tshow r)
     _ ->
       return ()
-  return res
+  return $ first (, pkg) res
 
-renderReadme :: Either ReadmeMissing Html -> Html
+renderReadme :: Either (ReadmeMissing, D.VerifiedPackage) Html -> Html
 renderReadme = \case
   Right html' ->
     html'
-  Left APIRateLimited ->
-    [shamlet|
-      <div .message .message--not-available>
-        No readme available (due to rate limiting). Please try again later.
-    |]
-  Left ReadmeNotFound ->
+  Left (APIRateLimited, D.Package{..}) ->
+    let githubLink = linkToGithub' "Github" pkgGithub
+    in [shamlet|
+          <div .message .message--not-available>
+            No readme available (due to rate limiting). Please try again later
+            or view this package's readme on ^{githubLink}.
+       |]
+  Left (ReadmeNotFound, _) ->
     [shamlet|
       <div .message .message--not-available>
         No readme found in the repository at this tag. If you are the maintainer,
         perhaps consider adding one in the next release.
     |]
-  Left (OtherReason _) ->
+  Left (OtherReason _, _) ->
     [shamlet|
       <div .message .message--not-available>
         No readme available, for some unexpected reason (which has been logged).
