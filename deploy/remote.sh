@@ -8,6 +8,7 @@ set -ex
 # - configuration of secrets/credentials
 # - data migrations,
 # - nginx SSL configuration,
+# - periodic running of the backup script
 #
 # so whenever any of these are needed, they must be done manually.
 
