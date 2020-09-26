@@ -29,7 +29,7 @@ fi
 SOURCE_DIR="$1"
 DEST_DIR="$2"
 
-rsync --archive --verbose --delete "$SOURCE_DIR" "$DEST_DIR"
+rsync --archive --verbose --delete --exclude .git "$SOURCE_DIR" "$DEST_DIR"
 pushd "$DEST_DIR"
 
 git add .           # add new files
