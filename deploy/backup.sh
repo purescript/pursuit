@@ -17,7 +17,7 @@ function die() {
     exit 1
 }
 
-for required_cmd in "rsync git"; do
+for required_cmd in rsync git; do
     which "$required_cmd" >/dev/null ||
         die "The program '$required_cmd' is required but could not be found."
 done
@@ -26,8 +26,8 @@ if [ $# -ne 2 ]; then
     die "Usage: $0 SOURCE_DIR DEST_DIR"
 fi
 
-$SOURCE_DIR="$1"
-$DEST_DIR="$2"
+SOURCE_DIR="$1"
+DEST_DIR="$2"
 
 rsync --archive --verbose --delete "$SOURCE_DIR" "$DEST_DIR"
 pushd "$DEST_DIR"
