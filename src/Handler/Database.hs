@@ -13,6 +13,7 @@ module Handler.Database
   ) where
 
 import Import
+import Language.PureScript.CoreFn.FromJSON (parseVersion')
 import qualified Data.Aeson as A
 import qualified Data.NonNull as NN
 import qualified Data.Text as T
@@ -79,7 +80,7 @@ availableVersionsFor pkgName = do
   dir <- packageDirFor pkgName
   mresult <- liftIO $ catchDoesNotExist $ do
     files <- getDirectoryContents dir
-    return $ mapMaybe (stripSuffix ".json" >=> D.parseVersion') files
+    return $ mapMaybe (stripSuffix ".json" >=> parseVersion') files
   return $ fromMaybe [] mresult
 
 getPackageModificationTime :: PackageName -> Handler UTCTime

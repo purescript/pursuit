@@ -8,7 +8,7 @@ module Settings where
 import ClassyPrelude.Yesod
 import System.Environment (lookupEnv)
 import Data.Version
-import Language.PureScript.Docs (parseVersion')
+import Language.PureScript.CoreFn.FromJSON (parseVersion')
 import Language.Haskell.TH.Syntax (Exp, Name, Q)
 import Network.Wai.Handler.Warp (HostPreference)
 import Yesod.Default.Util (WidgetFileSettings, widgetFileNoReload,

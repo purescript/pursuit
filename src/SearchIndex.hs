@@ -277,6 +277,8 @@ extractChildDeclarationType declTitle declInfo cdeclInfo =
             , P.constraintArgs = map (P.TypeVar () . fst) args
             , P.constraintData = Nothing
             , P.constraintAnn = ()
+              -- TODO: Verify that defaulting to `kindType` works
+            , P.constraintKindArgs = map (fromMaybe (P.kindType $> ()) . snd) args
             }
         in
           Just (addConstraint constraint ty)
@@ -470,7 +472,8 @@ compareQual (P.Qualified _ a1) (P.Qualified _ a2) = a1 == a2
 
 runParser :: CST.Parser a -> Text -> Maybe a
 runParser p =
-  hush
+  fmap snd
+    . hush
     . CST.runTokenParser (p <* CSTM.token CST.TokEof)
     . CST.lexTopLevel
 
