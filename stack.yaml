@@ -1,16 +1,28 @@
 resolver: lts-13.26
+# Resolves hjsmin requiring language-javascript ==0.6, while the purescript
+# compiler requires language-javascript ==0.7.
+allow-newer: true 
 packages:
 - '.'
 extra-deps:
 - bytestring-trie-0.2.5.0
+- cborg-0.2.2.0
 - connection-0.3.1
 - happy-1.19.9
-- language-javascript-0.6.0.13
+- language-javascript-0.7.0.0
 - network-3.0.1.1
-- purescript-0.13.3
+- ../purescript
+- ../purescript/lib/purescript-ast
+- ../purescript/lib/purescript-cst
+- serialise-0.2.2.0
 - socks-0.6.0
+- these-1.0.1
+- semialign-1
 flags:
   pursuit:
     dev: true
   aeson-pretty:
     lib-only: true
+  these:
+    assoc: false
+    quickcheck: false
