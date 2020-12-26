@@ -11,13 +11,17 @@ extra-deps:
 - happy-1.19.9
 - language-javascript-0.7.0.0
 - network-3.0.1.1
-- ../purescript
-- ../purescript/lib/purescript-ast
-- ../purescript/lib/purescript-cst
 - serialise-0.2.2.0
 - socks-0.6.0
 - these-1.0.1
 - semialign-1
+# purescript 0.14.0-rc4
+- github: purescript/purescript
+  commit: 8663d00a27c2c36e229f3d2f98358e660c297335
+  subdirs:
+    - .
+    - lib/purescript-ast
+    - lib/purescript-cst
 flags:
   pursuit:
     dev: true
