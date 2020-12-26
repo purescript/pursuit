@@ -5,6 +5,7 @@
 module Foundation where
 
 import Import.NoFoundation
+import Language.PureScript.CoreFn.FromJSON (parseVersion')
 import Text.Read (readsPrec)
 import qualified Data.Text as T
 import qualified Data.Text.Lazy as LT
@@ -44,7 +45,7 @@ newtype PathVersion =
 
 instance PathPiece PathVersion where
   toPathPiece = toPathPiece . showVersion . runPathVersion
-  fromPathPiece = fmap PathVersion . D.parseVersion' . T.unpack
+  fromPathPiece = fmap PathVersion . parseVersion' . T.unpack
 
 -- | A base64 encoded string.
 newtype VerificationKey =

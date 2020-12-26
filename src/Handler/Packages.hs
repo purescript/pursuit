@@ -7,6 +7,7 @@ import qualified Data.Char as Char
 import Data.Version
 import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
+import Language.PureScript.CoreFn.FromJSON (parseVersion')
 import qualified Language.PureScript.Docs as D
 import Web.Bower.PackageMeta (PackageName, runPackageName, bowerDependencies, bowerLicense)
 import qualified Data.HashMap.Strict as HashMap
@@ -263,7 +264,7 @@ displayJsonError value e = case e of
     toObject
     >=> HashMap.lookup "compilerVersion"
     >=> toString
-    >=> (D.parseVersion' . unpack)
+    >=> (parseVersion' . unpack)
 
   toObject json =
     case json of
