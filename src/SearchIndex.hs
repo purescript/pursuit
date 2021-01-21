@@ -277,7 +277,7 @@ extractChildDeclarationType declTitle declInfo cdeclInfo =
             , P.constraintArgs = map (P.TypeVar () . fst) args
             , P.constraintData = Nothing
             , P.constraintAnn = ()
-            , P.constraintKindArgs = fold $ traverse snd args
+            , P.constraintKindArgs = []
             }
         in
           Just (addConstraint constraint ty)
