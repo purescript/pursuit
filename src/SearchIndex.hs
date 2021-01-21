@@ -277,8 +277,7 @@ extractChildDeclarationType declTitle declInfo cdeclInfo =
             , P.constraintArgs = map (P.TypeVar () . fst) args
             , P.constraintData = Nothing
             , P.constraintAnn = ()
-              -- TODO: Verify that defaulting to `kindType` works
-            , P.constraintKindArgs = map (fromMaybe (P.kindType $> ()) . snd) args
+            , P.constraintKindArgs = []
             }
         in
           Just (addConstraint constraint ty)
