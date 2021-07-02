@@ -8,13 +8,14 @@ on:
     types: [published]
 
 env:
-  DROPLET_OS: ubuntu-18.04
   BUNDLE_DIR: bundle
 
 jobs:
   build_server:
     name: Build server
-    runs-on: ${{ env.DROPLET_OS }}
+    # Note that this must be kept in sync with the version of Ubuntu which the
+    # Pursit server is running, otherwise the server binary may fail to run.
+    runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
 
@@ -63,7 +64,7 @@ jobs:
     name: Release
     # Note that this must be kept in sync with the version of Ubuntu which the
     # Pursit server is running, otherwise the server binary may fail to run.
-    runs-on: ${{ env.DROPLET_OS }}
+    runs-on: ubuntu-18.04
     if: github.event_name == 'release'
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
