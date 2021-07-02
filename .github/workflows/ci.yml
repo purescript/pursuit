@@ -14,8 +14,7 @@ jobs:
   build_server:
     name: Build server
     # Note that this must be kept in sync with the version of Ubuntu which the
-    # Try PureScript server is running, otherwise the server binary may fail to
-    # run.
+    # Pursuit server is running, otherwise the server binary may fail to run.
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
