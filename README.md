@@ -1,6 +1,6 @@
 # Pursuit
 
-[![Build Status](https://api.travis-ci.org/purescript/pursuit.svg?branch=master)](https://travis-ci.org/purescript/pursuit)
+[![Build Status](https://github.com/purescript/pursuit/workflows/CI/badge.svg?branch=master)](https://github.com/purescript/pursuit/actions?query=workflow%3ACI+branch%3Amaster)
 
 Pursuit hosts API documentation for PureScript packages. It lets you search by
 package, module, and function names, as well as approximate type signatures.
@@ -95,7 +95,7 @@ application, and contains files which do not change and may be served as-is
 without forwarding the request on to the Yesod application. See Handler.Caching
 for more details.
 
-The `verified/` directory stores uploaded packages.  Each package has its own
+The `verified/` directory stores uploaded packages. Each package has its own
 directory, and then there is a JSON file for each version. These JSON files
 each contain a serialized `Package GithubUser`; see
 Language.PureScript.Docs.Types in the compiler for details about these types.
