@@ -28,12 +28,8 @@ jobs:
       - name: Cache dependencies
         uses: actions/cache@v2
         with:
-          path: |
-            ~/.stack
-            .stack-work
-          key: ${{ runner.os }}-stack-${{ hashFiles('stack.yaml.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-stack
+          path: ~/.stack
+          key: ${{ runner.os }}-stack-${{ hashFiles('stack.yaml.lock') }}-${{ hashFiles('pursuit.cabal') }}
 
       - name: Build server code
         run: |
