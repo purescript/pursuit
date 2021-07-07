@@ -1,7 +1,45 @@
-# pursuit changelog
+# Pursuit Changelog
 
 Please see https://github.com/purescript/pursuit/blob/master/CHANGELOG.md for
 the most up-to-date version of this file.
+
+## v0.8.3
+
+* Build against v0.14.3 of the PureScript compiler
+* Migrate to GitHub Actions for CI (#435 by @thomashoneyman)
+* Fix an internal typo (#432 by @i-am-the-slime)
+
+## v0.8.2
+
+* Default `constraintKindArgs` to an empty list (#430 by @thomashoneyman)
+
+## v0.8.1
+
+* Update outdated Pursuit version in the .cabal file to 0.8.1 (@thomashoneyman)
+
+## v0.8.0
+
+* Build against release 0.14.0-rc3 of the PureScript compiler (#428 by @thomashoneyman)
+
+## v0.7.7
+
+* Avoid deleting the .git directory in the backup script (@hdgarrood)
+
+## v0.7.6
+
+* Fix backup script (@hdgarrood)
+
+## v0.7.5
+
+* Bump the tag this for release via CI (@hdgarrood)
+
+## v0.7.4
+
+* Include the backup script in the deploy bundle (@hdgarrood)
+
+## v0.7.3
+
+* Build against version 0.13.0 of the PureScript compiler (@hdgarrood)
 
 ## v0.7.2
 
