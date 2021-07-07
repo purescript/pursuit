@@ -33,31 +33,19 @@ packages:
   original:
     hackage: language-javascript-0.7.0.0
 - completed:
-    size: 711344
-    subdir: .
-    url: https://github.com/purescript/purescript/archive/b4c90a8bb6a1059f271f4211687192370fda81bc.tar.gz
-    name: purescript
-    version: 0.14.3
-    sha256: 66f8f95ccbaad4bf7cc92797548f6b6317ab438432605059772c0077ae6fd446
+    hackage: purescript-0.14.3@sha256:4b75604e86c335711e1b1f1f73ef381108d047c9277df1cdc71922ec7da7c181,18623
     pantry-tree:
-      size: 125562
-      sha256: 256c4cdca0253dea46fd656de273409648f617b25fbdcc742ae3b9595619d64c
+      size: 132222
+      sha256: e3957c9d2c96434fcf5e8f310b34f4ea696cc8e5f63e60958eae5c6e31aba4c6
   original:
-    subdir: .
-    url: https://github.com/purescript/purescript/archive/b4c90a8bb6a1059f271f4211687192370fda81bc.tar.gz
+    hackage: purescript-0.14.3
 - completed:
-    size: 711344
-    subdir: lib/purescript-cst
-    url: https://github.com/purescript/purescript/archive/b4c90a8bb6a1059f271f4211687192370fda81bc.tar.gz
-    name: purescript-cst
-    version: 0.3.0.0
-    sha256: 66f8f95ccbaad4bf7cc92797548f6b6317ab438432605059772c0077ae6fd446
+    hackage: purescript-cst-0.3.0.0@sha256:369317d52737c4fa8c74a875283ed6cc0ef68e7c64db13d6e5bb7a7f72b76572,3861
     pantry-tree:
       size: 3018
-      sha256: 55486cc019d034e2972a19e745727b33c9b5259d3ac2c0421651ce273d1096f3
+      sha256: 38f94bcc121068215c6082bab39b6c555cadd3b88e786740c394a5c4b98c4100
   original:
-    subdir: lib/purescript-cst
-    url: https://github.com/purescript/purescript/archive/b4c90a8bb6a1059f271f4211687192370fda81bc.tar.gz
+    hackage: purescript-cst-0.3.0.0
 snapshots:
 - completed:
     size: 565712

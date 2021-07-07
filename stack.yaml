@@ -1,20 +1,19 @@
 resolver: lts-17.6
 # Resolves hjsmin requiring language-javascript ==0.6, while the purescript
 # compiler requires language-javascript ==0.7.
-allow-newer: true 
+allow-newer: true
+
 packages:
-- '.'
+  - "."
+
 extra-deps:
-- barrier-0.1.1
-- bytestring-trie-0.2.5.0
-- classy-prelude-yesod-1.5.0
-- language-javascript-0.7.0.0
-# purescript 0.14.3
-- github: purescript/purescript
-  commit: b4c90a8bb6a1059f271f4211687192370fda81bc
-  subdirs:
-    - .
-    - lib/purescript-cst
+  - barrier-0.1.1
+  - bytestring-trie-0.2.5.0
+  - classy-prelude-yesod-1.5.0
+  - language-javascript-0.7.0.0
+  - purescript-0.14.3
+  - purescript-cst-0.3.0.0
+
 flags:
   pursuit:
     dev: true
