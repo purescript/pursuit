@@ -79,3 +79,125 @@ called "Kleisli" in some contexts. This may also change in the future; see
 [`sequence`]: https://pursuit.purescript.org/packages/purescript-foldable-traversable/docs/Data.Traversable#t:Traversable
 [Modules page in the documentation repository]: https://github.com/purescript/documentation/blob/master/language/Modules.md
 [`Star`]: https://pursuit.purescript.org/packages/purescript-profunctor/docs/Data.Profunctor.Star#t:Star
+
+## Kind Signatures
+
+### Explicit and Inferred
+
+Data, newtype, type synonym, and type class declarations all have kind
+signatures. These signatures are either explicit (i.e. developer-defined)
+or implicit (i.e. compiler-inferred). For example
+
+```purescript
+-- Explicit kind signature
+
+data ExplicitFoo :: forall k. k -> Type
+data ExplicitFoo a = ExplicitFoo
+
+-- Implicit kind signature
+                                                                  {-
+data ImplicitFoo :: forall k. k -> (Type -> Type) -> Type         -}
+data ImplicitFoo a f = ImplicitFoo (f Int)
+```
+
+### Merging Documentation Comments
+
+Since both the kind signature declaration and the data/newtype/type/class
+declaration can have documentation comments, both will be merged together
+with a newline separating them, displaying the kind signature declaration's
+documentation comments first and then the other declaration's documentation
+comments second. For example, the below code...
+```purescript
+-- | Kind signature declaration documentation comment
+data ExplicitFoo :: forall k. k -> Type
+-- | Data declaration documentation comment
+data ExplicitFoo a = ExplicitFoo
+```
+... will be rendered as
+```
+Kind signature declaration documentation comment
+Data declaration documentation comment
+```
+
+### Interesting Kinds are displayed; Uninteresting Kinds are not
+
+The following design choice should make it easier for new learners
+to learn the language by limiting their exposure to these more
+advanced language features.
+
+In some cases, kind signatures can be very helpful. In other cases, they are
+a needless distraction. By default, all kind signatures, whether explicitly-
+declared by the developer or inferred by the compiler, will only be displayed
+if the kind signatures are considered "interesting." Put differently,
+"uninteresting" kind signatures will not be displayed.
+
+An "uninteresting" kind signature is one that follows this form:
+- `Type`
+- `Constraint`
+- `Type -> K` where `K` refers to an "uninteresting" kind signature
+
+Here's another way to think about it. Kind signatures are considered
+"uninteresting" if all of their type parameters' kinds are kind `Type`.
+
+### Examples of "uninteresting" kind signatures
+
+Consider the following examples of "uninteresting" kind signatures. Each
+kind signature is considered "uninteresting" because
+1. it does not have type parameters
+2. if it has type parameters, each type parameters' kind is kind `Type`
+
+```purescript
+data TypeOnly :: Type
+data TypeOnly
+
+class IntentionallyEmpty :: Constraint
+class IntentionallyEmpty
+
+data TypeProxy :: Type -> Type
+data TypeProxy a = TypeProxy
+
+class Bar :: Type -> Type -> Constraint
+class Bar a b where
+  convert :: a -> b
+```
+Are any of the above kind signatures really necessary? Not really.
+In the first two examples, its obvious that the kind signature is
+`Type` (i.e. `TypeOnly`) or `Constraint` (i.e. `IntentionallyEmpty`) whether
+the kind signature is displayed or not.
+
+In the second two examples, the type parameters' kind is always `Type`.
+So, this too is considered "uninteresting."
+
+In short, if you see a data, newtype, type synonym, or type class declaration
+that has type parameters and it does not have a kind signature, then you
+know by default that the kind of each type parameter is kind `Type`.
+
+### Examples of "interesting" kind signatures
+
+Consider the following examples of "interesting" kind signatures.
+Each kind signature is "interesting" because it has at least one
+type parameter whose kind is something other than kind `Type`:
+```purescript
+-- the "k" part makes this kind signature "interesting"
+data PolyProxy :: forall k. k -> Type
+data PolyProxy a = PolyProxy
+
+-- the `(Type -> Type)` part makes this kind signature "interesting"
+data FunctorLike :: (Type -> Type) -> Type -> Type
+data FunctorLike f a = FunctorLike (f Int) a
+
+-- the `(Type -> Type -> Type)` part makes this kind signature "interesting"
+data BiFunctorLike :: (Type -> Type -> Type) -> Type -> Type
+data BiFunctorLike f a = BiFunctorLike (f Int String) a
+
+-- every type parameter makes this kind signature "interesting"
+class TypeLevelProgrammingFunction :: Symbol -> Row Type -> Row Type -> Constraint
+class TypeLevelProgrammingFunction sym row1 row2 | sym row1 -> row2
+```
+
+In the `PolyProxy` example, the polykinded `a` type parameter is interesting.
+
+In the `FunctorLike` and `BiFunctorLike` examples, the higher-kinded `f`
+type paramter is interesting.
+
+Lastly, each type parameter in `TypeLevelProgrammingFunction` is interesting.
