@@ -1,27 +1,19 @@
-resolver: lts-13.26
+resolver: lts-17.6
 # Resolves hjsmin requiring language-javascript ==0.6, while the purescript
 # compiler requires language-javascript ==0.7.
-allow-newer: true 
+allow-newer: true
+
 packages:
-- '.'
+  - "."
+
 extra-deps:
-- bytestring-trie-0.2.5.0
-- cborg-0.2.2.0
-- connection-0.3.1
-- happy-1.19.9
-- language-javascript-0.7.0.0
-- network-3.0.1.1
-- serialise-0.2.2.0
-- socks-0.6.0
-- these-1.0.1
-- semialign-1
-# purescript 0.14.0-rc4
-- github: purescript/purescript
-  commit: 8663d00a27c2c36e229f3d2f98358e660c297335
-  subdirs:
-    - .
-    - lib/purescript-ast
-    - lib/purescript-cst
+  - barrier-0.1.1
+  - bytestring-trie-0.2.5.0
+  - classy-prelude-yesod-1.5.0
+  - language-javascript-0.7.0.0
+  - purescript-0.14.3
+  - purescript-cst-0.3.0.0
+
 flags:
   pursuit:
     dev: true
@@ -29,4 +21,3 @@ flags:
     lib-only: true
   these:
     assoc: false
-    quickcheck: false

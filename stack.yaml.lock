@@ -5,33 +5,26 @@
 
 packages:
 - completed:
-    hackage: bytestring-trie-0.2.5.0@sha256:96498959cf2af0e3f1f3dfb526b78502c9fa8f21255a3506938ee2a26e61d653,3331
+    hackage: barrier-0.1.1@sha256:2021f84c3aba67bb635d72825d3bc0371942444dc014bc307b875071e29eea98,3931
+    pantry-tree:
+      size: 1695
+      sha256: 2296d051562ead243beb831f20e216b44365e290ae76976cde7edd344e95bf29
+  original:
+    hackage: barrier-0.1.1
+- completed:
+    hackage: bytestring-trie-0.2.5.0@sha256:9efa9c6f556314d28486be2470ff789419c5238ed2e354870623a3cbbd28fbe2,3349
     pantry-tree:
       size: 705
-      sha256: dfcfade8cc0eaafae73ef31de6ecfa5c348bbd3a8d514dda8c9e7cef74e41b87
+      sha256: bdc13e00a60830edee41119af62b7203602377ccd81a6555c4fea95b0cb3a252
   original:
     hackage: bytestring-trie-0.2.5.0
 - completed:
-    hackage: cborg-0.2.2.0@sha256:83b644d2634991403e60a2766b0fcddb3eacf8acfed92f568a90311ed1ef779e,4953
+    hackage: classy-prelude-yesod-1.5.0@sha256:8f7e183bdfd6d2ea9674284c4f285294ab086aff60d9be4e5d7d2f3c1a2b05b7,1330
     pantry-tree:
-      size: 2559
-      sha256: 8ebe0d8b2d71f9a938ed73143e4c7ba068621fd2c83ff7d0c75fc940ab5fe163
+      size: 330
+      sha256: ae84d4cc0e1daf985db6cdcf2ac92319531b8e60f547183cc46480d00aafbe20
   original:
-    hackage: cborg-0.2.2.0
-- completed:
-    hackage: connection-0.3.1@sha256:65da1c055610095733bcd228d85dff80804b23a5d18fede994a0f9fcd1b0c121,1554
-    pantry-tree:
-      size: 386
-      sha256: 13a2c21049e69068e4c3d725533d94729772f2d3e05f5ef611bef28363b08798
-  original:
-    hackage: connection-0.3.1
-- completed:
-    hackage: happy-1.19.9@sha256:f8c774230735a390c287b2980cfcd2703d24d8dde85a01ea721b7b4b4c82944f,4667
-    pantry-tree:
-      size: 7980
-      sha256: 1f1d622f6e773e7a674da6364b755714c76c3fbb3c7a4e65deaf07242fc15211
-  original:
-    hackage: happy-1.19.9
+    hackage: classy-prelude-yesod-1.5.0
 - completed:
     hackage: language-javascript-0.7.0.0@sha256:3eab0262b8ac5621936a4beab6a0f97d0e00a63455a8b0e3ac1547b4088dae7d,3898
     pantry-tree:
@@ -40,43 +33,22 @@ packages:
   original:
     hackage: language-javascript-0.7.0.0
 - completed:
-    hackage: network-3.0.1.1@sha256:1a251b790ea98b6f7433f677958f921950780ba6f143d61ba8c0e3f7a9879097,4074
+    hackage: purescript-0.14.3@sha256:4b75604e86c335711e1b1f1f73ef381108d047c9277df1cdc71922ec7da7c181,18623
     pantry-tree:
-      size: 3296
-      sha256: 78e378780c998faaf4e32a16b98880220f502d8ef005f24d7ee0c99fb50636e6
+      size: 132222
+      sha256: e3957c9d2c96434fcf5e8f310b34f4ea696cc8e5f63e60958eae5c6e31aba4c6
   original:
-    hackage: network-3.0.1.1
+    hackage: purescript-0.14.3
 - completed:
-    hackage: serialise-0.2.2.0@sha256:6e8b89f437009ab30297a57de1a4bf2e3da5e5a086b96bf5cc278bdb7178f097,8356
+    hackage: purescript-cst-0.3.0.0@sha256:369317d52737c4fa8c74a875283ed6cc0ef68e7c64db13d6e5bb7a7f72b76572,3861
     pantry-tree:
-      size: 4056
-      sha256: 97702981cdfe830fca6d258341b9773272400e475165689548f56da83eff2778
+      size: 3018
+      sha256: 38f94bcc121068215c6082bab39b6c555cadd3b88e786740c394a5c4b98c4100
   original:
-    hackage: serialise-0.2.2.0
-- completed:
-    hackage: socks-0.6.0@sha256:a058ee6b66da40a2365efcf44b4c06c96e58a23b150bd3f3d0f9f5cadc33f728,1318
-    pantry-tree:
-      size: 692
-      sha256: 036f8eefaf2a473554c733ca838373b49c1b686eee4a8180741b8123d788dbc5
-  original:
-    hackage: socks-0.6.0
-- completed:
-    hackage: these-1.0.1@sha256:58dba2446b57dde711c5e7f63910d18bc28b9a5831a89772986bb184a3e7851b,3266
-    pantry-tree:
-      size: 351
-      sha256: dd785882a522b6c76ee97fdd5e0e8cbca15b2fc951985bbecc76d0dd6e456aae
-  original:
-    hackage: these-1.0.1
-- completed:
-    hackage: semialign-1@sha256:f11b3d8d0f31a3556061ec0fb515575646d162f12c5b25a0f07c92679db7d862,2433
-    pantry-tree:
-      size: 466
-      sha256: e67b833b94b7fa23afbf7088833a38596cf35a2b93635604dd9e49d0389360fe
-  original:
-    hackage: semialign-1
+    hackage: purescript-cst-0.3.0.0
 snapshots:
 - completed:
-    size: 499889
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/13/26.yaml
-    sha256: ecb02ee16829df8d7219e7d7fe6c310819820bf335b0b9534bce84d3ea896684
-  original: lts-13.26
+    size: 565712
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/17/6.yaml
+    sha256: 4e5e581a709c88e3fe26a9ce8bf331435729bead762fb5c190064c6c5bb1b835
+  original: lts-17.6
