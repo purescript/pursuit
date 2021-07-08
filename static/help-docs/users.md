@@ -198,6 +198,6 @@ class TypeLevelProgrammingFunction sym row1 row2 | sym row1 -> row2
 In the `PolyProxy` example, the polykinded `a` type parameter is interesting.
 
 In the `FunctorLike` and `BiFunctorLike` examples, the higher-kinded `f`
-type paramter is interesting.
+type parameter is interesting.
 
 Lastly, each type parameter in `TypeLevelProgrammingFunction` is interesting.
