@@ -104,9 +104,7 @@ data ImplicitFoo a f = ImplicitFoo (f Int)
 
 Since both the kind signature declaration and the data/newtype/type/class
 declaration can have documentation comments, both will be merged together
-with a newline separating them, displaying the kind signature declaration's
-documentation comments first and then the other declaration's documentation
-comments second. For example, the below code...
+with a newline separating them. For example, the below code's doc comments...
 ```purescript
 -- | Kind signature declaration documentation comment
 data ExplicitFoo :: forall k. k -> Type
@@ -125,11 +123,9 @@ The following design choice should make it easier for new learners
 to learn the language by limiting their exposure to these more
 advanced language features.
 
-In some cases, kind signatures can be very helpful. In other cases, they are
-a needless distraction. By default, all kind signatures, whether explicitly-
-declared by the developer or inferred by the compiler, will only be displayed
-if the kind signatures are considered "interesting." Put differently,
-"uninteresting" kind signatures will not be displayed.
+By default, all kind signatures, whether explicitly-declared by the developer
+or inferred by the compiler, will only be displayed if the kind signatures
+are considered "interesting." Put differently, "uninteresting" kind signatures will not be displayed.
 
 An "uninteresting" kind signature is one that follows this form:
 - `Type`
@@ -153,20 +149,10 @@ data TypeOnly
 class IntentionallyEmpty :: Constraint
 class IntentionallyEmpty
 
-data TypeProxy :: Type -> Type
-data TypeProxy a = TypeProxy
-
 class Bar :: Type -> Type -> Constraint
 class Bar a b where
   convert :: a -> b
 ```
-Are any of the above kind signatures really necessary? Not really.
-In the first two examples, its obvious that the kind signature is
-`Type` (i.e. `TypeOnly`) or `Constraint` (i.e. `IntentionallyEmpty`) whether
-the kind signature is displayed or not.
-
-In the second two examples, the type parameters' kind is always `Type`.
-So, this too is considered "uninteresting."
 
 In short, if you see a data, newtype, type synonym, or type class declaration
 that has type parameters and it does not have a kind signature, then you
@@ -186,18 +172,7 @@ data PolyProxy a = PolyProxy
 data FunctorLike :: (Type -> Type) -> Type -> Type
 data FunctorLike f a = FunctorLike (f Int) a
 
--- the `(Type -> Type -> Type)` part makes this kind signature "interesting"
-data BiFunctorLike :: (Type -> Type -> Type) -> Type -> Type
-data BiFunctorLike f a = BiFunctorLike (f Int String) a
-
 -- every type parameter makes this kind signature "interesting"
 class TypeLevelProgrammingFunction :: Symbol -> Row Type -> Row Type -> Constraint
 class TypeLevelProgrammingFunction sym row1 row2 | sym row1 -> row2
 ```
-
-In the `PolyProxy` example, the polykinded `a` type parameter is interesting.
-
-In the `FunctorLike` and `BiFunctorLike` examples, the higher-kinded `f`
-type parameter is interesting.
-
-Lastly, each type parameter in `TypeLevelProgrammingFunction` is interesting.
