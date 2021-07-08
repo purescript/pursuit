@@ -119,7 +119,7 @@ Kind signature declaration documentation comment
 Data declaration documentation comment
 ```
 
-### Interesting Kinds are displayed; Uninteresting Kinds are not
+### Interesting kinds are displayed; Uninteresting kinds are not
 
 The following design choice should make it easier for new learners
 to learn the language by limiting their exposure to these more
