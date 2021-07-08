@@ -133,7 +133,7 @@ An "uninteresting" kind signature is one that follows this form:
 - `Type -> K` where `K` refers to an "uninteresting" kind signature
 
 Here's another way to think about it: kind signatures are considered
-"uninteresting" if all of their type parameters' kinds are kind `Type`.
+"uninteresting" if all of their type parameters' kinds have kind `Type`.
 
 #### Examples of "uninteresting" kind signatures
 
