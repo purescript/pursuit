@@ -94,9 +94,9 @@ or implicit (i.e. compiler-inferred). For example
 data ExplicitFoo :: forall k. k -> Type
 data ExplicitFoo a = ExplicitFoo
 
--- Implicit kind signature
-                                                                  {-
+{- Kind signature inferred by the compiler for the below type:
 data ImplicitFoo :: forall k. k -> (Type -> Type) -> Type         -}
+
 data ImplicitFoo a f = ImplicitFoo (f Int)
 ```
 
