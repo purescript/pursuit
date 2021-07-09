@@ -135,11 +135,6 @@ Here's another way to think about it: kind signatures are considered
 
 #### Examples of "uninteresting" kind signatures
 
-Consider the following examples of "uninteresting" kind signatures. Each
-kind signature is considered "uninteresting" because
-1. it does not have type parameters
-2. if it has type parameters, each type parameters' kind is kind `Type`
-
 ```purescript
 data TypeOnly :: Type
 data TypeOnly
@@ -151,10 +146,6 @@ class Bar :: Type -> Type -> Constraint
 class Bar a b where
   convert :: a -> b
 ```
-
-In short, if you see a data, newtype, type synonym, or type class declaration
-that has type parameters and it does not have a kind signature, then you
-know by default that the kind of each type parameter is kind `Type`.
 
 #### Examples of "interesting" kind signatures
 
