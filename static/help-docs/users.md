@@ -149,8 +149,7 @@ class Bar a b where
 
 #### Examples of "interesting" kind signatures
 
-Consider the following examples of "interesting" kind signatures.
-Each kind signature is "interesting" because it has at least one
+Each kind signature below is "interesting" because it has at least one
 type parameter whose kind is something other than kind `Type`:
 ```purescript
 -- the "k" part makes this kind signature "interesting"
