@@ -90,13 +90,11 @@ or implicit (i.e. compiler-inferred). For example
 
 ```purescript
 -- Explicit kind signature
-
 data ExplicitFoo :: forall k. k -> Type
 data ExplicitFoo a = ExplicitFoo
 
 {- Kind signature inferred by the compiler for the below type:
 data ImplicitFoo :: forall k. k -> (Type -> Type) -> Type         -}
-
 data ImplicitFoo a f = ImplicitFoo (f Int)
 ```
 
