@@ -43,7 +43,7 @@ jobs:
         if: github.event_name == 'release'
         run: |
           mkdir ${{ env.BUNDLE_DIR }}
-          cp $(stack path --dist-dir)/build/pursit/pursuit ${{ env.BUNDLE_DIR }}/
+          cp $(stack path --dist-dir)/build/pursuit/pursuit ${{ env.BUNDLE_DIR }}/
           cp LICENSE ${{ env.BUNDLE_DIR }}/
           cp -r deploy/ ${{ env.BUNDLE_DIR }}/
           tar czf pursuit.tar.gz -C ${{ env.BUNDLE_DIR }}/ .
