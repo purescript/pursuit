@@ -79,3 +79,88 @@ called "Kleisli" in some contexts. This may also change in the future; see
 [`sequence`]: https://pursuit.purescript.org/packages/purescript-foldable-traversable/docs/Data.Traversable#t:Traversable
 [Modules page in the documentation repository]: https://github.com/purescript/documentation/blob/master/language/Modules.md
 [`Star`]: https://pursuit.purescript.org/packages/purescript-profunctor/docs/Data.Profunctor.Star#t:Star
+
+## Kind Signatures
+
+### Explicit and Inferred
+
+Data, newtype, type synonym, and type class declarations all have kind
+signatures. These signatures are either explicit (i.e. developer-defined)
+or implicit (i.e. compiler-inferred). For example
+
+```purescript
+-- Explicit kind signature
+data ExplicitFoo :: forall k. k -> Type
+data ExplicitFoo a = ExplicitFoo
+
+{- Kind signature inferred by the compiler for the below type:
+data ImplicitFoo :: forall k. k -> (Type -> Type) -> Type         -}
+data ImplicitFoo a f = ImplicitFoo (f Int)
+```
+
+### Merging Documentation Comments
+
+Since both the kind signature declaration and the data/newtype/type/class
+declaration can have documentation comments, both will be merged together
+with a newline separating them. For example, the below code's doc comments...
+```purescript
+-- | Kind signature declaration documentation comment
+data ExplicitFoo :: forall k. k -> Type
+-- | Data declaration documentation comment
+data ExplicitFoo a = ExplicitFoo
+```
+... will be rendered as
+```
+Kind signature declaration documentation comment
+Data declaration documentation comment
+```
+
+### Interesting kinds are displayed; Uninteresting kinds are not
+
+The following design choice should make it easier for new learners
+to learn the language by limiting their exposure to these more
+advanced language features.
+
+By default, all kind signatures, whether explicitly-declared by the developer
+or inferred by the compiler, will only be displayed if the kind signatures
+are considered "interesting." Put differently, "uninteresting" kind signatures will not be displayed.
+
+An "uninteresting" kind signature is one that follows this form:
+- `Type`
+- `Constraint`
+- `Type -> K` where `K` refers to an "uninteresting" kind signature
+
+Here's another way to think about it: kind signatures are considered
+"uninteresting" if all of their type parameters' kinds have kind `Type`.
+
+#### Examples of "uninteresting" kind signatures
+
+```purescript
+data TypeOnly :: Type
+data TypeOnly
+
+class IntentionallyEmpty :: Constraint
+class IntentionallyEmpty
+
+class Bar :: Type -> Type -> Constraint
+class Bar a b where
+  convert :: a -> b
+```
+
+#### Examples of "interesting" kind signatures
+
+Each kind signature below is "interesting" because it has at least one
+type parameter whose kind is something other than kind `Type`:
+```purescript
+-- the "k" part makes this kind signature "interesting"
+data PolyProxy :: forall k. k -> Type
+data PolyProxy a = PolyProxy
+
+-- the `(Type -> Type)` part makes this kind signature "interesting"
+data FunctorLike :: (Type -> Type) -> Type -> Type
+data FunctorLike f a = FunctorLike (f Int) a
+
+-- every type parameter makes this kind signature "interesting"
+class TypeLevelProgrammingFunction :: Symbol -> Row Type -> Row Type -> Constraint
+class TypeLevelProgrammingFunction sym row1 row2 | sym row1 -> row2
+```

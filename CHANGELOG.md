@@ -8,6 +8,7 @@ the most up-to-date version of this file.
 * Build against v0.14.3 of the PureScript compiler
 * Migrate to GitHub Actions for CI (#435 by @thomashoneyman)
 * Fix an internal typo (#432 by @i-am-the-slime)
+* Added a section on kind signatures (#437 by @JordanMartinez)
 
 ## v0.8.2
 
