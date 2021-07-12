@@ -33,11 +33,11 @@ jobs:
 
       - name: Build server code
         run: |
-          stack --no-terminal --jobs=2 build --flag pursuit:-dev --only-dependencies --fast
+          stack --no-terminal --jobs=2 build --flag pursuit:-dev
 
       - name: Test server code
         run: |
-          stack --no-terminal --jobs=2 test --flag pursuit:-dev --pedantic --only-dependencies --fast
+          stack --no-terminal --jobs=2 test --flag pursuit:-dev --pedantic
 
       - name: Build server assets
         if: github.event_name == 'release'
