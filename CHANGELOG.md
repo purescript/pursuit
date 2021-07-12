@@ -3,6 +3,10 @@
 Please see https://github.com/purescript/pursuit/blob/master/CHANGELOG.md for
 the most up-to-date version of this file.
 
+## v0.8.4
+
+- Fix typo in CI release script (@thomashoneyman)
+
 ## v0.8.3
 
 - Build against v0.14.3 of the PureScript compiler (#436 by @thomashoneyman)
