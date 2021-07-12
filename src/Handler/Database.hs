@@ -72,8 +72,8 @@ lookupPackage pkgName version = do
     Nothing -> do
       -- Work out whether there's no such package or just no such version
       dir <- packageDirFor pkgName
-      exists <- liftIO $ doesDirectoryExist dir
-      return $ Left $ if exists then NoSuchPackageVersion else NoSuchPackage
+      dirExists <- liftIO $ doesDirectoryExist dir
+      return $ Left $ if dirExists then NoSuchPackageVersion else NoSuchPackage
 
 availableVersionsFor :: PackageName -> Handler [Version]
 availableVersionsFor pkgName = do

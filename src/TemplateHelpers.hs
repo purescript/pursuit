@@ -3,8 +3,6 @@ module TemplateHelpers where
 import Import hiding (span, link)
 import qualified Data.List.Split as List
 import qualified Data.Map as Map
-import Data.Traversable (for)
-import Data.Bifunctor (first)
 import Data.Version (Version)
 import Data.List (nub)
 import Data.Text (splitOn)
