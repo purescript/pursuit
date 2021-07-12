@@ -154,7 +154,7 @@ postPackageIndexR = do
 
 getPackageVersionDocsR :: PathPackageName -> PathVersion -> Handler Html
 getPackageVersionDocsR (PathPackageName pkgName) (PathVersion version) =
-  findPackage pkgName version $ \pkg@D.Package{..} ->
+  findPackage pkgName version $ \pkg ->
     redirect (packageRoute pkg)
 
 getPackageVersionModuleDocsR :: PathPackageName -> PathVersion -> Text -> Handler Html
