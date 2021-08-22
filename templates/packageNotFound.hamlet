@@ -1,9 +1,0 @@
-<h2>
-  Package not found
-<p>
-  No package named
-  <strong>
-    #{runPackageName pkgName}
-  exists in the database. It might not have been published to Pursuit as of the
-  currently active version series of the PureScript compiler (namely,
-  #{versionSeries P.version}).

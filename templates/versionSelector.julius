@@ -1,5 +1,0 @@
-window.Pursuit.initializeVersionSelector({
-  currentVersion: "#{rawJS (showVersion version)}",
-  elementId: "#{rawJS versionSelectorIdent}",
-  availableVersionsUrl: "#{rawJS availableVersionsUrl}",
-})
