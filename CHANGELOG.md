@@ -3,6 +3,11 @@
 Please see https://github.com/purescript/pursuit/blob/master/CHANGELOG.md for
 the most up-to-date version of this file.
 
+## Unreleased
+
+- Update `purescript` to `0.14.5` and `purescript-cst` to `0.4.0.0` (@JordanMartinez)
+- 
+
 ## v0.8.5
 
 - Fix build command used in CI (@thomashoneyman)
