@@ -102,7 +102,7 @@ library
                  , containers
                  , vector
                  , time
-                 , purescript
+                 , purescript == 0.15.0
                  , bower-json
                  , blaze-builder
                  , blaze-markup
