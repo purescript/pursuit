@@ -254,6 +254,7 @@ renderText codeElem = case codeElem of
   D.Keyword s -> s
   D.Space -> " "
   D.Symbol _ s _ -> s
+  D.Role s -> s
 
 fromListWithDuplicates :: [(ByteString, a)] -> Trie [a]
 fromListWithDuplicates = foldr go Trie.empty
@@ -281,7 +282,7 @@ extractChildDeclarationType declTitle declInfo cdeclInfo =
             }
         in
           Just (addConstraint constraint ty)
-    (D.DataDeclaration _ tyArgs, D.ChildDataConstructor args) ->
+    (D.DataDeclaration _ tyArgs _, D.ChildDataConstructor args) ->
       let
         dataTy =
           foldl'
