@@ -41,7 +41,7 @@ Packages can only be uploaded to Pursuit if the following conditions are true:
 
 6. Change to your project directory and run `pulp publish`. This will the push commits and the relevant tag to your "origin" Git remote, and then generate your documentation and upload it to Pursuit.
 
-   `pulp publish` also accepts a `--no-push` flag which skips the Bower registration check as well as pushing commits (this is useful for uploading other people's packages, if you ever need to do this). There is also a `--push-to` option which allows you to specify a different Git remote to push tags and commits to.
+    `pulp publish` also accepts a `--no-push` flag which skips the Bower registration check as well as pushing commits (this is useful for uploading other people's packages, if you ever need to do this). There is also a `--push-to` option which allows you to specify a different Git remote to push tags and commits to.
 
     **Note: If `pulp publish` fails with a `400` error, try running it a second time.** Usually, your project's documentation will be successfully published on the second run. For example:
 
