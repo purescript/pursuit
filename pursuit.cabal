@@ -103,7 +103,6 @@ library
                  , vector
                  , time
                  , purescript
-                 , purescript-cst
                  , bower-json
                  , blaze-builder
                  , blaze-markup
