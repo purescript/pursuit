@@ -31,13 +31,15 @@ Packages can only be uploaded to Pursuit if the following conditions are true:
 
 1. Put the code up on GitHub. (Currently, GitHub is the only supported hosting method. If you'd rather host your code somewhere else, please open an issue and let us know).
 
-2. (Optional, highly recommended) Check that the documentation looks sensible locally before publishing by running `pulp docs -- --format html`.
+2. Verify that `bower install`, `pulp build`, and (if applicable) `pulp test` exit successfully.
 
-3. Create a git tag for the version you're releasing, if you haven't already. It is recommended to use `pulp version` to do this for you, as doing it this way will also check your package for common errors.
+3. (Optional, highly recommended) Check that the documentation looks sensible locally before publishing by running `pulp docs -- --format html`.
 
-4. Authenticate to GitHub by running `pulp login`. (This is necessary in order for us to be able to tell who uploaded which packages).
+4. Create a git tag for the version you're releasing, if you haven't already. It is recommended to use `pulp version` to do this for you, as doing it this way will also check your package for common errors.
 
-5. Change to your project directory and run `pulp publish`. This will register your package on Bower if necessary, push commits and the relevant tag to your "origin" Git remote, and then generate your documentation and upload it to Pursuit.
+5. Authenticate to GitHub by running `pulp login`. (This is necessary in order for us to be able to tell who uploaded which packages).
+
+6. Change to your project directory and run `pulp publish`. This will the push commits and the relevant tag to your "origin" Git remote, and then generate your documentation and upload it to Pursuit.
 
    `pulp publish` also accepts a `--no-push` flag which skips the Bower registration check as well as pushing commits (this is useful for uploading other people's packages, if you ever need to do this). There is also a `--push-to` option which allows you to specify a different Git remote to push tags and commits to.
 
