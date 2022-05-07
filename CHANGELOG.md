@@ -8,6 +8,7 @@ the most up-to-date version of this file.
 ## v0.9.0
 
 - Update `purescript` to `0.15.0` (@JordanMartinez)
+- Fix publishing instructions (@JordanMartinez)
 
 ## v0.8.7
 
