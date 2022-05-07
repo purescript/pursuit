@@ -5,6 +5,10 @@ the most up-to-date version of this file.
 
 ## Unreleased
 
+## v0.9.1
+
+- Fix typo in `ncu` command on `authors.md` page (@kRITZCREEK)
+
 ## v0.9.0
 
 - Update `purescript` to `0.15.0` (@JordanMartinez)
