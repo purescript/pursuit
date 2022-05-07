@@ -5,8 +5,13 @@ the most up-to-date version of this file.
 
 ## Unreleased
 
+## v0.9.0
+
+- Update `purescript` to `0.15.0` (@JordanMartinez)
+
+## v0.8.7
+
 - Update `purescript` to `0.14.5` and `purescript-cst` to `0.4.0.0` (@JordanMartinez)
-- 
 
 ## v0.8.5
 

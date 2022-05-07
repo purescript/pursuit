@@ -33,22 +33,36 @@ packages:
   original:
     hackage: language-javascript-0.7.0.0
 - completed:
-    hackage: purescript-0.14.3@sha256:4b75604e86c335711e1b1f1f73ef381108d047c9277df1cdc71922ec7da7c181,18623
+    hackage: purescript-0.15.0@sha256:901d26379aa58203103244fe190e840babcff60fc712b595ae8cc80978ffb35c,20095
     pantry-tree:
-      size: 132222
-      sha256: e3957c9d2c96434fcf5e8f310b34f4ea696cc8e5f63e60958eae5c6e31aba4c6
+      size: 145589
+      sha256: ba91174893b844de7093ddf71e815003c52b85b7ffe9dd289b4d35ddbb585a60
   original:
-    hackage: purescript-0.14.3
+    hackage: purescript-0.15.0
 - completed:
-    hackage: purescript-cst-0.3.0.0@sha256:369317d52737c4fa8c74a875283ed6cc0ef68e7c64db13d6e5bb7a7f72b76572,3861
+    hackage: monoidal-containers-0.6.2.0@sha256:124941d70df5e2928b4c6db605a1d0464e68c2c6b02e426db24a40194d43821d,2219
     pantry-tree:
-      size: 3018
-      sha256: 38f94bcc121068215c6082bab39b6c555cadd3b88e786740c394a5c4b98c4100
+      size: 569
+      sha256: 07ceac751866bad09af45df7d0ae97420d659221e8a0d85407705dcda1f6e89b
   original:
-    hackage: purescript-cst-0.3.0.0
+    hackage: monoidal-containers-0.6.2.0
+- completed:
+    hackage: process-1.6.13.1@sha256:c8bb8b7c993ff72d771381b3b56852dd154bce51880a24789c11f57b0688d353,2963
+    pantry-tree:
+      size: 1543
+      sha256: 58117b15fa330c79b3bca6b29c65f815e45840f79cc0915d3434f25e54ac8fa5
+  original:
+    hackage: process-1.6.13.1
+- completed:
+    hackage: Cabal-3.2.1.0@sha256:8743076ec022296f9771d962000c9ca3a0fe02e68c37b992c63e382a675f791d,27482
+    pantry-tree:
+      size: 41224
+      sha256: 92682a2aab8d967de341acff88525376eb9a31f53f094e0878c51c2886564f3a
+  original:
+    hackage: Cabal-3.2.1.0
 snapshots:
 - completed:
-    size: 565712
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/17/6.yaml
-    sha256: 4e5e581a709c88e3fe26a9ce8bf331435729bead762fb5c190064c6c5bb1b835
-  original: lts-17.6
+    size: 586286
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/18/15.yaml
+    sha256: 2c9cb11d7aa0656bf28672dcb2414ab21e3ba9ea83ca170c216b2c2fc7e55856
+  original: lts-18.15
