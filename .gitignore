@@ -7,3 +7,4 @@ license-generator/tmp/
 /.stack-work/
 bundle/
 pursuit.tar.gz
+dist-newstyle/
