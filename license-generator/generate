@@ -21,5 +21,5 @@ fi
 {
     cat license-generator/header.txt
     echo ""
-    cabal-plan license-report exe:pursuit
+    cabal-plan license-report exe:pursuit | sed 's/## /### /; s/# /## /;'
 } > LICENSE
