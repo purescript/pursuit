@@ -5,7 +5,7 @@ Packages can only be uploaded to Pursuit if the following conditions are true:
 - Your project must be registred in the [`purescript/registry` repo's `new-packages.json` file](https://github.com/purescript/registry/blob/master/new-packages.json). If it's not yet there, then submit a PR adding it.
 - `bower install` exits successfully without any conflicts.
 - `pulp build` (and if applicable `pulp test`) exits successfully without any conflicts.
-- A tag points to the same commit that is currently checked out (whether by a checked out commit, branch, or tag) refers to a tag.
+- A tag points to the same commit that is currently checked out (whether by a checked out commit, branch, or tag)
 - The `git` working directory is clean.
 
 `bower` often causes problems in publishing, and this is something that will be fixed once the PureScript Registry is started. Until then, keep the following in mind:
