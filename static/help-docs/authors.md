@@ -23,7 +23,7 @@ Packages can only be uploaded to Pursuit if the following conditions are true:
           # get list of outdated packages
           ncu -p bower
           # update versions to latest ones automatically
-          ncu -u -bower
+          ncu -u -p bower
           ```
 
     - one or more of your dependencies (e.g. `bar`) did not update their `bower.json` file's `dependencies` field to refer to the new version of their dependency (e.g. `baz`) before publishing it (e.g. `bar`). As a result, your direct dependency, `foo@2.0.0`, may depend on `baz@2.0.0` while your other direct dependency `bar@2.0.0` still depends on `baz@1.0.0`. Bower will complain when it isn't sure whether to use `baz@1.0.0` or `baz@2.0.0`.
