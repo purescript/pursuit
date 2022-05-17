@@ -7,7 +7,7 @@ the most up-to-date version of this file.
 
 ## v0.9.2
 
-- Update `purescript` to `0.15.1` (@JordanMartinez)
+- Update `purescript` to `0.15.2` (@JordanMartinez)
 
   This version of the compiler corrects and cleans up
   some of the docs for the builtin `Prim` module.
