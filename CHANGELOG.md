@@ -5,6 +5,11 @@ the most up-to-date version of this file.
 
 ## Unreleased
 
+- Update `purescript` to `0.15.4` (@sigma-andex)
+  
+  Update to GHC 9.2.3 required by Purescript v0.15.4
+  Remove `barrier` since it is unmaintained and doesn't work with GHC 9.2.3.
+
 ## v0.9.2
 
 - Update `purescript` to `0.15.2` (@JordanMartinez)

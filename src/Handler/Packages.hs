@@ -10,8 +10,8 @@ import qualified Data.Text.Lazy as TL
 import Language.PureScript.CoreFn.FromJSON (parseVersion')
 import qualified Language.PureScript.Docs as D
 import Web.Bower.PackageMeta (PackageName, runPackageName, bowerDependencies, bowerLicense)
-import qualified Data.HashMap.Strict as HashMap
 import qualified Data.Aeson as Aeson
+import qualified Data.Aeson.KeyMap as KM
 import qualified Data.Aeson.BetterErrors as ABE
 import qualified Language.PureScript as P
 
@@ -262,7 +262,7 @@ displayJsonError value e = case e of
   -- with.
   extractVersion =
     toObject
-    >=> HashMap.lookup "compilerVersion"
+    >=> KM.lookup "compilerVersion"
     >=> toString
     >=> (parseVersion' . unpack)
 

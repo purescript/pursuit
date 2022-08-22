@@ -33,12 +33,12 @@ packages:
   original:
     hackage: language-javascript-0.7.0.0
 - completed:
-    hackage: purescript-0.15.0@sha256:901d26379aa58203103244fe190e840babcff60fc712b595ae8cc80978ffb35c,20095
+    hackage: purescript-0.15.4@sha256:29fcb37f227a475a4357de52962f3564da6c881c146a679a514086d9883b1599,20642
     pantry-tree:
-      size: 145589
-      sha256: ba91174893b844de7093ddf71e815003c52b85b7ffe9dd289b4d35ddbb585a60
+      size: 151335
+      sha256: 6432cafb3d7b3334654d3e5c584eeada632e4c767403ede43953f2d3f33aa8ee
   original:
-    hackage: purescript-0.15.0
+    hackage: purescript-0.15.4
 - completed:
     hackage: monoidal-containers-0.6.2.0@sha256:124941d70df5e2928b4c6db605a1d0464e68c2c6b02e426db24a40194d43821d,2219
     pantry-tree:

@@ -297,7 +297,7 @@ extractChildDeclarationType declTitle declInfo cdeclInfo =
 
   where
     parentName :: P.Qualified (P.ProperName a)
-    parentName = P.Qualified Nothing (P.ProperName declTitle)
+    parentName = P.Qualified (P.ByNullSourcePos) (P.ProperName declTitle)
 
     addConstraint constraint =
       P.quantify . P.moveQuantifiersToFront . P.ConstrainedType () constraint
@@ -467,7 +467,7 @@ typeComplexity (P.ParensInType _ t) = typeComplexity t
 typeComplexity _ = 0
 
 compareQual :: Eq a => P.Qualified a -> P.Qualified a -> Bool
-compareQual (P.Qualified (Just mn1) a1) (P.Qualified (Just mn2) a2) = mn1 == mn2 && a1 == a2
+compareQual (P.Qualified (P.ByModuleName mn1) a1) (P.Qualified (P.ByModuleName mn2) a2) = mn1 == mn2 && a1 == a2
 compareQual (P.Qualified _ a1) (P.Qualified _ a2) = a1 == a2
 
 runParser :: CST.Parser a -> Text -> Maybe a

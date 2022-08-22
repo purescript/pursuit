@@ -9,6 +9,7 @@ import Import
 import Text.Blaze.Html (preEscapedToHtml)
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Aeson as A
+import qualified Data.Aeson.KeyMap as KM
 import qualified Data.HashMap.Strict as HashMap
 import qualified Data.CaseInsensitive as CI
 import Text.HTML.SanitizeXSS (sanitize)
@@ -93,7 +94,7 @@ getUser token =
   loginFromJSON val =
     case val of
       A.Object obj ->
-        case HashMap.lookup "login" obj of
+        case KM.lookup "login" obj of
           Just (A.String t) -> Just t
           _                 -> Nothing
       _            -> Nothing
