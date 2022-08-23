@@ -297,7 +297,7 @@ extractChildDeclarationType declTitle declInfo cdeclInfo =
 
   where
     parentName :: P.Qualified (P.ProperName a)
-    parentName = P.Qualified (P.ByNullSourcePos) (P.ProperName declTitle)
+    parentName = P.Qualified P.ByNullSourcePos (P.ProperName declTitle)
 
     addConstraint constraint =
       P.quantify . P.moveQuantifiersToFront . P.ConstrainedType () constraint
