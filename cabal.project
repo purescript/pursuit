@@ -1,0 +1,6 @@
+packages: .
+
+source-repository-package
+    type: git
+    location: https://github.com/PureFunctor/barrier.git
+    tag: 79e8fc36fb7d36591f9f65c0e0eb892d8062cdc5

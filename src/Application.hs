@@ -38,6 +38,7 @@ import Handler.Common
 import Handler.Database
 import Handler.Packages
 import Handler.Search
+import Handler.PackageBadges
 import Handler.Help
 import SearchIndex (emptySearchIndex, createSearchIndex, evalSearchIndex)
 

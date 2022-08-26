@@ -26,6 +26,7 @@ library
                      Handler.Common
                      Handler.Database
                      Handler.Help
+                     Handler.PackageBadges
                      Handler.Packages
                      Handler.Search
                      Handler.Utils
@@ -124,9 +125,9 @@ library
                  , transformers
                  , cookie
                  , xss-sanitize
+                 , barrier
                  , mono-traversable
                  , streaming-commons
-
     if flag(dev)
       build-depends: foreign-store
 
