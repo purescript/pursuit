@@ -1,4 +1,4 @@
-resolver: lts-18.15
+resolver: nightly-2022-06-09
 # Resolves hjsmin requiring language-javascript ==0.6, while the purescript
 # compiler requires language-javascript ==0.7.
 allow-newer: true
@@ -9,13 +9,15 @@ packages:
 extra-deps:
   - git: https://github.com/PureFunctor/barrier.git
     commit: 79e8fc36fb7d36591f9f65c0e0eb892d8062cdc5
-  - bytestring-trie-0.2.5.0
+  #- bytestring-trie-0.2.5.0
+  - bytestring-trie-0.2.7@sha256:f78e9d1dba699ce56080824693787918e9e8904db99d04d3470941420b1dd3ed,9010
   - classy-prelude-yesod-1.5.0
   - language-javascript-0.7.0.0
   - purescript-0.15.4
   - monoidal-containers-0.6.2.0
+  - protolude-0.3.1
   - process-1.6.13.1
-  - Cabal-3.2.1.0
+  - Cabal-3.6.3.0
 
 flags:
   pursuit:
@@ -24,3 +26,6 @@ flags:
     lib-only: true
   these:
     assoc: false
+system-ghc: true
+compiler: ghc-9.2.3
+compiler-check: match-exact

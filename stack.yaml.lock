@@ -16,12 +16,12 @@ packages:
     git: https://github.com/PureFunctor/barrier.git
     commit: 79e8fc36fb7d36591f9f65c0e0eb892d8062cdc5
 - completed:
-    hackage: bytestring-trie-0.2.5.0@sha256:2ebdf9ab8bfa82b324592f0f203b41b57423912a4a9509b76cf22fc1cf344d7c,3427
+    hackage: bytestring-trie-0.2.7@sha256:f78e9d1dba699ce56080824693787918e9e8904db99d04d3470941420b1dd3ed,9010
     pantry-tree:
-      size: 705
-      sha256: 4ce59841d2d44dc36634652c65560c467d98416e3b15280e1314a54eac18a8d7
+      size: 1221
+      sha256: b1f438713b95d8e1e95af11c5d747d1fa9b647c2f55be817ff91e4bd4d69ca00
   original:
-    hackage: bytestring-trie-0.2.5.0
+    hackage: bytestring-trie-0.2.7@sha256:f78e9d1dba699ce56080824693787918e9e8904db99d04d3470941420b1dd3ed,9010
 - completed:
     hackage: classy-prelude-yesod-1.5.0@sha256:8f7e183bdfd6d2ea9674284c4f285294ab086aff60d9be4e5d7d2f3c1a2b05b7,1330
     pantry-tree:
@@ -51,6 +51,13 @@ packages:
   original:
     hackage: monoidal-containers-0.6.2.0
 - completed:
+    hackage: protolude-0.3.1@sha256:1cc9e5a5c26c33a43c52b554443dd9779fef13974eaa0beec7ca6d2551b400da,2647
+    pantry-tree:
+      size: 1645
+      sha256: 6452a6ca8d395f7d810139779bb0fd16fc1dbb00f1862630bc08ef5a100430f9
+  original:
+    hackage: protolude-0.3.1
+- completed:
     hackage: process-1.6.13.1@sha256:c8bb8b7c993ff72d771381b3b56852dd154bce51880a24789c11f57b0688d353,2963
     pantry-tree:
       size: 1543
@@ -58,15 +65,15 @@ packages:
   original:
     hackage: process-1.6.13.1
 - completed:
-    hackage: Cabal-3.2.1.0@sha256:8743076ec022296f9771d962000c9ca3a0fe02e68c37b992c63e382a675f791d,27482
+    hackage: Cabal-3.6.3.0@sha256:ff97c442b0c679c1c9876acd15f73ac4f602b973c45bde42b43ec28265ee48f4,12459
     pantry-tree:
-      size: 41224
-      sha256: 92682a2aab8d967de341acff88525376eb9a31f53f094e0878c51c2886564f3a
+      size: 19757
+      sha256: b250a53bdb56844f047a2927833bb565b936a289abfa85dfc2a63148d776368a
   original:
-    hackage: Cabal-3.2.1.0
+    hackage: Cabal-3.6.3.0
 snapshots:
 - completed:
-    size: 586286
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/18/15.yaml
-    sha256: 2c9cb11d7aa0656bf28672dcb2414ab21e3ba9ea83ca170c216b2c2fc7e55856
-  original: lts-18.15
+    size: 607265
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/nightly/2022/6/9.yaml
+    sha256: 819ac07621dac5b2c320c45cb8c27f141f95114a1749b19b06d2c3606c79e839
+  original: nightly-2022-06-09
