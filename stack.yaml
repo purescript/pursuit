@@ -7,7 +7,8 @@ packages:
   - "."
 
 extra-deps:
-  - barrier-0.1.1
+  - git: https://github.com/PureFunctor/barrier.git
+    commit: 79e8fc36fb7d36591f9f65c0e0eb892d8062cdc5
   - bytestring-trie-0.2.5.0
   - classy-prelude-yesod-1.5.0
   - language-javascript-0.7.0.0

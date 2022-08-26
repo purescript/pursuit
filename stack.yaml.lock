@@ -5,17 +5,21 @@
 
 packages:
 - completed:
-    hackage: barrier-0.1.1@sha256:2021f84c3aba67bb635d72825d3bc0371942444dc014bc307b875071e29eea98,3931
+    name: barrier
+    version: 0.1.1
+    git: https://github.com/PureFunctor/barrier.git
     pantry-tree:
-      size: 1695
-      sha256: 2296d051562ead243beb831f20e216b44365e290ae76976cde7edd344e95bf29
+      size: 1892
+      sha256: c87d5adc48b644c76a4a07f31a98da6233f0ba5c2a386443e1ed2ec2261596c5
+    commit: 79e8fc36fb7d36591f9f65c0e0eb892d8062cdc5
   original:
-    hackage: barrier-0.1.1
+    git: https://github.com/PureFunctor/barrier.git
+    commit: 79e8fc36fb7d36591f9f65c0e0eb892d8062cdc5
 - completed:
-    hackage: bytestring-trie-0.2.5.0@sha256:9efa9c6f556314d28486be2470ff789419c5238ed2e354870623a3cbbd28fbe2,3349
+    hackage: bytestring-trie-0.2.5.0@sha256:2ebdf9ab8bfa82b324592f0f203b41b57423912a4a9509b76cf22fc1cf344d7c,3427
     pantry-tree:
       size: 705
-      sha256: bdc13e00a60830edee41119af62b7203602377ccd81a6555c4fea95b0cb3a252
+      sha256: 4ce59841d2d44dc36634652c65560c467d98416e3b15280e1314a54eac18a8d7
   original:
     hackage: bytestring-trie-0.2.5.0
 - completed:
@@ -40,10 +44,10 @@ packages:
   original:
     hackage: purescript-0.15.4
 - completed:
-    hackage: monoidal-containers-0.6.2.0@sha256:124941d70df5e2928b4c6db605a1d0464e68c2c6b02e426db24a40194d43821d,2219
+    hackage: monoidal-containers-0.6.2.0@sha256:97289baf716f22fdae04b4fcbee066453d2f4c630ef3f631aeeab61ee713841e,2309
     pantry-tree:
       size: 569
-      sha256: 07ceac751866bad09af45df7d0ae97420d659221e8a0d85407705dcda1f6e89b
+      sha256: 55c0b7f60f8350546d437c9c0ad52c1dba35cac727972e7dc0f12201870df62f
   original:
     hackage: monoidal-containers-0.6.2.0
 - completed:
