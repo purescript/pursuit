@@ -102,6 +102,7 @@ clearCache pkgName version = do
       eachRouteDir
         [ PackageVersionR pkgName' (PathVersion version)
         , PackageAvailableVersionsR pkgName'
+        , PackageBadgeR pkgName'
         ]
         removeDirectoryRecursive
 

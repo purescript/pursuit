@@ -26,6 +26,3 @@ flags:
     lib-only: true
   these:
     assoc: false
-system-ghc: true
-compiler: ghc-9.2.3
-compiler-check: match-exact
