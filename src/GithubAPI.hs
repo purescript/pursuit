@@ -10,7 +10,6 @@ import Text.Blaze.Html (preEscapedToHtml)
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Aeson as A
 import qualified Data.Aeson.KeyMap as KM
-import qualified Data.HashMap.Strict as HashMap
 import qualified Data.CaseInsensitive as CI
 import Text.HTML.SanitizeXSS (sanitize)
 import Data.CaseInsensitive (CI)
