@@ -5,19 +5,23 @@
 
 packages:
 - completed:
-    hackage: barrier-0.1.1@sha256:2021f84c3aba67bb635d72825d3bc0371942444dc014bc307b875071e29eea98,3931
+    name: barrier
+    version: 0.1.1
+    git: https://github.com/PureFunctor/barrier.git
     pantry-tree:
-      size: 1695
-      sha256: 2296d051562ead243beb831f20e216b44365e290ae76976cde7edd344e95bf29
+      size: 1892
+      sha256: b7d15fa12674068618745c2cbdaa6d0fa256206d0904d4e8964606ee7fd57676
+    commit: db5e27c8ff8f98b2ea18036ce20f853a92aec595
   original:
-    hackage: barrier-0.1.1
+    git: https://github.com/PureFunctor/barrier.git
+    commit: db5e27c8ff8f98b2ea18036ce20f853a92aec595
 - completed:
-    hackage: bytestring-trie-0.2.5.0@sha256:9efa9c6f556314d28486be2470ff789419c5238ed2e354870623a3cbbd28fbe2,3349
+    hackage: bytestring-trie-0.2.7@sha256:f78e9d1dba699ce56080824693787918e9e8904db99d04d3470941420b1dd3ed,9010
     pantry-tree:
-      size: 705
-      sha256: bdc13e00a60830edee41119af62b7203602377ccd81a6555c4fea95b0cb3a252
+      size: 1221
+      sha256: b1f438713b95d8e1e95af11c5d747d1fa9b647c2f55be817ff91e4bd4d69ca00
   original:
-    hackage: bytestring-trie-0.2.5.0
+    hackage: bytestring-trie-0.2.7@sha256:f78e9d1dba699ce56080824693787918e9e8904db99d04d3470941420b1dd3ed,9010
 - completed:
     hackage: classy-prelude-yesod-1.5.0@sha256:8f7e183bdfd6d2ea9674284c4f285294ab086aff60d9be4e5d7d2f3c1a2b05b7,1330
     pantry-tree:
@@ -33,19 +37,26 @@ packages:
   original:
     hackage: language-javascript-0.7.0.0
 - completed:
-    hackage: purescript-0.15.0@sha256:901d26379aa58203103244fe190e840babcff60fc712b595ae8cc80978ffb35c,20095
+    hackage: purescript-0.15.4@sha256:29fcb37f227a475a4357de52962f3564da6c881c146a679a514086d9883b1599,20642
     pantry-tree:
-      size: 145589
-      sha256: ba91174893b844de7093ddf71e815003c52b85b7ffe9dd289b4d35ddbb585a60
+      size: 151335
+      sha256: 6432cafb3d7b3334654d3e5c584eeada632e4c767403ede43953f2d3f33aa8ee
   original:
-    hackage: purescript-0.15.0
+    hackage: purescript-0.15.4
 - completed:
-    hackage: monoidal-containers-0.6.2.0@sha256:124941d70df5e2928b4c6db605a1d0464e68c2c6b02e426db24a40194d43821d,2219
+    hackage: monoidal-containers-0.6.2.0@sha256:97289baf716f22fdae04b4fcbee066453d2f4c630ef3f631aeeab61ee713841e,2309
     pantry-tree:
       size: 569
-      sha256: 07ceac751866bad09af45df7d0ae97420d659221e8a0d85407705dcda1f6e89b
+      sha256: 55c0b7f60f8350546d437c9c0ad52c1dba35cac727972e7dc0f12201870df62f
   original:
     hackage: monoidal-containers-0.6.2.0
+- completed:
+    hackage: protolude-0.3.1@sha256:1cc9e5a5c26c33a43c52b554443dd9779fef13974eaa0beec7ca6d2551b400da,2647
+    pantry-tree:
+      size: 1645
+      sha256: 6452a6ca8d395f7d810139779bb0fd16fc1dbb00f1862630bc08ef5a100430f9
+  original:
+    hackage: protolude-0.3.1
 - completed:
     hackage: process-1.6.13.1@sha256:c8bb8b7c993ff72d771381b3b56852dd154bce51880a24789c11f57b0688d353,2963
     pantry-tree:
@@ -54,15 +65,15 @@ packages:
   original:
     hackage: process-1.6.13.1
 - completed:
-    hackage: Cabal-3.2.1.0@sha256:8743076ec022296f9771d962000c9ca3a0fe02e68c37b992c63e382a675f791d,27482
+    hackage: Cabal-3.6.3.0@sha256:ff97c442b0c679c1c9876acd15f73ac4f602b973c45bde42b43ec28265ee48f4,12459
     pantry-tree:
-      size: 41224
-      sha256: 92682a2aab8d967de341acff88525376eb9a31f53f094e0878c51c2886564f3a
+      size: 19757
+      sha256: b250a53bdb56844f047a2927833bb565b936a289abfa85dfc2a63148d776368a
   original:
-    hackage: Cabal-3.2.1.0
+    hackage: Cabal-3.6.3.0
 snapshots:
 - completed:
-    size: 586286
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/18/15.yaml
-    sha256: 2c9cb11d7aa0656bf28672dcb2414ab21e3ba9ea83ca170c216b2c2fc7e55856
-  original: lts-18.15
+    size: 607265
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/nightly/2022/6/9.yaml
+    sha256: 819ac07621dac5b2c320c45cb8c27f141f95114a1749b19b06d2c3606c79e839
+  original: nightly-2022-06-09

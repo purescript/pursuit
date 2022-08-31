@@ -13,10 +13,10 @@ import qualified Text.Blaze.Html.Renderer.Text as Blaze
 import Text.Hamlet                 (hamletFile)
 import Text.Jasmine                (minifym)
 import Text.Julius                 (rawJS)
-import Yesod.Core.Types            (Logger)
+import Yesod.Core.Types
+    ( Logger, HandlerData, rheSite, handlerEnv )
 import Yesod.EmbeddedStatic        (EmbeddedStatic, embedStaticContent)
 import qualified Yesod.Core.Unsafe as Unsafe
-import Yesod.Core.Types (HandlerData, rheSite, handlerEnv)
 
 import Web.Bower.PackageMeta (PackageName, parsePackageName, runPackageName)
 import Data.Version

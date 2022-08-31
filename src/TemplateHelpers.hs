@@ -6,7 +6,6 @@ import qualified Data.Map as Map
 import Data.Version (Version)
 import Data.List (nub)
 import Data.Text (splitOn)
-import Data.Time.Format as TimeFormat
 import Text.Blaze.Html5 as H hiding (map, link)
 import Text.Blaze.Html5.Attributes as A hiding (span, name, start, for)
 import qualified Web.Bower.PackageMeta as Bower
@@ -17,6 +16,7 @@ import Handler.Database (lookupPackage)
 
 import GithubAPI (ReadmeMissing(..))
 import qualified GithubAPI
+import qualified Data.Time.Format.ISO8601 as ISO8601
 
 linkToGithubUser :: D.GithubUser -> Html
 linkToGithubUser user =
@@ -271,7 +271,4 @@ getFragmentRender = do
   return $ \(route, fragment) -> render route ++ maybe "" ("#" ++) fragment
 
 formatDate :: UTCTime -> String
-formatDate =
-  TimeFormat.formatTime
-    TimeFormat.defaultTimeLocale
-    (TimeFormat.iso8601DateFormat Nothing)
+formatDate = ISO8601.iso8601Show

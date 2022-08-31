@@ -1,5 +1,5 @@
 name:              pursuit
-version:           0.9.2
+version:           0.9.3
 cabal-version:     >= 1.8
 build-type:        Simple
 license:           MIT
@@ -76,7 +76,7 @@ library
                  , classy-prelude                >= 0.10.2
                  , classy-prelude-conduit        >= 0.10.2
                  , classy-prelude-yesod          >= 0.10.2
-                 , bytestring
+                 , bytestring                    >= 0.11.3.1
                  , bytestring-trie
                  , text
                  , template-haskell
@@ -102,7 +102,7 @@ library
                  , containers
                  , vector
                  , time
-                 , purescript == 0.15.2
+                 , purescript == 0.15.4
                  , bower-json
                  , blaze-builder
                  , blaze-markup
@@ -128,7 +128,6 @@ library
                  , barrier
                  , mono-traversable
                  , streaming-commons
-
     if flag(dev)
       build-depends: foreign-store
 
@@ -140,7 +139,7 @@ executable         pursuit
     hs-source-dirs:    app
     build-depends:     base, pursuit
 
-    ghc-options:       -threaded -O2 -rtsopts -with-rtsopts=-N
+    ghc-options:       -threaded -O2 -rtsopts -with-rtsopts=-N -Wunused-packages
 
 test-suite test
     type:              exitcode-stdio-1.0
