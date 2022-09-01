@@ -15,7 +15,7 @@
 
 /builtins/docs/#Text                                   BuiltinDocsR                GET
 
-/search                                                SearchR                     GET
+/search                                                SearchR                     GET OPTIONS
 
 /help         HelpR        GET
 /help/authors HelpAuthorsR GET

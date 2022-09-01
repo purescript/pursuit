@@ -1,6 +1,7 @@
 
 module Handler.Search
   ( getSearchR
+  , optionsSearchR
   , SearchResult(..)
   , interleave
   ) where
@@ -38,6 +39,12 @@ pagesParam = "pages"
 partialParam :: Text
 partialParam = "partial"
 
+optionsSearchR :: Handler RepPlain
+optionsSearchR = do
+    addHeader "Access-Control-Allow-Origin" "*"
+    addHeader "Access-Control-Allow-Methods" "GET, OPTIONS"
+    return $ RepPlain $ toContent ("" :: Text)
+
 getSearchR :: Handler TypedContent
 getSearchR = do
   query <- getQuery
@@ -53,6 +60,7 @@ getSearchR = do
 
   urls <- getRelatedUrls query npages hasMore
   addLinkHeader urls
+  addHeader "Access-Control-Allow-Origin" "*"
 
   partial <- lookupGetParam partialParam
   if isJust partial
