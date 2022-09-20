@@ -9,6 +9,8 @@ the most up-to-date version of this file.
 
 - Bump nginx max body limit to 10m (@thomashoneyman)
 
+- Add cors headers (@sigma-andex)
+
 - Update `purescript` to `0.15.4` (@sigma-andex)
   
   Update to GHC 9.2.3 required by Purescript v0.15.4
