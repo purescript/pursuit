@@ -10,9 +10,9 @@ After making a new compiler release, do the following to redeploy Pursuit using 
         - update the `purescript` version to the next release (e.g. `== 0.15.0`)
     - In `stack.yaml`, update `purescript` to use its new version.
     - Update the `LICENSE` file by doing the following:
-        - Run `cabal new-build`
+        - Run `cabal build`
           - This is needed so that [`cabal-plan`](https://github.com/haskell-hvr/cabal-plan) can generate our licenses
-        - Run `./license/generate`
+        - Run `./license-generator/generate`
     - Update the CHANGELOG.md to include a new section for the new release
 2. Once the PR is merged, create a new GitHub tagged release using `vX.X.X` as the version schema. The release will trigger a GitHub Actions build.
 3. Wait for the GitHub Actions build to finish (it builds the assets)

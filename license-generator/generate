@@ -2,7 +2,7 @@
 # Generates the LICENSE file and prints it to standard output.
 # Example use:
 #
-#   ./license/generate
+#   ./license-generator/generate
 #
 
 set -e              # exit on error
@@ -13,10 +13,13 @@ if ! which cabal-plan >/dev/null; then
     echo "$0: the program 'cabal-plan' is required." >&2
     echo "$0:   see Hackage: https://hackage.haskell.org/package/cabal-plan" >&2
     echo "$0:   repo: https://github.com/haskell-hvr/cabal-plan" >&2
-    echo "$0: git clone the repo and run 'stack init && stack build --copy-bins --flag 'cabal-plan:license-report'" >&2
-    echo "$0:   if there are any build issues, follow stack's suggestions about adding things to the 'extra-deps' field" >&2
+    echo "$0: git clone the repo and run 'cabal build' or 'cabal install' and make sure cabal-plan is on the PATH (cabal >=3.6, ghc >= 9.2)" >&2
     exit 1
 fi
+
+# Create "dist-newstyle" for cabal-plan using cabal and the same compiler version as stack
+ghc=$(stack path --compiler-exe)
+cabal build --with-compiler="$ghc"
 
 {
     cat license-generator/header.txt
