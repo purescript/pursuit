@@ -7,6 +7,8 @@ the most up-to-date version of this file.
 
 ## v0.9.3
 
+- Fix license generation (@andys8)
+
 - Bump nginx max body limit to 10m (@thomashoneyman)
 
 - Add cors headers (@sigma-andex)
