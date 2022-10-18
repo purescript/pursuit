@@ -5,6 +5,12 @@ the most up-to-date version of this file.
 
 ## Unreleased
 
+## v0.9.4
+
+- Fix license generation (@JordanMartinez)
+
+- Update `purescript` to `0.15.6` (@JordanMartinez)
+
 ## v0.9.3
 
 - Fix license generation (@andys8)

@@ -12,7 +12,7 @@ extra-deps:
   - bytestring-trie-0.2.7@sha256:f78e9d1dba699ce56080824693787918e9e8904db99d04d3470941420b1dd3ed,9010
   - classy-prelude-yesod-1.5.0
   - language-javascript-0.7.0.0
-  - purescript-0.15.4
+  - purescript-0.15.6
   - monoidal-containers-0.6.2.0
   - protolude-0.3.1
   - process-1.6.13.1
