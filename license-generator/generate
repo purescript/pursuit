@@ -9,20 +9,31 @@ set -e              # exit on error
 set -u              # exit on undefined variable
 set -o pipefail     # propagate nonzero exit codes through pipelines
 
+# Ensure Cabal knows of the new PureScript package
+# (and any deps needed by 'cabal-plan' if it's not already installed)
+cabal update
+
 if ! which cabal-plan >/dev/null; then
-    echo "$0: the program 'cabal-plan' is required." >&2
+    echo "$0: The program 'cabal-plan' is required." >&2
     echo "$0:   see Hackage: https://hackage.haskell.org/package/cabal-plan" >&2
     echo "$0:   repo: https://github.com/haskell-hvr/cabal-plan" >&2
-    echo "$0: git clone the repo and run 'cabal build' or 'cabal install' and make sure cabal-plan is on the PATH (cabal >=3.6, ghc >= 9.2)" >&2
+    echo "$0:" >&2
+    echo "$0: In a new directory:"
+    echo "$0: 1. Run 'git clone https://github.com/haskell-hvr/cabal-plan.git && cabal build'"
+    echo "$0: 2. Make sure 'cabal-plan' (cabal >=3.6, ghc >= 9.2) is on the PATH by adding it manually or running `cabal install`" >&2
     exit 1
 fi
 
 # Create "dist-newstyle" for cabal-plan using cabal and the same compiler version as stack
+echo "Building Pursuit"
 ghc=$(stack path --compiler-exe)
 cabal build --with-compiler="$ghc"
 
+echo "Regenerating LICENSE"
 {
     cat license-generator/header.txt
     echo ""
     cabal-plan license-report exe:pursuit | sed 's/## /### /; s/# /## /;'
 } > LICENSE
+
+echo "Done!"
