@@ -1,6 +1,6 @@
 ## <a name="submitting-packages"></a>How to submit packages
 
-Previously, users would need to use `bower` to upload packages' documentation. Uploading documentation is now handled by the PureScript Registry (still in alpha at the time of this writing). See https://discourse.purescript.org/t/registry-alpha-launched/3146 and any updates mentioned there for how to register and publish packages and their documentation.
+Previously, users would need to use `bower` to upload packages' documentation. Uploading documentation is now handled by the PureScript Registry (still in alpha at the time of this writing). See the [PureScript Registry repo](https://github.com/purescript/registry) for how to register and publish packages and their documentation. For more context, read the Discourse announcement, [Registry Alpha Launched](https://discourse.purescript.org/t/registry-alpha-launched/3146).
 
 ## <a name="package-deprecation"></a>How to mark package as deprecated
 
