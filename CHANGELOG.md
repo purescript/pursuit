@@ -5,6 +5,11 @@ the most up-to-date version of this file.
 
 ## Unreleased
 
+## v0.9.5
+
+- Update `purescript` to `0.15.8` (support dark theme) (@JordanMartinez)
+- Update documentation uploading instructions (@JordanMartinez)
+
 ## v0.9.4
 
 - Fix license generation (@JordanMartinez)
