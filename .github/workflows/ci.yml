@@ -60,7 +60,7 @@ jobs:
     name: Release
     # Note that this must be kept in sync with the version of Ubuntu which the
     # Pursit server is running, otherwise the server binary may fail to run.
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     if: github.event_name == 'release'
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
