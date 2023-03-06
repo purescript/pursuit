@@ -5,10 +5,15 @@ the most up-to-date version of this file.
 
 ## Unreleased
 
-## v0.9.5
+## v0.9.6
 
 - Update `purescript` to `0.15.8` (support dark theme) (@JordanMartinez)
 - Update documentation uploading instructions (@JordanMartinez)
+- Bump CI's Ubuntu version to `latest` (@JordanMartinez)
+
+## v0.9.5
+
+Due to an Ubuntu brownout, CI did not build this release properly.
 
 ## v0.9.4
 
