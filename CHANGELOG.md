@@ -5,6 +5,12 @@ the most up-to-date version of this file.
 
 ## Unreleased
 
+## v0.9.7
+
+- Update Pursuit version in `pursuit.cabal` (@JordanMartinez)
+
+  The previous release still indicates `v0.9.4`
+
 ## v0.9.6
 
 - Update `purescript` to `0.15.8` (support dark theme) (@JordanMartinez)
