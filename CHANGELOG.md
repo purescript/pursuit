@@ -5,6 +5,10 @@ the most up-to-date version of this file.
 
 ## Unreleased
 
+## v0.9.8
+
+- Update PureScript to `0.15.10` (@JordanMartinez)
+
 ## v0.9.7
 
 - Update Pursuit version in `pursuit.cabal` (@JordanMartinez)
