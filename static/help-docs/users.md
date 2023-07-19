@@ -67,6 +67,9 @@ When searching by name, an entry in Pursuit's database is considered to be a
 match if the query is a prefix of its name. For example, "con" matches "const"
 but "cosnt" does not. (This may change in the future.)
 
+Currently, searching for **visible type applications** (e.g. `forall @a. a -> a`)
+is not currently supported.
+
 Currently, documentation comments are not included in the search index. This
 means that, for example, if you search for "Kleisli", there are no results,
 even though the documentation for [`Star`][] mentions that this type is also
