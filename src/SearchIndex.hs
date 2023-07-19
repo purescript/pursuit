@@ -409,8 +409,8 @@ compareTypes type1 type2 =
 -- a' or 'f a b'.
   go (P.TypeApp _ a b) (P.TypeApp _ c d)
     | not (isFunction a) || isFunction c = (+) <$> go a c <*> go b d
-  go (P.ForAll _ _ _ t1 _) t2 = go t1 t2
-  go t1 (P.ForAll _ _ _ t2 _) = go t1 t2
+  go (P.ForAll _ _ _ _ t1 _) t2 = go t1 t2
+  go t1 (P.ForAll _ _ _ _ t2 _) = go t1 t2
   go (P.ConstrainedType _ _ t1) t2 = go t1 t2
   go t1 (P.ConstrainedType _ _ t2) = go t1 t2
   go (P.REmpty _) (P.REmpty _) = pure 0
@@ -458,7 +458,7 @@ isFunction _ = False
 
 typeComplexity :: D.Type' -> Int
 typeComplexity (P.TypeApp _ a b) = 1 + typeComplexity a + typeComplexity b
-typeComplexity (P.ForAll _ _ _ t _) = 1 + typeComplexity t
+typeComplexity (P.ForAll _ _ _ _ t _) = 1 + typeComplexity t
 typeComplexity (P.ConstrainedType _ _ t) = typeComplexity t + 1
 typeComplexity (P.REmpty _) = 0
 typeComplexity (P.RCons _ _ t r) = 1 + typeComplexity t + typeComplexity r
