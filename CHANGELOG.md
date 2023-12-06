@@ -5,6 +5,10 @@ the most up-to-date version of this file.
 
 ## Unreleased
 
+## v0.9.9
+
+- Update pursuit.service to 3.5GB max memory (@thomashoneyman)
+
 ## v0.9.8
 
 - Update PureScript to `0.15.10` (@JordanMartinez)
