@@ -40,7 +40,7 @@ import Handler.Packages
 import Handler.Search
 import Handler.PackageBadges
 import Handler.Help
-import SearchIndex (emptySearchIndex, createSearchIndex, evalSearchIndex)
+import SearchIndex (emptySearchIndex, evalSearchIndex)
 
 -- This line actually creates our YesodDispatch instance. It is the second half
 -- of the call to mkYesodData which occurs in Foundation.hs. Please see the
@@ -71,17 +71,16 @@ makeFoundation appSettings = do
        let hour = 60 * 60 * 1000 * 1000 -- microseconds
        in every hour $ do
            let emptySessionMap = mempty :: SessionMap
-           pkgs <- Unsafe.runFakeHandler
+           searchIndex <- Unsafe.runFakeHandler
                       emptySessionMap
                       appLogger
                       foundation
-                      getAllPackages
+                      createSearchIndexFromDatabase
 
            traverse ( atomically
                     . writeTVar (appSearchIndex foundation)
                     . withStrategy evalSearchIndex
-                    . createSearchIndex
-                    ) pkgs
+                    ) searchIndex
 
 -- | Convert our foundation to a WAI Application by calling @toWaiAppPlain@ and
 -- applyng some additional middlewares.

@@ -5,7 +5,9 @@ module SearchIndex
   , searchResultTitle
   , SearchIndex
   , emptySearchIndex
-  , createSearchIndex
+  , PackageEntries
+  , packageEntries
+  , buildSearchIndex
   , evalSearchIndex
   , searchForName
   , searchForType
@@ -114,38 +116,58 @@ instance NFData IndexEntry
 emptySearchIndex :: SearchIndex
 emptySearchIndex = SearchIndex Trie.empty
 
--- | Given a list of packages, create a search index for them.
-createSearchIndex :: [D.Package a] -> SearchIndex
-createSearchIndex =
-  countReverseDependencies
-  >>> sortOn (Down . snd)
-  >>> concatMap (uncurry entriesForPackage)
-  >>> (primEntries ++)
-  >>> fromListWithDuplicates
-  >>> SearchIndex
+-- | Everything the search index needs from a single package: the package's
+-- name, the names of its dependencies (for counting reverse dependencies),
+-- and the package's index entries.
+--
+-- The reverse dependency count in each entry is zero until it is filled in
+-- by 'buildSearchIndex', once every package's dependencies have been seen.
+data PackageEntries = PackageEntries
+  { peName    :: PackageName
+  , peDeps    :: [PackageName]
+  , peEntries :: [(ByteString, IndexEntry)]
+  }
+  deriving (Generic)
+
+instance NFData PackageEntries
+
+-- | Compute the index entries for a single package. The index is built from
+-- one 'PackageEntries' per package (see 'buildSearchIndex') rather than from
+-- a list of packages, so that the decoded packages themselves need not all be
+-- held in memory at the same time: a fully evaluated 'PackageEntries' retains
+-- only the small parts of a package that the index needs.
+packageEntries :: D.Package a -> PackageEntries
+packageEntries pkg = PackageEntries
+  { peName    = D.packageName pkg
+  , peDeps    = map fst (D.pkgResolvedDependencies pkg)
+  , peEntries = entriesForPackage pkg 0
+  }
+
+-- | Given entries for each package (which should not include duplicates, or
+-- more than one version of any given package), assemble them into a search
+-- index, filling in the reverse dependency count of each entry.
+buildSearchIndex :: [PackageEntries] -> SearchIndex
+buildSearchIndex pkgs =
+  SearchIndex
+    (fromListWithDuplicates
+      (primEntries ++
+        concatMap entriesWithRevDeps (sortOn (Down . revDepsOf) pkgs)))
+  where
+  revDepCounts :: Map.Map PackageName Int
+  revDepCounts =
+    Map.fromListWith (+) [ (dep, 1) | pkg <- pkgs, dep <- peDeps pkg ]
+
+  revDepsOf :: PackageEntries -> Int
+  revDepsOf pkg = Map.findWithDefault 0 (peName pkg) revDepCounts
+
+  entriesWithRevDeps :: PackageEntries -> [(ByteString, IndexEntry)]
+  entriesWithRevDeps pkg =
+    map (second (\entry -> entry { entryRevDeps = Just (Down (revDepsOf pkg)) }))
+        (peEntries pkg)
 
 -- | A strategy for evaluating a SearchIndex in parallel.
 evalSearchIndex :: Strategy SearchIndex
 evalSearchIndex = fmap SearchIndex . evalTraversable rdeepseq . unSearchIndex
-
--- |
--- Given a list of packages (which should not include duplicates, or more than
--- one version of any given package), return a list of packages together with
--- the number of reverse dependencies each one has, in no particular order.
---
-countReverseDependencies :: [D.Package a] -> [(D.Package a, Int)]
-countReverseDependencies packages =
-  Map.elems $ foldl' go initialMap packages
-  where
-  initialMap =
-    Map.fromList $ map (\pkg -> (D.packageName pkg, (pkg, 0))) packages
-
-  go m pkg =
-    foldl' (flip increment) m
-      (map fst (D.pkgResolvedDependencies pkg))
-
-  increment =
-    Map.adjust (second (+1))
 
 primEntries :: [(ByteString, IndexEntry)]
 primEntries =

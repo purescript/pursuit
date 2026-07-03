@@ -5,6 +5,22 @@ the most up-to-date version of this file.
 
 ## Unreleased
 
+## v0.9.10
+
+- Build the search index one package at a time (@thomashoneyman)
+
+  Previously the hourly search index regeneration (which also runs at startup)
+  decoded every package in the database into memory at once before building
+  the index. The decoded packages now require more memory than the server has,
+  which caused the server to be OOM-killed several times an hour. Packages are
+  now decoded and indexed one at a time, so only the index entries themselves
+  are retained.
+
+- Use both CPU cores and cap the heap below available RAM (`-N2 -A64m -M3G`)
+  in `pursuit.service` (@thomashoneyman)
+- Update GitHub Actions to current action versions and pin the runner to
+  `ubuntu-24.04` to match the server (@thomashoneyman)
+
 ## v0.9.9
 
 - Update pursuit.service to 3.5GB max memory (@thomashoneyman)
