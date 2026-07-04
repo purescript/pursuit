@@ -3,7 +3,7 @@
 -- Pursuit).
 module Handler.Database
   ( getAllPackageNames
-  , getAllPackages
+  , createSearchIndexFromDatabase
   , getLatestPackages
   , lookupPackage
   , availableVersionsFor
@@ -26,6 +26,7 @@ import qualified Language.PureScript.Docs as D
 
 import Handler.Utils
 import Handler.Caching (clearCache)
+import SearchIndex (SearchIndex, PackageEntries, packageEntries, buildSearchIndex)
 
 getAllPackageNames :: Handler [PackageName]
 getAllPackageNames = do
@@ -46,16 +47,41 @@ getLatestPackages = do
     withVersion :: PackageName -> Handler (Maybe (PackageName, Version))
     withVersion name = (map . map) (name,) (getLatestVersionFor name)
 
--- | This is horribly inefficient, but it will do for now. Note that this
--- only gets the latest version of each package in the database.
-getAllPackages :: Handler [D.VerifiedPackage]
-getAllPackages = do
+-- | Build the search index from the latest version of each package in the
+-- database. Packages are read and decoded one at a time, and only the
+-- (comparatively small) index entries for each package are retained: decoding
+-- every package up front requires several gigabytes of memory, which is more
+-- than the server has.
+createSearchIndexFromDatabase :: Handler SearchIndex
+createSearchIndexFromDatabase = do
   pkgNames <- getAllPackageNames
-  pkgNamesAndVersions <- catMaybes <$> traverse withVersion pkgNames
-  catMaybes <$> traverse lookupPackageMay pkgNamesAndVersions
+  entries <- catMaybes <$> traverse entriesFor pkgNames
+  return (buildSearchIndex entries)
   where
-  withVersion name = (map . map) (name,) (getLatestVersionFor name)
-  lookupPackageMay = map hush . uncurry lookupPackage
+  -- A package which cannot be read or decoded is skipped, rather than
+  -- aborting the entire index build; in particular, decodePackageFile
+  -- responds with a 500 (thrown as an exception) on invalid JSON.
+  entriesFor :: PackageName -> Handler (Maybe PackageEntries)
+  entriesFor name = do
+    result <- tryAny $ do
+      mversion <- getLatestVersionFor name
+      case mversion of
+        Nothing -> return Nothing
+        Just version -> do
+          mpkg <- hush <$> lookupPackage name version
+          case mpkg of
+            Nothing -> return Nothing
+            Just pkg -> do
+              -- Force the entries fully before moving on to the next package,
+              -- so that the decoded package can be garbage collected.
+              let pkgEntries = packageEntries pkg
+              pkgEntries `deepseq` return (Just pkgEntries)
+    case result of
+      Right r -> return r
+      Left err -> do
+        $logError ("Skipping " <> runPackageName name <>
+                   " while building the search index: " <> tshow err)
+        return Nothing
 
 data SomethingMissing
   = NoSuchPackage

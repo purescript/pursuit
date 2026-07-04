@@ -4,7 +4,10 @@ Description=Web service for hosting of PureScript API documentation
 [Service]
 Type=simple
 User=www-data
-ExecStart=/usr/local/bin/pursuit +RTS -N1 -A128m -M3.5G -RTS
+# The server has 2 vCPUs and 4GB of RAM. The heap limit needs to leave room
+# for nginx and the rest of the system, so that the RTS runs out of heap
+# before the kernel's OOM killer steps in.
+ExecStart=/usr/local/bin/pursuit +RTS -N2 -A64m -M3G -RTS
 Restart=always
 RestartSec=5s
 Environment="PURSUIT_APPROOT=https://pursuit.purescript.org"
