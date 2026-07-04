@@ -24,7 +24,7 @@ jobs:
       - uses: haskell-actions/setup@v2
         with:
           enable-stack: true
-          stack-version: "latest"
+          stack-version: "3.9.3"
           stack-no-global: true
 
       - name: Cache dependencies

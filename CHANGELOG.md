@@ -16,6 +16,11 @@ the most up-to-date version of this file.
   now decoded and indexed one at a time, so only the index entries themselves
   are retained.
 
+  A package file which cannot be read or decoded is now skipped (previously it
+  silently aborted the entire index build, leaving the search index empty),
+  and the new index is fully evaluated on the regeneration thread before being
+  published, rather than by the first search request to use it.
+
 - Use both CPU cores and cap the heap below available RAM (`-N2 -A64m -M3G`)
   in `pursuit.service` (@thomashoneyman)
 - Update GitHub Actions to current action versions and pin the runner to

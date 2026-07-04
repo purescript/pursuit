@@ -77,9 +77,11 @@ makeFoundation appSettings = do
                       foundation
                       createSearchIndexFromDatabase
 
-           traverse ( atomically
-                    . writeTVar (appSearchIndex foundation)
-                    . withStrategy evalSearchIndex
+           -- Evaluate the new index fully on this thread before publishing
+           -- it, so that request handlers never have to pay for building it.
+           traverse ( \idx -> do
+                        idx' <- evaluate (withStrategy evalSearchIndex idx)
+                        atomically (writeTVar (appSearchIndex foundation) idx')
                     ) searchIndex
 
 -- | Convert our foundation to a WAI Application by calling @toWaiAppPlain@ and

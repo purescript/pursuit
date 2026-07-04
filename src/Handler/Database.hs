@@ -58,20 +58,30 @@ createSearchIndexFromDatabase = do
   entries <- catMaybes <$> traverse entriesFor pkgNames
   return (buildSearchIndex entries)
   where
+  -- A package which cannot be read or decoded is skipped, rather than
+  -- aborting the entire index build; in particular, decodePackageFile
+  -- responds with a 500 (thrown as an exception) on invalid JSON.
   entriesFor :: PackageName -> Handler (Maybe PackageEntries)
   entriesFor name = do
-    mversion <- getLatestVersionFor name
-    case mversion of
-      Nothing -> return Nothing
-      Just version -> do
-        mpkg <- hush <$> lookupPackage name version
-        case mpkg of
-          Nothing -> return Nothing
-          Just pkg -> do
-            -- Force the entries fully before moving on to the next package,
-            -- so that the decoded package can be garbage collected.
-            let pkgEntries = packageEntries pkg
-            pkgEntries `deepseq` return (Just pkgEntries)
+    result <- tryAny $ do
+      mversion <- getLatestVersionFor name
+      case mversion of
+        Nothing -> return Nothing
+        Just version -> do
+          mpkg <- hush <$> lookupPackage name version
+          case mpkg of
+            Nothing -> return Nothing
+            Just pkg -> do
+              -- Force the entries fully before moving on to the next package,
+              -- so that the decoded package can be garbage collected.
+              let pkgEntries = packageEntries pkg
+              pkgEntries `deepseq` return (Just pkgEntries)
+    case result of
+      Right r -> return r
+      Left err -> do
+        $logError ("Skipping " <> runPackageName name <>
+                   " while building the search index: " <> tshow err)
+        return Nothing
 
 data SomethingMissing
   = NoSuchPackage
