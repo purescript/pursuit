@@ -5,6 +5,35 @@ the most up-to-date version of this file.
 
 ## Unreleased
 
+## v0.9.11
+
+- Serialise decoding of large package files (@thomashoneyman)
+
+  Rendering any documentation page decodes the entire docs JSON for that
+  package version, which transiently needs tens of times the file's size in
+  heap. A few generated packages (react-icons, elmish-html, deku, ...) have
+  files of 10MB or more with enormous numbers of rarely-cached documentation
+  pages, so a handful of concurrent crawler requests for those pages could
+  exhaust the heap and restart the server. Decodes of files over 5MB now run
+  one at a time; smaller packages (nearly all of them) are unaffected. The
+  file is only read once the lock is held, so queued requests do not pin file
+  contents, and the queue is bounded (excess requests fail fast with a 503
+  rather than accumulating while clients time out). The hourly index
+  regeneration is exempt from the bound so the index never silently omits a
+  package.
+
+- Do not decode a package version's file twice when rendering the package
+  page for the latest version (@thomashoneyman)
+- Disallow SEO/bulk crawlers (Semrush, Ahrefs, DotBot, MJ12, Amazonbot,
+  Bytespider, PetalBot) in robots.txt (@thomashoneyman)
+- Evict page-cache files not accessed in 90 days via a weekly cron job
+  installed by the deploy, so the cache cannot fill the disk
+  (@thomashoneyman)
+- Raise the heap limit to `-M3400m` now that the server has swap to absorb
+  transient spikes above physical RAM (@thomashoneyman)
+- Add `deploy/SERVER.md` documenting server-only and DigitalOcean account
+  state (@thomashoneyman)
+
 ## v0.9.10
 
 - Build the search index one package at a time (@thomashoneyman)
