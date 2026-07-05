@@ -68,6 +68,12 @@ data App = App
     , appHttpManager    :: Manager
     , appLogger         :: Logger
     , appSearchIndex    :: TVar SearchIndex
+    , appLargeDecodeLock :: MVar ()
+    -- ^ Held while decoding a large package's JSON; see
+    -- 'Handler.Database.lookupPackage'.
+    , appLargeDecodeWaiters :: TVar Int
+    -- ^ The number of threads holding or waiting for 'appLargeDecodeLock',
+    -- used to bound the queue.
     }
 
 instance HasHttpManager App where

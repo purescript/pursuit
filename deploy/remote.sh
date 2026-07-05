@@ -56,6 +56,9 @@ rm -r "$tmpdir"
 cp /var/www/pursuit/deploy/nginx.conf /etc/nginx/sites-enabled/pursuit.conf
 systemctl reload nginx
 
+# install cache eviction cron job
+install -m 755 /var/www/pursuit/deploy/cache-eviction.sh /etc/cron.weekly/pursuit-cache-eviction
+
 # install systemd service confing
 cp /var/www/pursuit/deploy/pursuit.service /etc/systemd/system/pursuit.service
 systemctl daemon-reload

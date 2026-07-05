@@ -219,7 +219,12 @@ findPackageWithLatest ::
 findPackageWithLatest pkgName version cont = do
   findPackage pkgName version $ \pkg -> do
     latestVersion <- fromMaybe version <$> getLatestVersionFor pkgName
-    latestPkg <- fromMaybe pkg . hush <$> lookupPackage pkgName latestVersion
+    -- Avoid decoding the same package file twice when the requested version
+    -- is the latest one; for large packages a decode is expensive.
+    latestPkg <-
+      if latestVersion == version
+        then return pkg
+        else fromMaybe pkg . hush <$> lookupPackage pkgName latestVersion
     cont pkg latestPkg
 
 packageNotFound :: PackageName -> Handler a

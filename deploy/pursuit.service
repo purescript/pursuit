@@ -4,10 +4,11 @@ Description=Web service for hosting of PureScript API documentation
 [Service]
 Type=simple
 User=www-data
-# The server has 2 vCPUs and 4GB of RAM. The heap limit needs to leave room
-# for nginx and the rest of the system, so that the RTS runs out of heap
-# before the kernel's OOM killer steps in.
-ExecStart=/usr/local/bin/pursuit +RTS -N2 -A64m -M3G -RTS
+# The server has 2 vCPUs, 4GB of RAM and 4GB of swap. The heap limit needs to
+# leave room for nginx and the rest of the system; spikes above physical RAM
+# are absorbed by swap, and the RTS runs out of heap before the kernel's OOM
+# killer would step in.
+ExecStart=/usr/local/bin/pursuit +RTS -N2 -A64m -M3400m -RTS
 Restart=always
 RestartSec=5s
 Environment="PURSUIT_APPROOT=https://pursuit.purescript.org"
