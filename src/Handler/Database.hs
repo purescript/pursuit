@@ -195,6 +195,18 @@ largeDecodeThreshold = 1024 * 1024
 
 -- | The maximum total size of large package files being decoded at any one
 -- time.
+--
+-- Measured with this module's exact decode path (strict read, aeson decode,
+-- deepseq; GHC 9.2.5, 64-bit, -A64m): the decode transiently holds ~11x the
+-- file size in live heap while the parse tree is alive, which is ~24x the
+-- file size in heap blocks under the copying collector - consistently across
+-- a 1.4MB (halogen), 4.4MB (next-purs-rsc) and 25MB (react-icons) file. A
+-- full budget therefore costs roughly 16MB x 24 ~= 400MB of heap, and the
+-- worst single admission - react-icons at 25MB, admitted alone - costs
+-- ~660MB, both well within the ~1.4GB the process has to spare under its
+-- 3.4GB RTS cap. The budget's job is to keep mid-size files from stacking
+-- past that known-survivable single-giant level, while still letting a few
+-- of them decode concurrently.
 largeDecodeBudget :: Integer
 largeDecodeBudget = 16 * 1024 * 1024
 
