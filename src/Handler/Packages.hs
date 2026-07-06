@@ -81,14 +81,13 @@ getPackageAvailableVersionsR (PathPackageName pkgName) =
 getPackageVersionR :: PathPackageName -> PathVersion -> Handler Html
 getPackageVersionR (PathPackageName pkgName) (PathVersion version) =
   cacheHtmlConditional $
-    findPackageWithLatest pkgName version $ \pkg@D.Package{..} latestPkg -> do
+    findPackageWithDeprecation pkgName version $ \pkg@D.Package{..} deprecated -> do
       moduleList <- renderModuleList pkg
       ereadme    <- tryGetReadme pkg
       let cacheStatus = either (const NotOkToCache) (const OkToCache) ereadme
       content <- defaultLayout $ do
         setTitle (toHtml (runPackageName pkgName))
         let dependencies = bowerDependencies pkgMeta
-        let deprecated = isDeprecated latestPkg
         $(widgetFile "packageVersion")
       return (cacheStatus, content)
 
@@ -159,7 +158,7 @@ getPackageVersionDocsR (PathPackageName pkgName) (PathVersion version) =
 
 getPackageVersionModuleDocsR :: PathPackageName -> PathVersion -> Text -> Handler Html
 getPackageVersionModuleDocsR (PathPackageName pkgName) (PathVersion version) mnString =
-  cacheHtml $ findPackageWithLatest pkgName version $ \pkg@D.Package{..} latestPkg -> do
+  cacheHtml $ findPackageWithDeprecation pkgName version $ \pkg@D.Package{..} deprecated -> do
     moduleList <- renderModuleList pkg
     mhtmlDocs <- renderHtmlDocs pkg mnString
     case mhtmlDocs of
@@ -167,7 +166,6 @@ getPackageVersionModuleDocsR (PathPackageName pkgName) (PathVersion version) mnS
       Just htmlDocs ->
         defaultLayout $ do
           let mn = P.moduleNameFromString mnString
-          let deprecated = isDeprecated latestPkg
           setTitle (toHtml (mnString <> " - " <> runPackageName pkgName))
           $(widgetFile "packageVersionModuleDocs")
 
@@ -211,21 +209,82 @@ findPackage pkgName version cont = do
     Left NoSuchPackage -> packageNotFound pkgName
     Left NoSuchPackageVersion -> packageVersionNotFound pkgName version
 
-findPackageWithLatest ::
+findPackageWithDeprecation ::
   PackageName ->
   Version ->
-  (D.VerifiedPackage -> D.VerifiedPackage -> Handler r) ->
+  (D.VerifiedPackage -> Bool -> Handler r) ->
   Handler r
-findPackageWithLatest pkgName version cont = do
+findPackageWithDeprecation pkgName version cont = do
   findPackage pkgName version $ \pkg -> do
     latestVersion <- fromMaybe version <$> getLatestVersionFor pkgName
-    -- Avoid decoding the same package file twice when the requested version
-    -- is the latest one; for large packages a decode is expensive.
-    latestPkg <-
+    deprecated <-
       if latestVersion == version
-        then return pkg
-        else fromMaybe pkg . hush <$> lookupPackage pkgName latestVersion
-    cont pkg latestPkg
+        then return (isDeprecated pkg)
+        else getLatestDeprecation pkgName latestVersion (isDeprecated pkg)
+    cont pkg deprecated
+
+data DeprecationMarker = DeprecationMarker
+  { markerLatestVersion :: Text
+  , markerDeprecated :: Bool
+  }
+  deriving (Show, Eq, Generic)
+
+instance ToJSON DeprecationMarker where
+  toJSON DeprecationMarker{..} =
+    object
+      [ "latest" .= markerLatestVersion
+      , "deprecated" .= markerDeprecated
+      ]
+
+instance FromJSON DeprecationMarker where
+  parseJSON = Aeson.withObject "DeprecationMarker" $ \obj ->
+    DeprecationMarker
+      <$> obj .: "latest"
+      <*> obj .: "deprecated"
+
+getLatestDeprecation :: PackageName -> Version -> Bool -> Handler Bool
+getLatestDeprecation pkgName latestVersion fallbackDeprecated = do
+  path <- deprecationMarkerFileFor pkgName
+  emarker <- tryAny (liftIO (readFileMay path))
+  case emarker of
+    Right mmarker ->
+      case mmarker >>= Aeson.decodeStrict of
+        Just DeprecationMarker{..}
+          | markerLatestVersion == latestVersionText ->
+              return markerDeprecated
+        _ ->
+          recompute path
+    _ -> recompute path
+  where
+  latestVersionText = pack (showVersion latestVersion)
+
+  recompute path = do
+    latestPkg <- hush <$> lookupPackage pkgName latestVersion
+    let deprecated = maybe fallbackDeprecated isDeprecated latestPkg
+    writeDeprecationMarker path deprecated
+    return deprecated
+
+  writeDeprecationMarker path deprecated = do
+    let marker =
+          DeprecationMarker
+            { markerLatestVersion = latestVersionText
+            , markerDeprecated = deprecated
+            }
+    result <- tryAny (writeFileWithParents path (toStrict (Aeson.encode marker)))
+    case result of
+      Right () -> return ()
+      Left err ->
+        $logError
+          ( "Failed to write deprecation marker for "
+            <> runPackageName pkgName <> ": " <> tshow err
+          )
+
+deprecationMarkerFileFor :: PackageName -> Handler FilePath
+deprecationMarkerFileFor pkgName = do
+  dir <- getDataDir
+  return $
+    dir </> "cache" </> "packages" </>
+    unpack (runPackageName pkgName) </> "deprecation-marker.json"
 
 packageNotFound :: PackageName -> Handler a
 packageNotFound pkgName = do
