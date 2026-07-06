@@ -31,6 +31,18 @@ the most up-to-date version of this file.
   decode running, so files bigger than the budget itself are still served).
   The queue remains bounded, failing fast with a 503 when full, and the
   search index regeneration remains exempt from the bound.
+  
+- Type search queries containing type variables now also match more concrete
+  types: `a -> HTMLElement` finds `HTMLAnchorElement -> HTMLElement` the same
+  way `_ -> HTMLElement` does (#395). Unlike a wildcard, instantiating a query
+  variable charges a small penalty, so results that unify with the query
+  directly rank first, and repeated variables must be instantiated
+  consistently (`a -> a` ranks `Int -> Int` above `Int -> String`). Based on
+  #396 by @klntsky. (@thomashoneyman)
+  
+- The package and module badges on search results are now links to the
+  package page and module docs page (#424, @joprice). Builtin modules such
+  as Prim have no package page, so their package badge remains plain text.
 
 ## v0.9.11
 

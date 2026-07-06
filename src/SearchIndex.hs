@@ -403,26 +403,37 @@ tryStripPrefix pre s = fromMaybe s (T.stripPrefix pre s)
 -- The first argument is the query, and the second is the candidate result.
 -- This function is not symmetric; for example:
 --
--- let compare s1 s2 = compareTypes <$> parseType s2 <*> parseType s2
+-- let compare s1 s2 = compareTypes <$> parseType s1 <*> parseType s2
 --
 -- >>> compare "a" "Int"
--- Just Nothing
--- >>> compare "Int" "a"
 -- Just (Just 1)
+-- >>> compare "Int" "a"
+-- Just (Just 10)
 --
--- (The idea here being it's ok to show a more general version of the query,
--- but usually not helpful to show a more concrete version of it.)
+-- (The idea here being that a result which is more concrete than the query
+-- is a slightly worse match than one which unifies with the query directly,
+-- but a much better match than one which is more general than the query.)
 --
 compareTypes :: D.Type' -> D.Type' -> Maybe Int
 compareTypes type1 type2 =
   map calculate . runWriterT $ go type1 type2
   where
-  calculate :: (Int, [(Text, Text)]) -> Int
-  calculate (score, vars) = (10 * score) + typeVarPenalty vars
+  -- Each instantiation of a query variable with a concrete type costs 1,
+  -- deliberately less than a single unit of structural mismatch (10), so
+  -- that results which unify with the query rank above instantiations of it.
+  calculate :: (Int, ([(Text, Text)], [(Text, Text)])) -> Int
+  calculate (score, (vars, insts)) =
+    (10 * score) + typeVarPenalty (vars ++ insts) + length insts
 
-  go :: D.Type' -> D.Type' -> WriterT [(Text, Text)] Maybe Int
-  go (P.TypeVar _ v1) (P.TypeVar _ v2) = tell [(v1, v2)] *> pure 0
+  go :: D.Type' -> D.Type' -> WriterT ([(Text, Text)], [(Text, Text)]) Maybe Int
+  go (P.TypeVar _ v1) (P.TypeVar _ v2) = tell ([(v1, v2)], []) *> pure 0
   go t (P.TypeVar _ _) = pure (1 + typeComplexity t)
+  -- A type variable in the query matches any concrete type, like a wildcard,
+  -- except that it is charged an instantiation penalty and the pairing is
+  -- recorded, so that repeated query variables are penalised for matching
+  -- inconsistently (the rendered type acts as a result-side variable in
+  -- 'typeVarPenalty').
+  go (P.TypeVar _ v) t = tell ([], [(v, typeToText t)]) *> pure (typeComplexity t)
   go (P.TypeLevelString _ s1) (P.TypeLevelString _ s2) | s1 == s2 = pure 0
   go (P.TypeWildcard _ _) t = pure (typeComplexity t)
   go (P.TypeConstructor _ q1) (P.TypeConstructor _ q2) | compareQual q1 q2 = pure 0
@@ -448,7 +459,7 @@ compareTypes type1 type2 =
   go t1 (P.ParensInType _ t2) = go t1 t2
   go _ _ = lift Nothing
 
-  goRows :: D.Type' -> D.Type' -> WriterT [(Text, Text)] Maybe Int
+  goRows :: D.Type' -> D.Type' -> WriterT ([(Text, Text)], [(Text, Text)]) Maybe Int
   goRows r1 r2 = sum <$>
     sequence [ go t1 t2
              | P.RowListItem _ name t1 <- fst (P.rowToList r1)
@@ -459,7 +470,10 @@ compareTypes type1 type2 =
   -- Calculate a penalty based on the extent to which the type variables match.
   -- Where differences occur, those which make the result more general than the
   -- query are not penalised as harshly as those which make the result less
-  -- general than the query.
+  -- general than the query. The list may pair a query variable with a rendered
+  -- concrete type as well as with a result variable; an inconsistently
+  -- instantiated query variable is penalised in the same way as one matching
+  -- several distinct result variables.
   typeVarPenalty :: [(Text, Text)] -> Int
   typeVarPenalty list =
     penalty list + (3 * penalty (map swap list))
