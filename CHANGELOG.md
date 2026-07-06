@@ -5,6 +5,20 @@ the most up-to-date version of this file.
 
 ## Unreleased
 
+- Challenge browser-like scraper traffic to package pages with Anubis
+  (@thomashoneyman)
+
+  Distributed scraper fleets (thousands of IPs presenting spoofed browser
+  user agents, so robots.txt does not apply) crawl the module documentation
+  pages of large generated packages hard enough to take the server down.
+  Deploys now install [Anubis](https://github.com/TecharoHQ/anubis), a
+  challenge proxy, and nginx routes cache misses under `/packages/` through
+  it: clients with browser-like user agents must pass a JavaScript
+  proof-of-work challenge once, while non-browser clients (curl, package
+  uploads, editor tooling, badge fetchers) and known-good search engine
+  crawlers pass through untouched. Cached package pages, `/search`, and all
+  other routes bypass Anubis entirely.
+
 - Give large package decodes an aggregate memory budget (@thomashoneyman)
 
   v0.9.11 serialised decodes of package docs JSON files of 5MB or more, but
