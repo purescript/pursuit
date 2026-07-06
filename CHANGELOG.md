@@ -60,6 +60,15 @@ the most up-to-date version of this file.
 - The package and module badges on search results are now links to the
   package page and module docs page (#424, @joprice). Builtin modules such
   as Prim have no package page, so their package badge remains plain text.
+- Write cached responses atomically (@thomashoneyman)
+
+  Every request that renders a cacheable page writes the response body to
+  the same cache file, so concurrent requests for one page raced on it: the
+  losers failed with "resource busy (file is locked)" and were served a 500
+  (#482 - under a 400-connection homepage flood, a third of responses), and
+  a half-written file was briefly visible to nginx, which serves the cache
+  directory directly. Responses are now written to a temporary file and
+  renamed into place, which is atomic; the same flood now returns no errors.
 
 ## v0.9.11
 

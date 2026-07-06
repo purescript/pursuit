@@ -8,7 +8,9 @@ import qualified Data.Conduit.Zlib as Zlib
 import Data.Streaming.Zlib (ZlibException(..))
 import qualified Data.Conduit.Attoparsec as Attoparsec
 import Web.Cookie (setCookieName, setCookieValue, setCookieMaxAge)
-import System.Directory (createDirectoryIfMissing, removeFile,
+import Control.Concurrent (myThreadId)
+import Data.Char (isDigit)
+import System.Directory (createDirectoryIfMissing, removeFile, renameFile,
                         getDirectoryContents, getModificationTime)
 import System.FilePath (takeDirectory)
 
@@ -37,10 +39,25 @@ catchDoesNotExist act =
     | isDoesNotExistErrorType (ioeGetErrorType e) = Just ()
     | otherwise = Nothing
 
+-- | Write a file, creating parent directories as necessary. The contents are
+-- written to a temporary file which is then renamed into place: cacheable
+-- responses are written by every request that renders them, so concurrent
+-- requests for the same page otherwise race on the destination - the losers
+-- fail with "resource busy (file is locked)" - and a reader (nginx serves
+-- the cache directory directly) could observe a partially written file.
+-- The temporary name includes the writer's thread id, which is unique among
+-- live threads, so concurrent writers cannot collide on it either.
 writeFileWithParents :: MonadIO m => FilePath -> ByteString -> m ()
 writeFileWithParents file contents = liftIO $ do
   createDirectoryIfMissing True (takeDirectory file)
-  writeFile file contents
+  tid <- myThreadId
+  let tmp = file ++ ".tmp" ++ filter isDigit (show tid)
+  bracketOnError
+    (return tmp)
+    (void . catchDoesNotExist . removeFile)
+    (\t -> do
+      writeFile t contents
+      renameFile t file)
 
 deleteFilesOlderThan :: forall m.
   (MonadIO m, MonadUnliftIO m, MonadLogger m) =>
