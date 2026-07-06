@@ -208,35 +208,42 @@ searchResultToJSON result@SearchResult{..} = do
       SourcePackage pn v ->
         (Bower.runPackageName pn, v)
 
+moduleRoute :: SearchResult -> Text -> Route App
+moduleRoute SearchResult{..} =
+  case srSource of
+    SourceBuiltin ->
+      BuiltinDocsR
+    SourcePackage pkgName version ->
+      PackageVersionModuleDocsR
+        (PathPackageName pkgName)
+        (PathVersion version)
+
+-- | The package a result belongs to, if any; builtin modules such as Prim
+-- have no package page.
+resultPackageRoute :: SearchResult -> Maybe (Route App)
+resultPackageRoute SearchResult{..} =
+  case srSource of
+    SourcePackage pkgName _ ->
+      Just (packageNameRoute pkgName)
+    SourceBuiltin ->
+      Nothing
+
 routeResult :: SearchResult -> (Route App, Maybe Text)
-routeResult SearchResult{..} =
+routeResult result@SearchResult{..} =
   case srInfo of
     PackageResult _ ->
-      ( case srSource of
-          SourcePackage pkgName _ ->
-            PackageR (PathPackageName pkgName)
-          SourceBuiltin ->
-            -- this shouldn't happen
-            HomeR
+      -- packages are never builtin, so the fallback is unreachable
+      ( fromMaybe HomeR (resultPackageRoute result)
       , Nothing
       )
     ModuleResult modName ->
-      ( moduleRoute modName
+      ( moduleRoute result modName
       , Nothing
       )
     DeclarationResult ns modName declTitle _ ->
-      ( moduleRoute modName
+      ( moduleRoute result modName
       , Just $ drop 1 $ makeFragment ns declTitle
       )
-  where
-  moduleRoute =
-    case srSource of
-      SourceBuiltin ->
-        BuiltinDocsR
-      SourcePackage pkgName version ->
-        PackageVersionModuleDocsR
-          (PathPackageName pkgName)
-          (PathVersion version)
 
 -- | Like Prelude.take, except also returns a Bool indicating whether the
 -- original list has any additional elements after the returned prefix.
@@ -313,18 +320,29 @@ searchResultHtml fr r =
       $case srInfo r
         $of PackageResult _
         $of ModuleResult _
-          <span .result__actions__item>
-            <span .badge.badge--package title="Package">P
-            #{pkgName}
+          ^{packageBadge}
         $of DeclarationResult _ moduleName _ _
+          ^{packageBadge}
           <span .result__actions__item>
-            <span .badge.badge--package title="Package">P
-            #{pkgName}
-          <span .result__actions__item>
-            <span .badge.badge--module title="Module">M
-            #{moduleName}
+            <a href=#{fr (moduleRoute r moduleName, Nothing)}>
+              <span .badge.badge--module title="Module">M
+              #{moduleName}
   |]
   where
+  packageBadge =
+    [shamlet|
+      <span .result__actions__item>
+        $maybe route <- resultPackageRoute r
+          <a href=#{fr (route, Nothing)}>
+            ^{packageBadgeContent}
+        $nothing
+          ^{packageBadgeContent}
+    |]
+  packageBadgeContent =
+    [shamlet|
+      <span .badge.badge--package title="Package">P
+      #{pkgName}
+    |]
   pkgName =
     case srSource r of
       SourceBuiltin ->
