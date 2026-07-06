@@ -5,6 +5,10 @@ the most up-to-date version of this file.
 
 ## Unreleased
 
+- The package and module badges on search results are now links to the
+  package page and module docs page (#424, @joprice). Builtin modules such
+  as Prim have no package page, so their package badge remains plain text.
+
 ## v0.9.11
 
 - Serialise decoding of large package files (@thomashoneyman)
