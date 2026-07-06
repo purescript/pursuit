@@ -121,3 +121,27 @@ spec = do
       x <- shouldMatch query cand0
       y <- shouldMatch query cand1
       x `shouldBeLessThan` y
+
+    describe "with query variables against concrete types (#395)" $ do
+      it "matches concrete instantiations of the query" $ do
+        void $ shouldMatch (p "a -> Int") (p "String -> Int")
+
+      it "treats variables like wildcards, with a small penalty" $ do
+        x <- shouldMatch (p "_ -> Int") (p "String -> Int")
+        y <- shouldMatch (p "a -> Int") (p "String -> Int")
+        x `shouldBeLessThan` y
+
+      it "prefers unifying results to concrete instantiations" $ do
+        x <- shouldMatch (p "a -> a") (p "x -> x")
+        y <- shouldMatch (p "a -> a") (p "Int -> Int")
+        x `shouldBeLessThan` y
+
+      it "prefers consistent instantiations to inconsistent ones" $ do
+        x <- shouldMatch (p "a -> a") (p "Int -> Int")
+        y <- shouldMatch (p "a -> a") (p "Int -> String")
+        x `shouldBeLessThan` y
+
+      it "prefers instantiation to generalization" $ do
+        x <- shouldMatch (p "a -> Int") (p "String -> Int")
+        y <- shouldMatch (p "a -> Int") (p "x -> y")
+        x `shouldBeLessThan` y
