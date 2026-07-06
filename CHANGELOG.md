@@ -5,6 +5,19 @@ the most up-to-date version of this file.
 
 ## Unreleased
 
+- Give large package decodes an aggregate memory budget (@thomashoneyman)
+
+  v0.9.11 serialised decodes of package docs JSON files of 5MB or more, but
+  concurrent decodes of files just below that cutoff could still exhaust the
+  heap: scrapers crawling the ~1,900 module pages of next-purs-rsc (a 4.4MB
+  file) repeatedly took the server down by stacking four or five decodes of
+  it at once. Decodes of files of 1MB or more now share a 16MB in-flight
+  budget instead: a decode starts once the total size of large files being
+  decoded fits within the budget (or immediately if it is the only large
+  decode running, so files bigger than the budget itself are still served).
+  The queue remains bounded, failing fast with a 503 when full, and the
+  search index regeneration remains exempt from the bound.
+
 ## v0.9.11
 
 - Serialise decoding of large package files (@thomashoneyman)

@@ -14,6 +14,7 @@ module Handler.Database
 
 import Import
 import Language.PureScript.CoreFn.FromJSON (parseVersion')
+import qualified Control.Concurrent.STM as STM
 import qualified Data.Aeson as A
 import qualified Data.NonNull as NN
 import qualified Data.Text as T
@@ -101,7 +102,7 @@ lookupPackageWithPolicy policy pkgName version = do
     Nothing -> return Nothing
     Just size
       | size >= largeDecodeThreshold ->
-          withLargeDecodeLock policy (decodeFrom file)
+          withLargeDecodeBudget policy size (decodeFrom file)
       | otherwise ->
           decodeFrom file
   case mpkg of
@@ -112,11 +113,11 @@ lookupPackageWithPolicy policy pkgName version = do
       dirExists <- liftIO $ doesDirectoryExist dir
       return $ Left $ if dirExists then NoSuchPackageVersion else NoSuchPackage
   where
-  -- The file is read inside the lock (rather than before queueing for it) so
-  -- that threads waiting their turn do not each pin a copy of a large file's
-  -- bytes. The decoded package is forced before the lock is released; the
-  -- decode is eager in practice, but we make certain the allocation spike
-  -- stays inside the lock.
+  -- The file is read inside the budget (rather than before queueing for it)
+  -- so that threads waiting their turn do not each pin a copy of a large
+  -- file's bytes. The decoded package is forced before the budget share is
+  -- released; the decode is eager in practice, but we make certain the
+  -- allocation spike stays inside the budget.
   decodeFrom :: String -> Handler (Maybe D.VerifiedPackage)
   decodeFrom file = do
     mcontents <- liftIO (readFileMay file)
@@ -127,22 +128,37 @@ lookupPackageWithPolicy policy pkgName version = do
         pkg `deepseq` return (Just pkg)
 
 -- | Decoding a package's docs JSON transiently needs tens of times the file's
--- size in memory, and a few generated packages (react-icons, elmish-html,
--- deku, ...) have files of 10MB or more, so a handful of concurrent requests
--- for their (rarely cached, because there are so many of them) documentation
--- pages can exhaust the heap. Decodes of large files therefore run one at a
--- time; packages below the threshold - nearly all of them - are unaffected.
+-- size in memory, so concurrent requests for (rarely cached, because there
+-- are so many of them) documentation pages of packages with large files can
+-- exhaust the heap. Serialising only the decodes of files of 5MB or more
+-- turned out not to be enough: a crawler fetching many pages of a package
+-- whose file sits just below whatever cutoff is chosen (next-purs-rsc, at
+-- 4.4MB, has ~1,900 module pages) stacks enough concurrent decodes to
+-- exhaust the heap anyway. Decodes of large files therefore share an
+-- aggregate budget: a decode is admitted once the total size of large files
+-- being decoded fits within 'largeDecodeBudget', or when no other large
+-- decode is running (so a single file bigger than the whole budget is still
+-- served, by itself). Packages below the threshold - nearly all of them -
+-- are unaffected.
 --
--- The queue for the lock is bounded: once 'maxLargeDecodeWaiters' threads
--- hold or await the lock, further requests fail fast with a 503 rather than
+-- The budget is measured in file bytes as a proxy for heap use, and it
+-- bounds the decode spike, not the decoded package, which lives on a little
+-- longer while the page renders. Admission is not first-come-first-served: a
+-- large file's decode can be overtaken by smaller ones that fit the
+-- remaining budget, which is acceptable because waiters are bounded and
+-- contention is rare.
+--
+-- The queue is bounded: once 'maxLargeDecodeWaiters' threads hold or await a
+-- share of the budget, further requests fail fast with a 503 rather than
 -- accumulating without limit while clients time out. The hourly search index
 -- regeneration ('WaitWhenBusy') is exempt from the bound - it must not
 -- silently omit a package from the index just because the server is busy, and
 -- as a single sequential thread it adds at most one waiter.
-withLargeDecodeLock :: LargeDecodePolicy -> Handler a -> Handler a
-withLargeDecodeLock policy action = do
+withLargeDecodeBudget :: LargeDecodePolicy -> Integer -> Handler a -> Handler a
+withLargeDecodeBudget policy size action = do
   app <- getYesod
   let counter = appLargeDecodeWaiters app
+  let inFlight = appDecodeBytesInFlight app
   admitted <- case policy of
     WaitWhenBusy -> do
       atomically (modifyTVar' counter (+ 1))
@@ -156,7 +172,7 @@ withLargeDecodeLock policy action = do
           return True
   if admitted
     then
-      withMVar (appLargeDecodeLock app) (const action)
+      bracket_ (acquireBudget inFlight) (releaseBudget inFlight) action
         `finally` atomically (modifyTVar' counter (subtract 1))
     else
       sendResponseStatus serviceUnavailable503
@@ -164,8 +180,23 @@ withLargeDecodeLock policy action = do
   where
   maxLargeDecodeWaiters = 16 :: Int
 
+  acquireBudget inFlight = atomically $ do
+    inUse <- readTVar inFlight
+    STM.check (inUse == 0 || inUse + size <= largeDecodeBudget)
+    writeTVar inFlight (inUse + size)
+
+  releaseBudget inFlight =
+    atomically (modifyTVar' inFlight (subtract size))
+
+-- | Files at least this large count against 'largeDecodeBudget' while they
+-- are being decoded.
 largeDecodeThreshold :: Integer
-largeDecodeThreshold = 5 * 1024 * 1024
+largeDecodeThreshold = 1024 * 1024
+
+-- | The maximum total size of large package files being decoded at any one
+-- time.
+largeDecodeBudget :: Integer
+largeDecodeBudget = 16 * 1024 * 1024
 
 availableVersionsFor :: PackageName -> Handler [Version]
 availableVersionsFor pkgName = do
