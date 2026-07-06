@@ -87,6 +87,13 @@ cp /var/www/pursuit/deploy/anubis.botPolicies.yaml /etc/anubis/pursuit.botPolici
 systemctl enable anubis@pursuit
 systemctl restart anubis@pursuit
 
+# A broken policy file makes anubis exit shortly after starting (restart
+# reports success regardless), and on a redeploy nginx is already routing
+# package pages to it. Fail the deploy loudly here rather than leaving that
+# to be discovered as 502s.
+sleep 2
+systemctl is-active --quiet anubis@pursuit
+
 # install nginx config
 cp /var/www/pursuit/deploy/nginx.conf /etc/nginx/sites-enabled/pursuit.conf
 systemctl reload nginx

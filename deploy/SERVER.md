@@ -56,7 +56,8 @@ crawlers pass through untouched.
   `/.within.website/` endpoints) through it - the expensive decode-triggering
   routes. Cache hits, `/search` (including the uptime check, which must see
   the real backend), `POST /packages` uploads, and everything else go
-  straight to the backend.
+  straight to the backend. If Anubis is down, those cache misses return 502
+  (cached pages keep serving) - see the emergency bypass below.
 - **Emergency bypass**: if Anubis itself misbehaves, edit
   `/etc/nginx/sites-enabled/pursuit.conf` to point the `@anubis` location's
   `proxy_pass` at `http://127.0.0.1:3000`, then `systemctl reload nginx`.

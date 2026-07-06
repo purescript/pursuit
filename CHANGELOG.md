@@ -19,6 +19,17 @@ the most up-to-date version of this file.
   crawlers pass through untouched. Cached package pages, `/search`, and all
   other routes bypass Anubis entirely.
 
+- Serve cached pages to browsers, and treat HEAD like GET (@thomashoneyman)
+
+  The nginx Accept-header map had no default, so the composite Accept
+  strings real browsers send ("text/html,application/xhtml+xml,...") never
+  matched the page cache, and every browser page view was re-rendered by the
+  backend. Cache lookups now default to the HTML representation, making
+  cache hits real for browsers - and confining the Anubis detour above to
+  genuine cache misses. HEAD requests now take the same cache/challenge path
+  as GET instead of going straight to the backend, where Yesod runs the full
+  GET handler for them - previously a full-cost decode that looked free.
+
 - Give large package decodes an aggregate memory budget (@thomashoneyman)
 
   v0.9.11 serialised decodes of package docs JSON files of 5MB or more, but
