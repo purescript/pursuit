@@ -68,12 +68,16 @@ data App = App
     , appHttpManager    :: Manager
     , appLogger         :: Logger
     , appSearchIndex    :: TVar SearchIndex
-    , appLargeDecodeLock :: MVar ()
-    -- ^ Held while decoding a large package's JSON; see
-    -- 'Handler.Database.lookupPackage'.
+    , appDecodeBytesInFlight :: TVar Integer
+    -- ^ The total file size of the large package JSONs currently being
+    -- decoded; see 'Handler.Database.lookupPackage'.
+    , appLargeDecodeAdmission :: MVar ()
+    -- ^ Held while acquiring a share of the decode budget, so that admission
+    -- is first-come-first-served and a file too large to share the budget
+    -- cannot be overtaken indefinitely by smaller decodes.
     , appLargeDecodeWaiters :: TVar Int
-    -- ^ The number of threads holding or waiting for 'appLargeDecodeLock',
-    -- used to bound the queue.
+    -- ^ The number of threads holding or waiting for a share of the decode
+    -- budget, used to bound the queue.
     }
 
 instance HasHttpManager App where

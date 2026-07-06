@@ -52,6 +52,48 @@ install /var/www/pursuit/pursuit /usr/local/bin/pursuit
 popd
 rm -r "$tmpdir"
 
+# install anubis, the challenge proxy that nginx routes uncached package page
+# requests through (see SERVER.md). Installed before the nginx config so the
+# config never points at a proxy that isn't there yet.
+anubis_version="1.25.0"
+anubis_sha256="93e083461f43c8fd92b95a9d6b2a88a80131ecfbef15e894a3fd576cdc5749f3"
+if [ "$(dpkg-query --showformat='${Version}' --show anubis 2>/dev/null)" != "$anubis_version" ]
+then
+  anubis_tmpdir="$(mktemp -d)"
+  wget -O "$anubis_tmpdir/anubis.deb" "https://github.com/TecharoHQ/anubis/releases/download/v${anubis_version}/anubis_${anubis_version}_amd64.deb"
+  echo "$anubis_sha256 $anubis_tmpdir/anubis.deb" | sha256sum --check
+  apt-get install --yes "$anubis_tmpdir/anubis.deb"
+  rm -r "$anubis_tmpdir"
+fi
+
+# The env file holds the instance's signing key (challenge-pass cookies are
+# invalidated whenever it changes), so it is generated once and kept.
+if [ ! -f /etc/anubis/pursuit.env ]
+then
+  touch /etc/anubis/pursuit.env
+  chmod 600 /etc/anubis/pursuit.env
+  cat > /etc/anubis/pursuit.env <<EOF
+BIND=127.0.0.1:8923
+BIND_NETWORK=tcp
+METRICS_BIND=127.0.0.1:9823
+METRICS_BIND_NETWORK=tcp
+TARGET=http://127.0.0.1:3000
+POLICY_FNAME=/etc/anubis/pursuit.botPolicies.yaml
+ED25519_PRIVATE_KEY_HEX=$(openssl rand -hex 32)
+EOF
+fi
+
+cp /var/www/pursuit/deploy/anubis.botPolicies.yaml /etc/anubis/pursuit.botPolicies.yaml
+systemctl enable anubis@pursuit
+systemctl restart anubis@pursuit
+
+# A broken policy file makes anubis exit shortly after starting (restart
+# reports success regardless), and on a redeploy nginx is already routing
+# package pages to it. Fail the deploy loudly here rather than leaving that
+# to be discovered as 502s.
+sleep 2
+systemctl is-active --quiet anubis@pursuit
+
 # install nginx config
 cp /var/www/pursuit/deploy/nginx.conf /etc/nginx/sites-enabled/pursuit.conf
 systemctl reload nginx

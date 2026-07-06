@@ -5,6 +5,50 @@ the most up-to-date version of this file.
 
 ## Unreleased
 
+- Challenge browser-like scraper traffic to package pages with Anubis
+  (@thomashoneyman)
+
+  Distributed scraper fleets (thousands of IPs presenting spoofed browser
+  user agents, so robots.txt does not apply) crawl the module documentation
+  pages of large generated packages hard enough to take the server down.
+  Deploys now install [Anubis](https://github.com/TecharoHQ/anubis), a
+  challenge proxy, and nginx routes cache misses under `/packages/` through
+  it: clients with browser-like user agents must pass a JavaScript
+  proof-of-work challenge once, while non-browser clients (curl, package
+  uploads, editor tooling, badge fetchers) and known-good search engine
+  crawlers pass through untouched. Cached package pages, `/search`, and all
+  other routes bypass Anubis entirely.
+
+- Serve cached pages to browsers, and treat HEAD like GET (@thomashoneyman)
+
+  The nginx Accept-header map had no default, so the composite Accept
+  strings real browsers send ("text/html,application/xhtml+xml,...") never
+  matched the page cache, and every browser page view was re-rendered by the
+  backend. Cache lookups now default to the HTML representation, making
+  cache hits real for browsers - and confining the Anubis detour above to
+  genuine cache misses. HEAD requests now take the same cache/challenge path
+  as GET instead of going straight to the backend, where Yesod runs the full
+  GET handler for them - previously a full-cost decode that looked free.
+
+- Give large package decodes an aggregate memory budget (@thomashoneyman)
+
+  v0.9.11 serialised decodes of package docs JSON files of 5MB or more, but
+  concurrent decodes of files just below that cutoff could still exhaust the
+  heap: scrapers crawling the ~1,900 module pages of next-purs-rsc (a 4.4MB
+  file) repeatedly took the server down by stacking four or five decodes of
+  it at once. Decodes of files of 1MB or more now share a 16MB in-flight
+  budget instead: a decode starts once the total size of large files being
+  decoded fits within the budget (or immediately if it is the only large
+  decode running, so files bigger than the budget itself are still served).
+  The queue remains bounded, failing fast with a 503 when full, and the
+  search index regeneration remains exempt from the bound.
+
+  Budget admission is first-come-first-served: without an ordering, a file
+  too large to share the budget (which must wait until nothing else is in
+  flight) can be overtaken indefinitely by a steady stream of smaller
+  decodes - load testing showed a crawler burst starving the search index
+  build behind a react-icons decode for over an hour.
+  
 - Type search queries containing type variables now also match more concrete
   types: `a -> HTMLElement` finds `HTMLAnchorElement -> HTMLElement` the same
   way `_ -> HTMLElement` does (#395). Unlike a wildcard, instantiating a query
@@ -12,6 +56,7 @@ the most up-to-date version of this file.
   directly rank first, and repeated variables must be instantiated
   consistently (`a -> a` ranks `Int -> Int` above `Int -> String`). Based on
   #396 by @klntsky. (@thomashoneyman)
+  
 - The package and module badges on search results are now links to the
   package page and module docs page (#424, @joprice). Builtin modules such
   as Prim have no package page, so their package badge remains plain text.
