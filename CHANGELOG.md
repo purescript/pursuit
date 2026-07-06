@@ -3,7 +3,7 @@
 Please see https://github.com/purescript/pursuit/blob/master/CHANGELOG.md for
 the most up-to-date version of this file.
 
-## Unreleased
+## v0.9.12
 
 - Challenge browser-like scraper traffic to package pages with Anubis
   (@thomashoneyman)
