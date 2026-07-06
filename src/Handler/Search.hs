@@ -218,30 +218,28 @@ moduleRoute SearchResult{..} =
         (PathPackageName pkgName)
         (PathVersion version)
 
-routeToModule :: SearchResult -> Text -> (Route App, Maybe Text)
-routeToModule result modName =
-  ( moduleRoute result modName
-  , Nothing
-  )
-
-routeToPackage :: SearchResult -> (Route App, Maybe a)
-routeToPackage SearchResult{..} =
-  ( case srSource of
-      SourcePackage pkgName _ ->
-        PackageR (PathPackageName pkgName)
-      SourceBuiltin ->
-        -- this shouldn't happen
-        HomeR
-  , Nothing
-  )
+-- | The package a result belongs to, if any; builtin modules such as Prim
+-- have no package page.
+resultPackageRoute :: SearchResult -> Maybe (Route App)
+resultPackageRoute SearchResult{..} =
+  case srSource of
+    SourcePackage pkgName _ ->
+      Just (packageNameRoute pkgName)
+    SourceBuiltin ->
+      Nothing
 
 routeResult :: SearchResult -> (Route App, Maybe Text)
 routeResult result@SearchResult{..} =
   case srInfo of
     PackageResult _ ->
-      routeToPackage result
+      -- packages are never builtin, so the fallback is unreachable
+      ( fromMaybe HomeR (resultPackageRoute result)
+      , Nothing
+      )
     ModuleResult modName ->
-      routeToModule result modName
+      ( moduleRoute result modName
+      , Nothing
+      )
     DeclarationResult ns modName declTitle _ ->
       ( moduleRoute result modName
       , Just $ drop 1 $ makeFragment ns declTitle
@@ -322,21 +320,29 @@ searchResultHtml fr r =
       $case srInfo r
         $of PackageResult _
         $of ModuleResult _
-          <span .result__actions__item>
-            <a href=#{fr $ routeToPackage r}>
-              <span .badge.badge--package title="Package">P
-              #{pkgName}
+          ^{packageBadge}
         $of DeclarationResult _ moduleName _ _
+          ^{packageBadge}
           <span .result__actions__item>
-            <a href=#{fr $ routeToPackage r}>
-              <span .badge.badge--package title="Package">P
-              #{pkgName}
-          <span .result__actions__item>
-            <a href=#{fr $ routeToModule r moduleName}>
+            <a href=#{fr (moduleRoute r moduleName, Nothing)}>
               <span .badge.badge--module title="Module">M
               #{moduleName}
   |]
   where
+  packageBadge =
+    [shamlet|
+      <span .result__actions__item>
+        $maybe route <- resultPackageRoute r
+          <a href=#{fr (route, Nothing)}>
+            ^{packageBadgeContent}
+        $nothing
+          ^{packageBadgeContent}
+    |]
+  packageBadgeContent =
+    [shamlet|
+      <span .badge.badge--package title="Package">P
+      #{pkgName}
+    |]
   pkgName =
     case srSource r of
       SourceBuiltin ->
