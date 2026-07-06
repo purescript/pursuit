@@ -60,6 +60,7 @@ makeFoundation appSettings = do
     appLogger <- newStdoutLoggerSet defaultBufSize >>= makeYesodLogger
     appSearchIndex <- newTVarIO emptySearchIndex
     appDecodeBytesInFlight <- newTVarIO 0
+    appLargeDecodeAdmission <- newMVar ()
     appLargeDecodeWaiters <- newTVarIO 0
     let foundation = App{..}
     void (startRegenThread foundation)

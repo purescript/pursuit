@@ -42,6 +42,12 @@ the most up-to-date version of this file.
   decode running, so files bigger than the budget itself are still served).
   The queue remains bounded, failing fast with a 503 when full, and the
   search index regeneration remains exempt from the bound.
+
+  Budget admission is first-come-first-served: without an ordering, a file
+  too large to share the budget (which must wait until nothing else is in
+  flight) can be overtaken indefinitely by a steady stream of smaller
+  decodes - load testing showed a crawler burst starving the search index
+  build behind a react-icons decode for over an hour.
   
 - Type search queries containing type variables now also match more concrete
   types: `a -> HTMLElement` finds `HTMLAnchorElement -> HTMLElement` the same

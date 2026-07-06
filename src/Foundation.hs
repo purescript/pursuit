@@ -71,6 +71,10 @@ data App = App
     , appDecodeBytesInFlight :: TVar Integer
     -- ^ The total file size of the large package JSONs currently being
     -- decoded; see 'Handler.Database.lookupPackage'.
+    , appLargeDecodeAdmission :: MVar ()
+    -- ^ Held while acquiring a share of the decode budget, so that admission
+    -- is first-come-first-served and a file too large to share the budget
+    -- cannot be overtaken indefinitely by smaller decodes.
     , appLargeDecodeWaiters :: TVar Int
     -- ^ The number of threads holding or waiting for a share of the decode
     -- budget, used to bound the queue.

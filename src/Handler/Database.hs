@@ -143,10 +143,14 @@ lookupPackageWithPolicy policy pkgName version = do
 --
 -- The budget is measured in file bytes as a proxy for heap use, and it
 -- bounds the decode spike, not the decoded package, which lives on a little
--- longer while the page renders. Admission is not first-come-first-served: a
--- large file's decode can be overtaken by smaller ones that fit the
--- remaining budget, which is acceptable because waiters are bounded and
--- contention is rare.
+-- longer while the page renders. Admission is first-come-first-served, which
+-- matters for files too large to share the budget: they are only admitted
+-- once nothing else is in flight, and under a steady stream of smaller
+-- decodes the in-flight total never reaches zero, so without the admission
+-- queue such a file's decode (and the search index regeneration behind it)
+-- is overtaken indefinitely - observed as an hour-long stall. Holding
+-- 'appLargeDecodeAdmission' while waiting makes later arrivals queue behind
+-- the waiting decode instead, and the budget drains within seconds.
 --
 -- The queue is bounded: once 'maxLargeDecodeWaiters' threads hold or await a
 -- share of the budget, further requests fail fast with a 503 rather than
@@ -159,6 +163,7 @@ withLargeDecodeBudget policy size action = do
   app <- getYesod
   let counter = appLargeDecodeWaiters app
   let inFlight = appDecodeBytesInFlight app
+  let admission = appLargeDecodeAdmission app
   admitted <- case policy of
     WaitWhenBusy -> do
       atomically (modifyTVar' counter (+ 1))
@@ -172,7 +177,7 @@ withLargeDecodeBudget policy size action = do
           return True
   if admitted
     then
-      bracket_ (acquireBudget inFlight) (releaseBudget inFlight) action
+      bracket_ (acquireBudget admission inFlight) (releaseBudget inFlight) action
         `finally` atomically (modifyTVar' counter (subtract 1))
     else
       sendResponseStatus serviceUnavailable503
@@ -180,10 +185,11 @@ withLargeDecodeBudget policy size action = do
   where
   maxLargeDecodeWaiters = 16 :: Int
 
-  acquireBudget inFlight = atomically $ do
-    inUse <- readTVar inFlight
-    STM.check (inUse == 0 || inUse + size <= largeDecodeBudget)
-    writeTVar inFlight (inUse + size)
+  acquireBudget admission inFlight = withMVar admission $ \_ ->
+    atomically $ do
+      inUse <- readTVar inFlight
+      STM.check (inUse == 0 || inUse + size <= largeDecodeBudget)
+      writeTVar inFlight (inUse + size)
 
   releaseBudget inFlight =
     atomically (modifyTVar' inFlight (subtract size))
