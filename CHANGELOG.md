@@ -3,6 +3,18 @@
 Please see https://github.com/purescript/pursuit/blob/master/CHANGELOG.md for
 the most up-to-date version of this file.
 
+## v0.9.13
+
+- Avoid decoding the latest package version just to render deprecation badges
+  on old-version package pages (@thomashoneyman)
+
+  Package and module documentation pages display a deprecated badge when the
+  latest package version is marked with the `pursuit-deprecated` keyword.
+  Old-version pages previously decoded both the requested version and the
+  latest version's full docs JSON to compute that one boolean. They now cache
+  a tiny version-stamped deprecation marker per package, so after the first
+  marker miss these renders decode only the requested package version.
+
 ## v0.9.12
 
 - Challenge browser-like scraper traffic to package pages with Anubis
@@ -69,16 +81,6 @@ the most up-to-date version of this file.
   a half-written file was briefly visible to nginx, which serves the cache
   directory directly. Responses are now written to a temporary file and
   renamed into place, which is atomic; the same flood now returns no errors.
-
-- Avoid decoding the latest package version just to render deprecation badges
-  on old-version package pages (@thomashoneyman)
-
-  Package and module documentation pages display a deprecated badge when the
-  latest package version is marked with the `pursuit-deprecated` keyword.
-  Old-version pages previously decoded both the requested version and the
-  latest version's full docs JSON to compute that one boolean. They now cache
-  a tiny version-stamped deprecation marker per package, so after the first
-  marker miss these renders decode only the requested package version.
 
 ## v0.9.11
 
