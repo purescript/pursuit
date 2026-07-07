@@ -3,6 +3,20 @@
 Please see https://github.com/purescript/pursuit/blob/master/CHANGELOG.md for
 the most up-to-date version of this file.
 
+## v0.9.14
+
+- Fix the version selector getting stuck on "Loading …" after a restart
+  (@thomashoneyman)
+
+  The version dropdown on package pages was initialized by a per-page inline
+  script that Yesod bundles into a dynamic `/static/widget/<hash>.js` file,
+  whose contents live only in the running backend's in-memory store. Any
+  backend restart (such as a deploy) orphaned those widgets: nginx kept
+  serving already-cached HTML that referenced them, the script 404'd, and the
+  selector never populated. The version selector, search box, and search
+  "load more" link are now initialized from the statically embedded
+  `Pursuit.js`, which is served from disk and survives restarts.
+
 ## v0.9.13
 
 - Avoid decoding the latest package version just to render deprecation badges

@@ -1,13 +1,21 @@
 (function() {
-/* Expects arguments as an Object with the following properties:
- * - currentVersion (String):
+/* Expects the version selector <select> element, which carries its per-page
+ * configuration in data attributes:
+ * - data-current-version (String):
  *    the version of docs that is being shown on this page.
- * - elementId (String):
- *    the HTML id of the version selector element.
- * - availableVersionsUrl (String):
+ * - data-available-versions-url (String):
  *     The URL to fetch the available versions for this package from.
+ *
+ * This initializer is invoked from this (statically served) script rather than
+ * from an inline per-page script, so that it keeps working across backend
+ * restarts. Inline widget scripts are served from the backend's in-memory
+ * EmbeddedStatic store and are orphaned when it restarts, which would leave
+ * already-cached pages stuck showing "Loading …".
  */
-function initializeVersionSelector(args) {
+function initializeVersionSelector(selector) {
+  var currentVersion = selector.getAttribute('data-current-version')
+  var availableVersionsUrl = selector.getAttribute('data-available-versions-url')
+
   function getJSON(url, callback) {
     var req = new XMLHttpRequest()
     req.open('GET', url, true)
@@ -30,7 +38,7 @@ function initializeVersionSelector(args) {
     el.setAttribute("value", url)
 
     // Set the 'selected' attribute on the current version
-    if (version === args.currentVersion) {
+    if (version === currentVersion) {
       el.setAttribute('selected', null)
     }
 
@@ -52,13 +60,12 @@ function initializeVersionSelector(args) {
 
   // Set an onchange handler so that selecting a version in the <select>
   // will navigate to the new page
-  var selector = document.getElementById(args.elementId)
   selector.onchange = function() {
     window.location.href = this.value
   }
 
   // Load the <option> elements via AJAX
-  getJSON(args.availableVersionsUrl, function(data) {
+  getJSON(availableVersionsUrl, function(data) {
     // Delete the placeholder <option>
     selector.removeChild(selector.firstChild)
 
@@ -173,4 +180,31 @@ window.Pursuit = {
   initializeSearchForm: initializeSearchForm,
   initializeLoadMoreLink: initializeLoadMoreLink
 }
+
+// Wire everything up on page load. This script is served statically (embedded
+// at compile time), so it is always available; doing initialization here rather
+// than from inline per-page scripts means the page's dynamic behaviour survives
+// backend restarts. This script is loaded in <head>, so wait for the DOM.
+function onReady(fn) {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', fn)
+  } else {
+    fn()
+  }
+}
+
+onReady(function() {
+  if (document.getElementById('search-input')) {
+    initializeSearchForm()
+  }
+
+  var selectors = document.querySelectorAll('.version-selector')
+  for (var i = 0; i < selectors.length; i++) {
+    initializeVersionSelector(selectors[i])
+  }
+
+  if (document.getElementById('load-more-link')) {
+    initializeLoadMoreLink()
+  }
+})
 })()

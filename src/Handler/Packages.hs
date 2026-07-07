@@ -1,7 +1,6 @@
 module Handler.Packages where
 
 import Import
-import Text.Julius (rawJS)
 import Text.Blaze (ToMarkup, toMarkup)
 import qualified Data.Char as Char
 import Data.Version
@@ -301,7 +300,6 @@ defaultLayout404 widget =
 
 versionSelector :: PackageName -> Version -> WidgetFor App ()
 versionSelector pkgName version = do
-  versionSelectorIdent <- newIdent
   let route = PackageAvailableVersionsR (PathPackageName pkgName)
   availableVersionsUrl <- getUrlRender <*> pure route
   $(widgetFile "versionSelector")
