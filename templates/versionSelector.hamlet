@@ -1,3 +1,3 @@
-<select id=#{versionSelectorIdent} .version-selector>
+<select .version-selector data-current-version=#{showVersion version} data-available-versions-url=#{availableVersionsUrl}>
   <option id="placeholder" disabled="disabled">
     Loading …
